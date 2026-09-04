@@ -29,6 +29,19 @@ import type {
   Wallet,
   Withdrawal,
 } from '../contracts'
+import {
+  CATALOG,
+  CATALOG_AUTHORS,
+  FILLER,
+  FILLER_BADGES,
+  FILLER_STATUS,
+  KISAH_TAGS,
+  MY_SYNOPSES,
+  type StorySeed,
+  SYNOPSES,
+  TAGS_BY_GENRE,
+} from './data/catalog'
+import { CHAPTER_SEED, PAID_PRICES, PROSE } from './data/chapters'
 import { db } from './db'
 import { BANNER_URLS, COVER_URLS, pickImage } from './sampleImages'
 
@@ -90,18 +103,6 @@ const FOLLOWER_ROWS: Array<
 /** Indeks pengikut yang **juga** diikuti balik oleh pengguna ini. */
 const FOLLOWING_IDX = [1, 3, 4, 7, 11, 14, 18, 21]
 
-/** Penulis katalog — nama dari `STORIES[].a`. */
-const CATALOG_AUTHORS = [
-  'Amelia Putri',
-  'Rani Kusuma',
-  'Soraya Lin',
-  'Dian Hastari',
-  'Nadia Ardhani',
-  'Bening Ayu',
-  'Yudha Prasetya',
-  'Laras Wangi',
-]
-
 const users: User[] = [
   {
     id: ME,
@@ -154,23 +155,6 @@ const follows: Array<Follow & { id: string }> = [
 
 // ── katalog ─────────────────────────────────────────────────────────────────
 
-type StorySeed = {
-  id: string
-  title: string
-  authorIdx: number
-  genres: Story['genres']
-  rating: number
-  reads: number
-  saves: number
-  status: Story['status']
-  badge: string
-  updatedAt: string
-  chapterCount: number
-  /** `'+24rb pembaca minggu ini'` — kalimat kanvas; angkanya diambil ulang di bawah. */
-  growth: string
-  note: string
-}
-
 /** `'+24rb pembaca minggu ini'` → `24_000`. Urutan tidak bisa dibangun di atas teks. */
 function weeklyReadsOf(growth: string): number {
   const match = /\+(\d+)(rb|jt)?/.exec(growth)
@@ -178,178 +162,6 @@ function weeklyReadsOf(growth: string): number {
   const value = Number(match[1] ?? 0)
   return match[2] === 'jt' ? value * 1_000_000 : match[2] === 'rb' ? value * 1_000 : value
 }
-
-const CATALOG: StorySeed[] = [
-  {
-    id: 's1',
-    title: 'Cinta di Balik Kontrak',
-    authorIdx: 0,
-    genres: ['Romance', 'CEO'],
-    rating: 4.8,
-    reads: 985_000,
-    saves: 128_000,
-    status: 'ongoing',
-    badge: 'HOT',
-    updatedAt: '2026-08-24',
-    chapterCount: 120,
-    growth: '+24rb pembaca minggu ini',
-    note: 'Dialog tajam, tempo rapi.',
-  },
-  {
-    id: 's2',
-    title: 'Surat dari Bandung',
-    authorIdx: 1,
-    genres: ['Drama'],
-    rating: 4.6,
-    reads: 412_000,
-    saves: 61_000,
-    status: 'ongoing',
-    badge: 'BARU',
-    updatedAt: '2026-08-25',
-    chapterCount: 64,
-    growth: '+18rb pembaca minggu ini',
-    note: 'Surat-surat yang tak pernah dikirim.',
-  },
-  {
-    id: 's3',
-    title: 'Jejak Hujan Semalam',
-    authorIdx: 2,
-    genres: ['Mystery', 'Romance'],
-    rating: 4.7,
-    reads: 723_000,
-    saves: 88_000,
-    status: 'ongoing',
-    badge: 'HOT',
-    updatedAt: '2026-08-22',
-    chapterCount: 96,
-    growth: '+12rb pembaca minggu ini',
-    note: 'Misteri kecil di kota kecil.',
-  },
-  {
-    id: 's4',
-    title: 'Kembang Api Terakhir',
-    authorIdx: 3,
-    genres: ['Drama', 'Romance'],
-    rating: 4.5,
-    reads: 268_000,
-    saves: 44_000,
-    status: 'completed',
-    badge: 'TAMAT',
-    updatedAt: '2026-07-30',
-    chapterCount: 74,
-    growth: '+6rb pembaca minggu ini',
-    note: 'Penutup yang tidak menghibur, tapi jujur.',
-  },
-  {
-    id: 's5',
-    title: 'Rahasia Nyonya Muda',
-    authorIdx: 4,
-    genres: ['CEO', 'Drama'],
-    rating: 4.4,
-    reads: 512_000,
-    saves: 52_000,
-    status: 'ongoing',
-    badge: 'NAIK',
-    updatedAt: '2026-08-26',
-    chapterCount: 110,
-    growth: '+31rb pembaca minggu ini',
-    note: 'Politik keluarga di ruang rapat.',
-  },
-  {
-    id: 's6',
-    title: 'Mata Air Terlarang',
-    authorIdx: 5,
-    genres: ['Fantasy'],
-    rating: 4.9,
-    reads: 190_000,
-    saves: 39_000,
-    status: 'ongoing',
-    badge: 'PERMATA',
-    updatedAt: '2026-08-21',
-    chapterCount: 60,
-    growth: '+9rb pembaca minggu ini',
-    note: 'Bangunan dunia yang sabar.',
-  },
-  {
-    id: 's7',
-    title: 'Jangan Pulang Malam Ini',
-    authorIdx: 6,
-    genres: ['Thriller', 'Mystery'],
-    rating: 4.3,
-    reads: 141_000,
-    saves: 21_000,
-    status: 'hiatus',
-    badge: 'BARU',
-    updatedAt: '2026-08-12',
-    chapterCount: 38,
-    growth: '+4rb pembaca minggu ini',
-    note: 'Tegang tanpa banyak darah.',
-  },
-  {
-    id: 's8',
-    title: 'Kopi, Hujan, dan Kamu',
-    authorIdx: 7,
-    genres: ['Romance'],
-    rating: 4.6,
-    reads: 356_000,
-    saves: 47_000,
-    status: 'ongoing',
-    badge: 'HOT',
-    updatedAt: '2026-08-25',
-    chapterCount: 88,
-    growth: '+15rb pembaca minggu ini',
-    note: 'Manis, tapi tidak kelewatan.',
-  },
-]
-
-/**
- * Katalog diperluas jadi 40 cerita.
- *
- * Delapan pertama datang dari `novelova-data.js` dan tidak boleh berubah —
- * itulah yang membuat perbandingan dengan kanvas jujur. Sisanya **pengisi**:
- * beranda menampilkan 20 cerita per section, dan di layar lebar delapan cerita
- * meninggalkan baris yang setengah kosong.
- *
- * Angkanya diturunkan dari indeks, bukan diacak — seed harus menghasilkan urutan
- * yang sama setiap kali dijalankan.
- */
-const FILLER: Array<[title: string, genres: Story['genres']]> = [
-  ['Perjanjian Musim Hujan', ['Romance', 'Drama']],
-  ['Rahasia Lantai Dua Belas', ['Mystery', 'CEO']],
-  ['Nyala di Ujung Koridor', ['Fantasy']],
-  ['Kekasih yang Tak Diundang', ['Romance']],
-  ['Serpihan Kaca Bulan Juni', ['Drama']],
-  ['Kontrak Sunyi', ['Romance', 'CEO']],
-  ['Jalan Pulang ke Selasar', ['Drama', 'Romance']],
-  ['Malam Tanpa Rembulan', ['Mystery', 'Thriller']],
-  ['Bunga Api di Meja Rapat', ['Romance', 'CEO']],
-  ['Suara dari Kamar 803', ['Horror', 'Mystery']],
-  ['Hujan yang Tak Selesai', ['Romance', 'Drama']],
-  ['Kastil Angin Utara', ['Fantasy', 'Romance']],
-  ['Detak Kedua', ['Thriller']],
-  ['Aroma Kopi Pagi Itu', ['Romance']],
-  ['Perempuan di Halte Terakhir', ['Drama', 'Mystery']],
-  ['Naga Kecil dari Timur', ['Fantasy']],
-  ['Janji yang Tertinggal', ['Romance', 'Drama']],
-  ['Sepuluh Menit Sebelum Tengah Malam', ['Thriller', 'Mystery']],
-  ['Direktur dan Sekretaris Sementara', ['Romance', 'CEO']],
-  ['Perpustakaan yang Menghilang', ['Fantasy', 'Mystery']],
-  ['Setelah Musim Kelima', ['Drama']],
-  ['Pelukan Terakhir Bulan Desember', ['Romance']],
-  ['Kabut di Puncak Ijen', ['Horror']],
-  ['Tuan Muda dan Kucing Liarnya', ['Romance', 'CEO']],
-  ['Simfoni Tanpa Penonton', ['Drama', 'Romance']],
-  ['Bayangan di Balik Cermin', ['Horror', 'Thriller']],
-  ['Sepasang Payung Merah', ['Romance']],
-  ['Peta Menuju Rumah', ['Fantasy', 'Drama']],
-  ['Rapat Terakhir Hari Jumat', ['CEO', 'Thriller']],
-  ['Sebelum Kamu Bertanya', ['Romance']],
-  ['Lagu Lama di Radio Tua', ['Drama', 'Romance']],
-  ['Ekspedisi ke Selatan Angin', ['Fantasy', 'Thriller']],
-]
-
-const FILLER_BADGES = ['HOT', 'BARU', 'NAIK', 'PERMATA', 'TAMAT'] as const
-const FILLER_STATUS: Array<Story['status']> = ['ongoing', 'ongoing', 'completed', 'hiatus']
 
 const CATALOG_FILLER: StorySeed[] = FILLER.map(([title, genres], i) => {
   const reads = 890_000 - i * 21_000
@@ -371,26 +183,6 @@ const CATALOG_FILLER: StorySeed[] = FILLER.map(([title, genres], i) => {
   }
 })
 
-/**
- * Kosakata tag · Fase 3b.
- *
- * Section kurasi dibangun di atas tag, jadi tag harus **benar-benar berbeda**
- * antar cerita. Sebelumnya keempat puluh cerita contoh bertag identik, dan
- * delapan section kurasi di atasnya akan menampilkan isi yang sama persis.
- */
-const TAGS_BY_GENRE: Record<string, string[]> = {
-  Romance: ['kantor', 'musuh jadi cinta', 'cinta pertama', 'slow burn'],
-  CEO: ['pernikahan kontrak', 'balas dendam', 'kantor'],
-  Mystery: ['kasus tertutup', 'twist'],
-  Fantasy: ['dunia lain', 'sihir'],
-  Drama: ['keluarga', 'kehilangan'],
-  Thriller: ['kejar-kejaran', 'psikologis'],
-  Horror: ['rumah angker', 'teror perlahan'],
-}
-
-/** Tag khas kisah nyata; genre-nya tetap apa adanya. */
-const KISAH_TAGS = ['tragedi', 'komedi']
-
 function tagsFor(genres: readonly string[], index: number): string[] {
   const picked = genres.flatMap((g) => {
     const pool = TAGS_BY_GENRE[g] ?? []
@@ -399,13 +191,10 @@ function tagsFor(genres: readonly string[], index: number): string[] {
   return [...new Set(picked.filter(Boolean))]
 }
 
-const SYNOPSIS =
-  'Kaia datang ke lantai tiga puluh untuk memperpanjang satu kontrak, dan pulang membawa perjanjian yang tidak pernah ia baca sampai habis. Di gedung ini ketenangan adalah satu-satunya mata uang yang dihargai, dan ia sudah menabungnya sejak pagi.'
-
 const catalogStories: Story[] = [...CATALOG, ...CATALOG_FILLER].map((s, i) => ({
   id: s.id,
   title: s.title,
-  synopsis: SYNOPSIS,
+  synopsis: SYNOPSES[i] ?? '',
   coverUrl: pickImage(COVER_URLS, i),
   bannerUrl: pickImage(BANNER_URLS, i),
   authorId: `a${s.authorIdx + 1}`,
@@ -507,7 +296,7 @@ const myStories: Story[] = [
 ].map<Story>((s, i) => ({
   id: s.id,
   title: s.title,
-  synopsis: SYNOPSIS,
+  synopsis: MY_SYNOPSES[i] ?? '',
   // Digeser dari katalog supaya karya penulis tidak memakai sampul yang sama.
   coverUrl: pickImage(COVER_URLS, CATALOG.length + CATALOG_FILLER.length + i),
   bannerUrl: pickImage(BANNER_URLS, CATALOG.length + CATALOG_FILLER.length + i),
@@ -546,32 +335,6 @@ const myStories: Story[] = [
     coinsEarned: Math.round(s.reads / 9),
   },
 }))
-
-/** `CHAPTERS` kanvas — delapan bab pertama `s1`, harga 0/1.500/1.800/2.000. */
-const CHAPTER_SEED: Array<[n: number, title: string, min: number, price: number]> = [
-  [1, 'Perjanjian Malam Itu', 8, 0],
-  [2, 'Kopi yang Selalu Dingin', 9, 0],
-  [3, 'Nomor yang Tidak Tersimpan', 7, 0],
-  [4, 'Tawaran di Lantai Tiga Puluh', 10, 1_500],
-  [5, 'Dua Tanda Tangan', 11, 1_500],
-  [6, 'Hujan di Parkiran Basement', 9, 1_800],
-  [7, 'Nama yang Tidak Boleh Disebut', 12, 1_800],
-  [8, 'Sarapan Pukul Empat Pagi', 10, 2_000],
-]
-
-/**
- * Bab untuk **seluruh katalog**, bukan hanya cerita pertama.
- *
- * Delapan bab `s1` datang apa adanya dari `novelova-data.js` — judul, durasi
- * baca, dan **harga per babnya** yang berbeda-beda (0 · 1.500 · 1.800 · 2.000).
- * Sisanya dibangkitkan dari `stats.chapterCount` cerita itu, karena halaman
- * detail yang mengaku punya 120 bab lalu menampilkan delapan terbaca sebagai
- * kerusakan.
- *
- * Tiga bab pertama tiap cerita gratis: itu pola pancingan yang dipakai
- * requirement, dan yang membuat gerbang bab terkunci bisa dicoba tanpa koin.
- */
-const PAID_PRICES = [1_500, 1_500, 1_800, 1_800, 2_000]
 
 function chaptersFor(story: Story): ChapterSummary[] {
   const seeded = story.id === 's1' ? CHAPTER_SEED : []
@@ -764,15 +527,6 @@ const authorChapters: ChapterSummary[] = (
   finished: false,
   withdrawnAt: null,
 }))
-
-/** `PROSE` dan `PREVIEW` kanvas — lima paragraf isi, dua paragraf pratinjau. */
-const PROSE = [
-  'Lift itu berhenti di lantai tiga puluh, dan untuk pertama kalinya Kaia menyadari bahwa gedung ini tidak pernah benar-benar sunyi. Ada suara mesin di balik dinding, ada langkah yang tertahan di ujung koridor, ada napasnya sendiri yang terlalu cepat untuk seseorang yang datang hanya untuk mengantar berkas.',
-  'Di ujung ruangan, Arden Wibawa berdiri membelakangi jendela. Kota di bawahnya tampak seperti peta yang belum selesai digambar, penuh titik lampu yang tidak saling mengenal.',
-  '"Kamu terlambat empat menit," katanya tanpa menoleh. "Untuk orang yang datang meminta perpanjangan kontrak, itu bukan pembukaan yang baik."',
-  'Kaia meletakkan berkasnya di meja, rapi, sudutnya sejajar dengan tepi kayu. Ia sudah belajar bahwa di ruangan ini ketenangan adalah satu-satunya mata uang yang dihargai, dan ia sudah menabungnya sejak pagi.',
-  '"Saya tidak datang untuk meminta," jawabnya. "Saya datang untuk menawar."',
-]
 
 export const CHAPTER_PREVIEW = [
   'Arden akhirnya berbalik. Ada sesuatu di matanya yang tidak pernah muncul dalam rapat mana pun, sesuatu yang membuat Kaia lupa pada urutan kalimat yang sudah ia susun sepanjang malam.',

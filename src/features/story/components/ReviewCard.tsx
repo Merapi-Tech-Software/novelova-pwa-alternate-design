@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Review } from '@/api/contracts'
 import { isApiError } from '@/api/errors'
+import { ModerationActions } from '@/components/patterns/ModerationActions'
 import { SpoilerVeil } from '@/components/patterns/SpoilerVeil'
 import { StarRating } from '@/components/patterns/StarRating'
 import { Button } from '@/components/ui/Button'
@@ -9,7 +10,6 @@ import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
 import { formatDate } from '@/lib/format'
 import { useMarkHelpful, useReplyToReview } from '../hooks/useReviews'
-import { ModerationActions } from './ModerationActions'
 
 export interface ReviewCardProps {
   review: Review

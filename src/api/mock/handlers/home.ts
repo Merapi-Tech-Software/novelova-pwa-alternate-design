@@ -1,6 +1,7 @@
 import type { NovelovaApi } from '../../client'
 import type { HomeFeed, HomeSection, Paged, SectionParams, Story } from '../../contracts'
 import { db } from '../db'
+import { readingCounts } from './library'
 import { BANNER, CONTINUE, findSection, type SectionDef, sectionsFor, tabFilter } from './sections'
 import { currentUserId } from './session'
 
@@ -43,7 +44,12 @@ function favoritesFirst(stories: Story[], favorites: string[]): Story[] {
 }
 
 /** Section tanpa isi dibuang di sini, sekali, bukan di tiap pemakai. */
-function build(def: SectionDef, stories: Story[], favorites: string[]): HomeSection | null {
+function build(
+  def: SectionDef,
+  stories: Story[],
+  favorites: string[],
+  progress: Record<string, number> | null = null,
+): HomeSection | null {
   const picked = stories.filter((s) => def.match?.(s) ?? true).sort(def.order)
   if (picked.length === 0) return null
 
@@ -53,6 +59,7 @@ function build(def: SectionDef, stories: Story[], favorites: string[]): HomeSect
     subtitle: null,
     seeAll: def.browsable === false ? null : def.id,
     stories: favoritesFirst(picked, favorites).slice(0, SIZE),
+    progress,
   }
 }
 
@@ -75,10 +82,23 @@ export const homeHandlers: Pick<NovelovaApi, 'getHomeFeed' | 'getSection'> = {
       .map((p) => all.find((s) => s.id === p.storyId))
       .filter((s): s is Story => s !== undefined)
 
+    // Progres tiap cerita yang sedang dibaca, dihitung fungsi yang **sama**
+    // dengan batang progres `/pustaka`. Cerita tanpa bab terbit dilewati, bukan
+    // dikirim sebagai 0% — nol yang berarti "belum mulai" dan nol yang berarti
+    // "tidak ada babnya" bukan hal yang sama.
+    const readingPct: Record<string, number> = {}
+    for (const story of reading) {
+      const { finishedCount, total } = await readingCounts(
+        story.id,
+        progress.find((p) => p.storyId === story.id),
+      )
+      if (total > 0) readingPct[story.id] = finishedCount / total
+    }
+
     const sections = [
       build(BANNER, all, []),
       ...sectionsFor(tab).map((def) => build(def, inTab, favorites)),
-      build(CONTINUE, reading, []),
+      build(CONTINUE, reading, [], readingPct),
     ]
 
     return { genre: tab ?? null, sections: sections.filter((s): s is HomeSection => s !== null) }

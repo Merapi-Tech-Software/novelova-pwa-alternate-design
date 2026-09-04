@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Chip } from '@/components/ui/Chip'
 import { t } from '@/i18n/t'
 import { cx } from '@/lib/cx'
 
@@ -11,7 +10,12 @@ export interface GenreTabsProps {
 }
 
 /**
- * Tab genre · FR-HOME-03 · FR-HOME-13.
+ * Tab genre · FR-HOME-03 · FR-HOME-13 · mockup `7a`.
+ *
+ * **Tab teks bergaris bawah 2px, bukan pil.** Brief §1 memisahkan keduanya
+ * tegas: saringan adalah tab teks, pil hanya dipakai di tempat mockup memang
+ * menggambar pil. Deret pil di sini membuat baris genre terbaca sebagai deretan
+ * tombol — padahal ia satu pilihan tunggal.
  *
  * Gradien tepi muncul **hanya bila deretnya benar-benar bisa digulir**: fade
  * yang selalu ada menjanjikan isi yang tidak pernah ada. Ambangnya 1px, karena
@@ -46,16 +50,29 @@ export function GenreTabs({ tabs, value, onChange }: GenreTabsProps) {
       <div
         ref={rail}
         onScroll={measure}
-        className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-5 overflow-x-auto border-nv-line border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <Chip selected={value === null} onClick={() => onChange(null)}>
-          {t('home.allGenres')}
-        </Chip>
-        {tabs.map((genre) => (
-          <Chip key={genre} selected={value === genre} onClick={() => onChange(genre)}>
-            {genre}
-          </Chip>
-        ))}
+        {[null, ...tabs].map((genre) => {
+          const on = value === genre
+          return (
+            <button
+              key={genre ?? '__semua'}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onChange(genre)}
+              className={cx(
+                // `-mb-px` menaruh garis tab tepat di atas garis relnya, bukan
+                // 1px di bawahnya — tanpa itu keduanya jadi dua garis kembar.
+                '-mb-px shrink-0 border-b-2 px-0.5 pt-1 pb-2.5 text-body transition',
+                on
+                  ? 'border-nv-accent font-bold text-nv-text'
+                  : 'border-transparent font-medium text-nv-muted hover:text-nv-text-2',
+              )}
+            >
+              {genre ?? t('home.allGenres')}
+            </button>
+          )
+        })}
       </div>
 
       <span

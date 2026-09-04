@@ -125,7 +125,7 @@ export function RateSheet({ storyId, open, onClose, myReview }: RateSheetProps) 
           <p className="text-body text-nv-danger">{blocked}</p>
           <Link
             to={`/cerita/${storyId}`}
-            className="inline-block pt-1 text-body text-nv-accent-strong underline"
+            className="inline-block pt-1 text-body text-nv-accent underline"
           >
             {t('social.needReadCta')}
           </Link>
@@ -167,7 +167,7 @@ export function RateSheet({ storyId, open, onClose, myReview }: RateSheetProps) 
               rows={5}
               value={text}
               onChange={(e) => onText(e.target.value)}
-              className="mt-1 w-full rounded-nv-md border border-nv-line bg-nv-card p-3 text-body text-nv-text"
+              className="mt-1 w-full rounded-nv-md border border-nv-line-soft bg-nv-card p-3 font-display text-card text-nv-text"
             />
           </label>
           <p className="pt-1 text-caption text-nv-muted tabular-nums">

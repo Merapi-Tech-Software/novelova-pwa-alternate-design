@@ -48,7 +48,7 @@ export function EmptyState({
       {icon && (
         <span
           aria-hidden
-          className="grid size-12 place-items-center rounded-nv-pill bg-nv-accent-soft text-nv-accent-strong"
+          className="grid size-12 place-items-center rounded-nv-pill bg-nv-accent-soft text-nv-accent"
         >
           {icon}
         </span>

@@ -74,7 +74,7 @@ export default function PayoutHistoryPage() {
           title: t('payout.emptyTitle'),
           description: t('payout.emptyBody'),
           secondary: (
-            <Link to="/penulis/penarikan" className="text-body text-nv-accent-strong underline">
+            <Link to="/penulis/penarikan" className="text-body text-nv-accent underline">
               {t('payout.toWithdraw')}
             </Link>
           ),

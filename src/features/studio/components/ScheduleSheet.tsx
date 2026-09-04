@@ -67,7 +67,7 @@ export function ScheduleSheet({ item, onClose, onSave, saving }: ScheduleSheetPr
     >
       <section>
         <h3 className="font-semibold text-body text-nv-text">{t('studio.schedStep1')}</h3>
-        <p className="pt-1 font-semibold text-body text-nv-accent-strong">{item.story.title}</p>
+        <p className="pt-1 font-semibold text-body text-nv-accent">{item.story.title}</p>
         <p className="pt-1 text-caption text-nv-muted">{t('studio.schedWhole')}</p>
       </section>
 

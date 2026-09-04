@@ -25,9 +25,11 @@ async function rantaiUlasan(page: Page) {
   // Ditunggu sampai isinya benar-benar termuat: server mencatat "bab dibuka"
   // saat `getChapter` selesai, dan pindah halaman lebih cepat dari itu membuat
   // jejaknya tidak pernah tertulis.
-  await expect(page.getByRole('link', { name: /komentar/i }).first()).toBeVisible({
-    timeout: 15_000,
-  })
+  // Penandanya **badan bacanya**, bukan tautan komentar: sejak `7v` komentar
+  // hanya hidup di overlay yang tersembunyi sampai teks diketuk, jadi ia
+  // berhenti jadi bukti bahwa isinya termuat. `<article>` hanya dirender setelah
+  // `getChapter` selesai — dan itu persis peristiwa yang ditunggu di sini.
+  await expect(page.getByRole('article')).toBeVisible({ timeout: 15_000 })
 
   // 2 — Beri rating dari halaman ulasan cerita itu.
   await page.goto('/cerita/ms1/ulasan')

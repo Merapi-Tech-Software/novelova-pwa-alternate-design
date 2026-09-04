@@ -13,7 +13,7 @@ export interface CoinChipProps {
 /**
  * Angka koin dengan ikonnya.
  *
- * Ikon memakai `--nv-coin-icon` (nilai asli PRD), teksnya memakai `--nv-coin`
+ * Ikon memakai `--nv-gold-line` (nilai asli PRD), teksnya memakai `--nv-gold`
  * yang dinaikkan kontrasnya — emas yang enak jadi ikon tidak lolos AA sebagai
  * teks (architecture.md §9.1).
  */
@@ -24,12 +24,12 @@ export function CoinChip({ amount, format = 'compact', size = 'md', className }:
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1 font-semibold text-nv-coin tabular-nums',
+        'inline-flex items-center gap-1 font-semibold text-nv-gold tabular-nums',
         size === 'sm' ? 'text-caption' : 'text-body',
         className,
       )}
     >
-      <Coins size={size === 'sm' ? 12 : 14} className="text-nv-coin-icon" aria-hidden />
+      <Coins size={size === 'sm' ? 12 : 14} className="text-nv-gold-line" aria-hidden />
       {text}
       <span className="sr-only">koin</span>
     </span>

@@ -1,60 +1,48 @@
 import { Link } from 'react-router'
 import type { Story } from '@/api/contracts'
+import { Cover } from '@/components/patterns/Cover'
 import { t } from '@/i18n/t'
 
 /**
- * Banner cerita unggulan · FR-HOME-02.
+ * Banner cerita unggulan · FR-HOME-02 · mockup `7a`.
  *
- * **Seluruh kartu adalah satu `Link`**, dan "Baca sekarang" adalah label di
- * dalamnya — bukan tombol kedua. Prototipe memakai dua handler bertumpuk dan
- * karena itu butuh `stopPropagation()` supaya tidak berpindah halaman dua kali;
- * dengan satu tautan, masalahnya tidak pernah ada. Tombol di dalam tautan juga
- * bukan HTML yang sah.
+ * **Kartu garis rambut, bukan gambar penuh berscrim.** Putaran 7 membalik
+ * bentuknya: sampul kecil 66×88 di kiri, lalu judul serif, satu baris caption,
+ * dan pil `Read now` terisi. Alasannya konsisten dengan seluruh bahasa visualnya
+ * — bayangan dan gambar melebar diganti garis, dan sampul dibiarkan jadi
+ * satu-satunya benda "fisik" di layar.
+ *
+ * **Seluruh kartu adalah satu `Link`**, dan `Read now` adalah label di dalamnya
+ * — bukan tombol kedua. Prototipe memakai dua handler bertumpuk dan karena itu
+ * butuh `stopPropagation()` supaya tidak berpindah halaman dua kali; dengan satu
+ * tautan, masalahnya tidak pernah ada. Tombol di dalam tautan juga bukan HTML
+ * yang sah.
  */
 export function BannerCarousel({ stories }: { stories: Story[] }) {
   return (
     <section
       aria-label={t('home.featured')}
-      className="-mx-4 mb-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mx-4 mb-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {stories.slice(0, 3).map((story) => (
         <Link
           key={story.id}
           to={`/cerita/${story.id}`}
-          className="w-72 shrink-0 snap-start overflow-hidden rounded-nv-lg border border-nv-line bg-nv-card"
+          className="flex w-[17rem] shrink-0 snap-start items-start gap-3.5 rounded-nv-lg border border-nv-line-soft bg-nv-card p-3.5"
         >
-          <div className="relative flex h-36 flex-col justify-end bg-nv-accent-soft p-4">
-            {(story.bannerUrl ?? story.coverUrl) && (
-              <img
-                src={story.bannerUrl ?? story.coverUrl ?? ''}
-                alt=""
-                loading="lazy"
-                className="absolute inset-0 size-full object-cover"
-              />
-            )}
-            {/* Gradien supaya judul tetap terbaca di atas gambar apa pun. */}
-            <span
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-nv-scrim to-transparent"
-            />
-            <div className="relative">
-              <p className="text-caption tracking-widest text-nv-on-scrim/85 uppercase">
-                {story.badge ?? t('home.featuredKicker')}
-              </p>
-              <p className="pt-1 font-display text-page leading-tight font-bold text-nv-on-scrim">
-                {story.title}
-              </p>
-            </div>
-          </div>
+          <Cover src={story.coverUrl} title={story.title} className="w-[66px]" />
 
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <span className="min-w-0 truncate text-caption text-nv-muted">
-              {story.genres.join(' / ')} · ★ {story.stats.rating.toFixed(1)}
+          <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+            <span className="line-clamp-2 font-display text-section leading-tight font-semibold">
+              {story.title}
             </span>
-            <span className="shrink-0 rounded-nv-pill border border-nv-accent px-3 py-1 text-caption font-semibold text-nv-accent-strong">
+            <span className="line-clamp-2 text-caption text-nv-muted">
+              {story.badge ?? t('home.featuredKicker')} · {story.genres.join(' / ')}
+            </span>
+            <span className="mt-1.5 rounded-nv-pill bg-nv-accent px-4 py-2 text-caption font-bold text-nv-card">
               {t('home.readNow')}
             </span>
-          </div>
+          </span>
         </Link>
       ))}
     </section>

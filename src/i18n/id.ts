@@ -40,6 +40,14 @@ export const id = {
   },
 
   reader: {
+    // Putaran 7 · ruang baca Type A.
+    chapterLabel: (n: number) => `Bab ${n}`,
+    tapHint: 'Ketuk teks sekali lagi untuk menyembunyikan',
+    // Label tombol di bilah bawah — berbeda dari `comments` di bawah, yang
+    // penghitung ("12 komentar"). Satu kunci untuk keduanya membuat salah
+    // satunya salah begitu copy-nya berubah.
+    commentsButton: 'Komentar bab',
+    bookmark: 'Tandai halaman',
     settings: 'Pengaturan baca',
     fontSize: 'Ukuran huruf',
     darkTheme: 'Tema gelap',
@@ -54,6 +62,9 @@ export const id = {
       'Awal babnya ada di bawah. Gerbang pembukaan beserta pilihan koin dan iklan menyusul pada langkah berikutnya.',
     preview: 'Pratinjau',
     chapterOf: (n: number, total: number) => `Bab ${n} / ${total}`,
+    /** Bilah atas `7v` — posisi **dan** durasi, karena keduanya menjawab "berapa lagi". */
+    chapterPos: (n: number, total: number, minutes: number) =>
+      `Bab ${n} dari ${total} · ${minutes} menit`,
     authorNote: 'Catatan penulis',
 
     // ── gerbang bab terkunci · FR-READ-06/07/17/18 ────────────────────────
@@ -123,6 +134,13 @@ export const id = {
     views: 'Dibaca',
     ratings: 'Rating',
     followers: 'Disimpan',
+    // Empat label strip statistik `7b`. `statChapters` terpisah dari `chapters`
+    // karena yang satu label sel ("Bab") dan yang lain judul section
+    // ("Daftar bab") — memakai satu kunci untuk keduanya membuat salah satunya
+    // salah begitu copy-nya berubah.
+    statChapters: 'Bab',
+    readDuration: 'Durasi baca',
+    status: 'Status',
     save: 'Simpan',
     saved: 'Tersimpan',
     follow: 'Ikuti',
@@ -132,6 +150,15 @@ export const id = {
     share: 'Bagikan',
     report: 'Laporkan',
     shareCopied: 'Tautan cerita disalin.',
+    // Kartu monetisasi `7b`. Angkanya diformat di sini, bukan di komponen:
+    // "koin" adalah satuan yang terlihat pengguna, dan satuan yang tercecer di
+    // JSX adalah satuan yang kelak berbeda antar layar.
+    monetizeFree: (n: number) => `${n} bab pertama gratis`,
+    monetizeRest: (price: number) => `Sisanya mulai ${price.toLocaleString('id-ID')} koin per bab.`,
+    monetizeRestFull: (price: number, full: number) =>
+      `Sisanya mulai ${price.toLocaleString('id-ID')} koin per bab, atau ${full.toLocaleString('id-ID')} koin akses penuh.`,
+    lastRead: 'Terakhir dibaca',
+    resume: 'Lanjutkan',
     readMore: 'Selengkapnya',
     readLess: 'Ringkas',
     chapters: 'Daftar bab',
@@ -191,6 +218,8 @@ export const id = {
     trending: 'Sedang banyak dicari',
     loadMore: 'Muat lagi',
     groupStories: 'Cerita',
+    /** Penghitung di kepala section hasil — `7e` menaruhnya rata kanan. */
+    resultCount: (n: number) => `${n} hasil`,
     groupAuthors: 'Penulis',
     groupTags: 'Tag',
     tagCount: (n: number) => `${n} cerita`,
@@ -284,7 +313,7 @@ export const id = {
 
   home: {
     greeting: (name: string) => `Hi, ${name}`,
-    greetingSub: 'Enjoy your reading today ✨',
+    greetingSub: 'Enjoy your reading today',
     allGenres: 'Semua',
     seeAll: 'See all',
     search: 'Cari',
@@ -326,6 +355,8 @@ export const id = {
     searchPlaceholder: 'Cari judul atau penulis',
     sectionsTitle: 'Tampilkan di beranda',
     sectionsHint: 'Pilihan tersimpan otomatis di perangkat ini.',
+    sectionsDone: 'Selesai',
+    sectionsReset: 'Atur ulang',
   },
 
   action: {

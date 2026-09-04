@@ -1,14 +1,15 @@
+import { Play } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
+import { ModerationActions } from '@/components/patterns/ModerationActions'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Card'
 import { Badge, Chip } from '@/components/ui/Chip'
 import { useChapters, useStory, useToggleFollow, useToggleSave } from '@/hooks/useStory'
 import { t } from '@/i18n/t'
-import { formatCompactCoin as formatCoin } from '@/lib/coin'
 import { ChapterList } from '../components/ChapterList'
-import { ModerationActions } from '../components/ModerationActions'
+import { MonetizationCard } from '../components/MonetizationCard'
 import { RateSheet } from '../components/RateSheet'
 import { StoryActions } from '../components/StoryActions'
 import { StoryHero } from '../components/StoryHero'
@@ -76,9 +77,20 @@ export default function StoryDetailPage() {
   const rows = chapters.data?.pages.flatMap((page) => page.items) ?? []
   const total = chapters.data?.pages[0]?.total ?? 0
   const resume = detail.continueChapterNumber
+  /*
+   * `7b` menuliskan **nomor dan judul** bab terakhir, bukan kalimat tombolnya.
+   * Judulnya hanya ada di daftar bab yang sudah termuat; kalau babnya belum
+   * termuat, bilahnya turun ke nomor saja — bukan memuat halaman tambahan
+   * demi satu baris teks.
+   */
+  const lastRead =
+    rows.find((c) => c.id === detail.continueChapterId) ??
+    (resume === null ? undefined : { number: resume, title: '' })
 
   return (
-    <div>
+    // Ruang bawah tambahan: `AppShell` sudah menyisakan ruang untuk bilah nav
+    // dan FAB, tetapi bilah lengket di halaman ini menumpuk di atas keduanya.
+    <div className="pb-20">
       <StoryHero story={detail} />
 
       <StoryActions
@@ -87,27 +99,23 @@ export default function StoryDetailPage() {
         onToggleFollow={() => toggleFollow.mutate()}
       />
 
-      {/* Tombol utama: melanjutkan bila pernah membaca, memulai bila belum. */}
-      {rows.length > 0 && (
-        <Link
-          to={`/cerita/${detail.id}/bab/${detail.continueChapterId ?? rows[0]?.id}`}
-          className="mb-5 flex h-13 w-full items-center justify-center rounded-nv-pill bg-nv-accent px-6 text-card font-semibold text-nv-card transition hover:bg-nv-accent-strong"
-        >
-          {resume ? t('story.continueAt')(resume) : t('story.startReading')}
-        </Link>
-      )}
-
       <section className="mb-5">
-        <p className={expanded ? 'text-body' : 'line-clamp-3 text-body'}>{detail.synopsis}</p>
+        {/* Sinopsis **serif**: ia bagian dari ceritanya, bukan keterangan aplikasi
+            tentang dirinya (brief §2). */}
+        <p className={expanded ? 'font-display text-card' : 'line-clamp-3 font-display text-card'}>
+          {detail.synopsis}
+        </p>
         <button
           type="button"
           aria-expanded={expanded}
           onClick={() => setExpanded((on) => !on)}
-          className="pt-1 text-caption font-semibold text-nv-accent-strong underline underline-offset-4"
+          className="pt-1 text-caption font-semibold text-nv-accent underline underline-offset-4"
         >
           {expanded ? t('story.readLess') : t('story.readMore')}
         </button>
       </section>
+
+      <MonetizationCard story={detail} />
 
       {/* Status dan harga sebagai lencana, genre sebagai pil — dua kosakata
           berbeda yang tidak boleh terbaca sebagai satu deret (FR-DETAIL-06). */}
@@ -119,10 +127,7 @@ export default function StoryDetailPage() {
         <Button variant="secondary" onClick={() => setRating(true)}>
           {myRating.data ? t('social.rated')(myRating.data.stars) : t('social.rate')}
         </Button>
-        <Link
-          to={`/cerita/${detail.id}/ulasan`}
-          className="text-body text-nv-accent-strong underline"
-        >
+        <Link to={`/cerita/${detail.id}/ulasan`} className="text-body text-nv-accent underline">
           {t('social.allReviews')}
         </Link>
         {/* Tombol Report prototipe tidak pernah punya handler (FR-SOCIAL-07);
@@ -151,9 +156,11 @@ export default function StoryDetailPage() {
           <Badge tone="accent">{MONETIZE_LABEL[detail.monetizeType] ?? detail.monetizeType}</Badge>
           <Badge tone="neutral">{detail.audience}</Badge>
           <Badge tone="neutral">{detail.language}</Badge>
-          {detail.fullAccessCoins !== null && (
-            <Badge tone="coin">{formatCoin(detail.fullAccessCoins)} koin · akses penuh</Badge>
-          )}
+          {/*
+            Harga akses penuh **tidak diulang di sini** — kartu monetisasi di atas
+            sudah menyebutnya, dan satu angka uang yang tampil dua kali di satu
+            layar adalah dua tempat yang bisa berselisih.
+          */}
         </div>
         <div className="flex flex-wrap gap-2">
           {detail.genres.map((genre) => (
@@ -171,6 +178,38 @@ export default function StoryDetailPage() {
         storyId={detail.id}
         chapters={rows}
       />
+
+      {/*
+        Bilah bawah lengket `7b`. **`bottom-[var(--nv-bottom-nav)]`, bukan
+        `bottom-0`** — di `<1024` bilah navigasi juga menempel di dasar layar,
+        dan dua bilah `fixed bottom-0` saling menutupi persis di lebar yang
+        paling banyak dipakai (`CLAUDE.md` §8). Menaikkan `z-index` hanya
+        menukar siapa yang tertutup.
+
+        Isinya digandakan di ruang statis setinggi bilahnya supaya baris terakhir
+        daftar bab tidak pernah tertutup.
+      */}
+      {rows.length > 0 && (
+        <div className="fixed inset-x-0 bottom-[var(--nv-bottom-nav)] z-30 border-nv-line border-t bg-nv-card/95 backdrop-blur lg:bottom-0">
+          <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="nv-section-label">{t('story.lastRead')}</p>
+              <p className="truncate pt-0.5 font-display text-card font-semibold">
+                {lastRead
+                  ? `Bab ${lastRead.number}${lastRead.title ? ` · ${lastRead.title}` : ''}`
+                  : t('story.startReading')}
+              </p>
+            </div>
+            <Link
+              to={`/cerita/${detail.id}/bab/${detail.continueChapterId ?? rows[0]?.id}`}
+              className="flex shrink-0 items-center gap-1.5 rounded-nv-pill bg-nv-accent px-5 py-3 text-body font-bold text-nv-card"
+            >
+              <Play size={13} className="fill-current" aria-hidden />
+              {t('story.resume')}
+            </Link>
+          </div>
+        </div>
+      )}
 
       <ChapterList
         story={detail}

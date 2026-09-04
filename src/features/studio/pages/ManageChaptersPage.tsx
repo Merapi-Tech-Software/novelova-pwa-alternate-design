@@ -226,7 +226,7 @@ export default function ManageChaptersPage() {
       </fieldset>
 
       {board.data && board.data.notices.length > 0 && (
-        <ul className="grid gap-2 pt-3">
+        <ul className="grid grid-cols-1 gap-2 pt-3">
           {board.data.notices.map((notice) => (
             <li
               key={notice.id}
@@ -235,7 +235,7 @@ export default function ManageChaptersPage() {
               <span className="min-w-0 text-caption text-nv-text">{notice.text}</span>
               <Link
                 to={notice.href}
-                className="shrink-0 text-caption font-semibold text-nv-accent-strong underline"
+                className="shrink-0 text-caption font-semibold text-nv-accent underline"
               >
                 {notice.actionLabel}
               </Link>
@@ -272,7 +272,7 @@ export default function ManageChaptersPage() {
           >
             {(data) => (
               <>
-                <div className="grid gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5">
                   {data.items.map((chapter) => (
                     <ChapterRow
                       key={chapter.id}

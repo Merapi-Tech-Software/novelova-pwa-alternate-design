@@ -25,6 +25,20 @@ function renderReader(chapterId: string) {
   )
 }
 
+/**
+ * Putaran 7 Type A: chrome **tersembunyi sejak awal**, dan satu ketukan pada
+ * teks membukanya (`7u`/`7v`). Bilah atas dan navigasi bawah karena itu tidak
+ * ada sampai layar diketuk — test yang mencarinya harus mengetuk lebih dulu,
+ * persis seperti pembacanya.
+ *
+ * Bab **terkunci** dikecualikan: bilah atasnya selalu terlihat (`7x`), jadi
+ * test bab terkunci tidak perlu memanggil ini.
+ */
+async function bukaKontrol() {
+  const badan = await screen.findByRole('article')
+  fireEvent.click(badan)
+}
+
 describe('ruang baca · FR-READ-01 sampai FR-READ-06', () => {
   it('bab gratis tampil utuh beserta bilah atasnya', async () => {
     renderReader('s1-c1')
@@ -32,9 +46,20 @@ describe('ruang baca · FR-READ-01 sampai FR-READ-06', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Perjanjian Malam Itu' }),
     ).toBeInTheDocument()
+
+    // Sebelum diketuk, kontrolnya memang belum ada — itu inti Type A.
+    expect(screen.queryByRole('button', { name: 'Pengaturan baca' })).not.toBeInTheDocument()
+
+    await bukaKontrol()
     expect(screen.getByRole('button', { name: 'Pengaturan baca' })).toBeInTheDocument()
-    // Posisinya tampil dua kali: bilah atas dan navigasi bawah (FR-READ-15).
-    expect(screen.getAllByText('Bab 1 / 120')).toHaveLength(2)
+    // Posisinya tetap tampil dua kali (FR-READ-15), tetapi **formatnya berbeda**
+    // sejak `7v`: bilah atas membawa judul cerita + posisi + durasi, navigasi
+    // bawah membawa posisi ringkasnya. Dua kalimat berbeda untuk dua tempat yang
+    // menjawab pertanyaan berbeda — "aku di buku mana, berapa lagi" versus
+    // "aku bisa ke mana".
+    expect(screen.getByText('Bab 1 dari 120 · 8 menit')).toBeInTheDocument()
+    expect(screen.getByText('Cinta di Balik Kontrak')).toBeInTheDocument()
+    expect(screen.getByText('Bab 1 / 120')).toBeInTheDocument()
   })
 
   it('bab terkunci hanya mengirim pratinjau, bukan naskah lengkap', async () => {
@@ -47,6 +72,7 @@ describe('ruang baca · FR-READ-01 sampai FR-READ-06', () => {
 
   it('panel pengaturan tertutup benar-benar hilang, dan aria-expanded ikut', async () => {
     renderReader('s1-c1')
+    await bukaKontrol()
     const toggle = await screen.findByRole('button', { name: 'Pengaturan baca' })
 
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
@@ -59,6 +85,7 @@ describe('ruang baca · FR-READ-01 sampai FR-READ-06', () => {
 
   it('mengubah ukuran huruf langsung menempel ke elemen akar', async () => {
     renderReader('s1-c1')
+    await bukaKontrol()
     await userEvent.click(await screen.findByRole('button', { name: 'Pengaturan baca' }))
 
     // `fireEvent`, bukan `userEvent`: jsdom tidak menggeser `input[type=range]`
@@ -120,6 +147,7 @@ describe('navigasi bab · FR-READ-15', () => {
     await screen.findByRole('heading', { level: 1, name: 'Perjanjian Malam Itu' })
 
     // Ada, tetapi mati — tata letaknya tetap sama di bab mana pun.
+    await bukaKontrol()
     expect(screen.getByRole('button', { name: 'Bab sebelumnya' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Bab berikutnya' })).toBeEnabled()
   })
@@ -132,14 +160,27 @@ describe('navigasi bab · FR-READ-15', () => {
     ).toBeInTheDocument()
   })
 
-  it('baris reaksi dan tautan komentar ada di akhir bab terbuka', async () => {
+  it('komentar hanya di bilah bawah, tidak pernah di akhir bab', async () => {
     renderReader('s1-c1')
 
+    // Reaksi tetap di akhir bab — yang pindah hanya komentarnya.
     expect(await screen.findByRole('button', { name: 'Suka' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /komentar/ })).toHaveAttribute(
-      'href',
-      '/cerita/s1/bab/s1-c1/komentar',
-    )
+
+    // Brief §7: **satu-satunya** tempatnya baris kedua bilah bawah. Komentar di
+    // ujung teks hanya bisa dicapai dengan menggulir melewati seluruh bab, dan
+    // pembaca yang sampai ke sana sudah kehilangan tempatnya.
+    expect(screen.queryByRole('link', { name: /komentar/i })).not.toBeInTheDocument()
+
+    // Dan di overlay ia **tombol yang membuka lembar**, bukan tautan yang
+    // berpindah halaman (`7w`): posisi baca tidak pernah hilang karena ruang
+    // bacanya tetap terpasang di belakang lembarnya.
+    await bukaKontrol()
+    const tombol = screen.getByRole('button', { name: /komentar bab/i })
+    expect(tombol).toBeInTheDocument()
+
+    await userEvent.click(tombol)
+    expect(await screen.findByRole('dialog', { name: /komentar bab/i })).toBeInTheDocument()
+    expect(screen.getByRole('article')).toBeInTheDocument()
   })
 })
 

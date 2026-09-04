@@ -145,7 +145,7 @@ export default function StudioPage() {
           title={t('studio.joinTitle')}
           description={t('studio.joinBody')}
           secondary={
-            <Link to="/bantuan" className="text-body text-nv-accent-strong underline">
+            <Link to="/bantuan" className="text-body text-nv-accent underline">
               {t('studio.printHistory')}
             </Link>
           }
@@ -211,16 +211,16 @@ export default function StudioPage() {
       </dl>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pt-3">
-        <Link to="/karya/cetak" className="text-body text-nv-accent-strong underline">
+        <Link to="/karya/cetak" className="text-body text-nv-accent underline">
           {t('studio.printHistory')}
         </Link>
-        <Link to="/penulis/analitik" className="text-body text-nv-accent-strong underline">
+        <Link to="/penulis/analitik" className="text-body text-nv-accent underline">
           {t('studio.earnings')}
         </Link>
-        <Link to="/karya/jadwal" className="text-body text-nv-accent-strong underline">
+        <Link to="/karya/jadwal" className="text-body text-nv-accent underline">
           {t('studio.schedule')}
         </Link>
-        <Link to="/karya/tinjauan" className="text-body text-nv-accent-strong underline">
+        <Link to="/karya/tinjauan" className="text-body text-nv-accent underline">
           {t('studio.reviewQueue')}
         </Link>
       </div>
@@ -232,7 +232,7 @@ export default function StudioPage() {
               title={t('studio.emptyTitle')}
               description={t('studio.emptyBody')}
               secondary={
-                <Link to="/karya/baru" className="text-body text-nv-accent-strong underline">
+                <Link to="/karya/baru" className="text-body text-nv-accent underline">
                   {t('studio.newStory')}
                 </Link>
               }
@@ -275,7 +275,7 @@ export default function StudioPage() {
               >
                 {(data) => (
                   <>
-                    <div className="grid gap-2.5">
+                    <div className="grid grid-cols-1 gap-2.5">
                       {data.items.map((item) => (
                         <StudioCard
                           key={item.story.id}

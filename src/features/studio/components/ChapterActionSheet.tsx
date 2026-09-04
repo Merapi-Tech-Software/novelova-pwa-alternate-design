@@ -123,7 +123,7 @@ export function ChapterActionSheet({
               <Link
                 to={action.to}
                 onClick={onClose}
-                className="block py-3 text-body text-nv-text hover:text-nv-accent-strong"
+                className="block py-3 text-body text-nv-text hover:text-nv-accent"
               >
                 {action.label}
               </Link>

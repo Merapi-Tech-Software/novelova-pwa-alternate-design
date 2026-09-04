@@ -62,7 +62,7 @@ function SignupForm({ profile: loaded }: { profile: AuthorProfile }) {
           satu halaman membuat pembaca layar mengumumkan dua judul berbeda. */}
       <p className="text-body text-nv-muted">{t('studio.signupBody')}</p>
 
-      <p className="pt-3 font-semibold text-body text-nv-accent-strong">
+      <p className="pt-3 font-semibold text-body text-nv-accent">
         {tier === 'verified'
           ? t('studio.tierVerified')
           : tier === 'registered'
@@ -70,7 +70,7 @@ function SignupForm({ profile: loaded }: { profile: AuthorProfile }) {
             : t('studio.tierNone')}
       </p>
 
-      <div className="grid gap-2.5 pt-4">
+      <div className="grid grid-cols-1 gap-2.5 pt-4">
         <Requirement
           checked={terms}
           onChange={setTerms}
@@ -110,7 +110,7 @@ function SignupForm({ profile: loaded }: { profile: AuthorProfile }) {
       {!terms && <p className="pt-2 text-caption text-nv-danger">{t('studio.signupNeedTerms')}</p>}
 
       <p className="pt-4 text-center">
-        <Link to="/karya" className="text-body text-nv-accent-strong underline">
+        <Link to="/karya" className="text-body text-nv-accent underline">
           {t('studio.backToStudio')}
         </Link>
       </p>

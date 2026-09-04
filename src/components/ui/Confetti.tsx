@@ -11,9 +11,9 @@ export interface ConfettiProps {
 
 const DEFAULT_PALETTE = [
   'var(--nv-accent)',
-  'var(--nv-accent-2)',
-  'var(--nv-coin-icon)',
-  'var(--nv-accent-strong)',
+  'var(--nv-gold-line)',
+  'var(--nv-gold-line)',
+  'var(--nv-accent)',
 ] as const
 
 /**

@@ -1,13 +1,16 @@
-import { Heart, MessageSquare } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { api } from '@/api/client'
 import { isApiError, VISIBLE_CODES } from '@/api/errors'
 import { AdSlot } from '@/components/patterns/AdSlot'
+import { ChapterComments } from '@/components/patterns/ChapterComments'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Card'
+import { Sheet } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
+import { useChapter } from '@/hooks/useChapter'
 import { useStory } from '@/hooks/useStory'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
@@ -20,7 +23,6 @@ import { ChapterEnd, ChapterNav } from '../components/ChapterNav'
 import { InsufficientCoins } from '../components/InsufficientCoins'
 import { ReaderBar } from '../components/ReaderBar'
 import { ReaderSettingsPanel } from '../components/ReaderSettingsPanel'
-import { useChapter } from '../hooks/useChapter'
 import { useReadingProgress } from '../hooks/useReadingProgress'
 import { useTts } from '../hooks/useTts'
 import { useAdQuota, useUnlockChapter, useUnlockOptions } from '../hooks/useUnlock'
@@ -58,6 +60,24 @@ export default function ReaderPage() {
   const autoTried = useRef<string | null>(null)
   const gateRef = useRef<HTMLDivElement>(null)
 
+  /*
+   * **Type A: chrome tersembunyi sejak awal** (`7u`), dan satu ketukan pada teks
+   * membukanya (`7v`).
+   *
+   * Bab **terkunci** dikecualikan: bilah atasnya selalu terlihat (`7x`).
+   * Alasannya bukan estetika — tanpa bilah, bab terkunci tidak punya tombol
+   * kembali sampai pembaca menebak bahwa layar bisa diketuk.
+   */
+  const [chromeOpen, setChromeOpen] = useState(false)
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  /*
+   * Urutan dan jumlah muat komentar di **keadaan lokal**, bukan URL: lembar ini
+   * dibuka di atas ruang baca dan tidak punya alamatnya sendiri untuk dibagikan.
+   * Halaman penuhnya (`7t`) yang menyimpannya di URL.
+   */
+  const [commentSort, setCommentSort] = useState('newest')
+  const [commentSize, setCommentSize] = useState(20)
+
   const chapter = useChapter(storyId, chapterId)
   const story = useStory(storyId)
   const wallet = useWallet()
@@ -70,7 +90,7 @@ export default function ReaderPage() {
 
   const body = chapter.data?.owned ? (chapter.data.content[0]?.body ?? []) : []
   const tts = useTts(sentencesOf(body))
-  useReadingProgress(storyId, chapterId, chapter.data?.owned === true)
+  const readPct = useReadingProgress(storyId, chapterId, chapter.data?.owned === true)
 
   const balance = wallet.data?.balance ?? 0
   const adLeft = Math.max(0, (quota.data?.max ?? 0) - (quota.data?.used ?? 0))
@@ -226,19 +246,51 @@ export default function ReaderPage() {
 
   return (
     <div>
-      <ReaderBar
-        chapter={data}
-        storyId={storyId ?? ''}
-        total={total}
-        settingsOpen={settingsOpen}
-        onToggleSettings={() => setSettingsOpen((on) => !on)}
-        tts={tts}
-      />
+      {(chromeOpen || locked) && (
+        <ReaderBar
+          chapter={data}
+          storyId={storyId ?? ''}
+          total={total}
+          settingsOpen={settingsOpen}
+          onToggleSettings={() => setSettingsOpen((on) => !on)}
+          tts={tts}
+          locked={locked}
+        />
+      )}
 
       <ReaderSettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      <article className="mx-auto max-w-[68ch] px-4 py-6 lg:pr-80">
-        <h1 className="mb-5 font-display text-page leading-tight font-bold">{data.title}</h1>
+      {/*
+        Ketukan pada teks membuka/menutup kontrol. Ketukan yang mendarat di
+        tautan, tombol, atau kolom **tidak** ikut menutup: kalau ikut, menekan
+        "Selengkapnya" atau tombol di dalam gerbang akan menyembunyikan kontrol
+        pada saat yang sama — dua hal terjadi dari satu ketukan.
+        `onClick` di elemen non-interaktif, jadi ia bukan target keyboard;
+        pembaca papan ketik punya bilahnya lewat `Escape`/fokus, dan Type B
+        memang tidak pernah menyembunyikannya.
+      */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: pengganti keyboard-nya adalah bilah yang memang tidak pernah disembunyikan untuk bab terkunci */}
+      <article
+        /*
+          Ruang untuk bilah melayang **selalu disediakan**, bukan ditambahkan
+          saat kontrolnya muncul. Menambahkannya saat diketuk menggeser teks
+          ~290px di bawah jari pembaca — mengetuk untuk *melihat* kontrol tidak
+          boleh memindahkan yang sedang dibaca. `7u` juga menggambar ruang lega
+          di atas pembuka bab meski bilahnya belum ada.
+        */
+        className="mx-auto max-w-[68ch] px-4 pt-24 pb-36 lg:pr-80"
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest('a,button,input,select,textarea,[role="button"]'))
+            return
+          setChromeOpen((on) => !on)
+        }}
+      >
+        {/* Pembuka bab `7u`: label kecil, judul serif, garis emas. */}
+        <p className="nv-section-label text-center">{t('reader.chapterLabel')(data.number)}</p>
+        <h1 className="pt-2 text-center font-display text-page leading-tight font-semibold">
+          {data.title}
+        </h1>
+        <span aria-hidden className="mx-auto mt-4 mb-7 block h-px w-10 bg-nv-gold-line" />
 
         {/* Ditawarkan, bukan dilompati sendiri: pembaca yang membuka bab lagi
             belum tentu ingin melanjutkan dari tempat ia berhenti (FR-READ-16). */}
@@ -323,13 +375,13 @@ export default function ReaderPage() {
               >
                 {liked ? t('reader.liked') : t('reader.like')}
               </Button>
-              <Link
-                to={`/cerita/${storyId}/bab/${data.id}/komentar`}
-                className="inline-flex h-9 items-center gap-1.5 rounded-nv-pill px-3.5 text-caption font-semibold text-nv-muted"
-              >
-                <MessageSquare size={15} aria-hidden />
-                {t('reader.comments')(data.commentCount)}
-              </Link>
+              {/*
+                **Tidak ada tombol komentar di sini.** Brief §7 melarangnya: satu-
+                satunya tempatnya baris kedua bilah bawah (`7v`). Komentar yang
+                diletakkan di ujung teks hanya bisa dicapai dengan menggulir
+                melewati seluruh bab, dan pembaca yang sampai ke sana sudah
+                kehilangan tempatnya.
+              */}
             </div>
 
             <ChapterEnd chapter={data} storyId={storyId ?? ''} onGo={go} />
@@ -346,7 +398,58 @@ export default function ReaderPage() {
         )}
       </article>
 
-      <ChapterNav chapter={data} total={total} onGo={go} />
+      {chromeOpen ? (
+        <>
+          <ChapterNav
+            chapter={data}
+            total={total}
+            onGo={go}
+            settingsOpen={settingsOpen}
+            onToggleSettings={() => setSettingsOpen((on) => !on)}
+            onOpenComments={() => setCommentsOpen(true)}
+            tts={tts}
+          />
+          <p className="pointer-events-none fixed inset-x-0 top-24 z-40 flex justify-center">
+            <span className="rounded-nv-pill bg-nv-accent px-3.5 py-1.5 text-caption font-semibold text-nv-card">
+              {t('reader.tapHint')}
+            </span>
+          </p>
+        </>
+      ) : (
+        /*
+          Satu-satunya yang tersisa saat chrome tersembunyi (`7u`): hairline
+          progres 1,5px di dasar layar. `aria-hidden` — posisi baca sudah
+          diumumkan bilah bawah saat ia dibuka, dan garis yang bergerak tiap
+          gulir akan membanjiri pembaca layar.
+        */
+        <span aria-hidden className="fixed inset-x-0 bottom-0 z-30 block h-[1.5px] bg-nv-line">
+          <span
+            className="block h-full bg-nv-gold-line transition-[width]"
+            style={{ width: `${Math.round(readPct * 100)}%` }}
+          />
+        </span>
+      )}
+
+      {/*
+        Lembar komentar `7w`. **Lembar, bukan navigasi** — ruang bacanya tetap
+        terpasang di belakangnya, jadi posisi gulirnya tidak pernah berpindah:
+        tidak ada yang perlu dipulihkan karena tidak ada yang hilang.
+      */}
+      <Sheet
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        title={t('reader.commentsButton')}
+      >
+        <ChapterComments
+          storyId={storyId ?? ''}
+          chapterId={chapterId ?? ''}
+          composerAt="bottom"
+          sort={commentSort}
+          onSort={setCommentSort}
+          pageSize={commentSize}
+          onMore={setCommentSize}
+        />
+      </Sheet>
 
       <InsufficientCoins
         open={shortBy !== null}

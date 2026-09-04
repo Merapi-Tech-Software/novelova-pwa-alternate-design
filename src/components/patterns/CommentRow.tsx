@@ -1,9 +1,9 @@
 import type { CommentBase } from '@/api/contracts'
 import { SpoilerVeil } from '@/components/patterns/SpoilerVeil'
 import { Button } from '@/components/ui/Button'
+import { useLikeComment } from '@/hooks/useComments'
 import { t } from '@/i18n/t'
 import { formatRelative } from '@/lib/format'
-import { useLikeComment } from '../hooks/useComments'
 import { ModerationActions } from './ModerationActions'
 
 export interface CommentRowProps {

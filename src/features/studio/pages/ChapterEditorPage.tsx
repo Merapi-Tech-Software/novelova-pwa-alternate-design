@@ -341,7 +341,7 @@ function EditorBody({
           </div>
         </Card>
       ) : (
-        <div className="grid gap-4 pt-4">
+        <div className="grid grid-cols-1 gap-4 pt-4">
           <Input
             label={lang === 'id' ? t('chapterEditor.fTitleId') : t('chapterEditor.fTitleEn')}
             value={active.title}

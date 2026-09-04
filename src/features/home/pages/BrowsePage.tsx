@@ -16,15 +16,6 @@ import { SECTION_TITLE, useInfiniteSection } from '../hooks/useSection'
 const PAGE_SIZE = 20
 
 /**
- * Satu kolom di HP, dua sejak 640, tiga sejak 1280.
- *
- * Bukan 2/3/4: barisnya memakai anatomi kanvas — sampul 66px, judul, penulis,
- * meta, dan tombol simpan. Dua kolom di layar ponsel menyisakan ~180px per
- * baris, dan tidak satu pun dari itu muat.
- */
-const GRID = 'grid gap-2 sm:grid-cols-2 xl:grid-cols-3'
-
-/**
  * Lihat semua · FR-HOME-10 · FR-HOME-14 · FR-HOME-15.
  *
  * **Seluruh keadaan saringan hidup di URL.** Itu yang membuat tombol kembali
@@ -117,7 +108,7 @@ export default function BrowsePage() {
           hanya membuat pembaca menebak mana yang mencari apa. */}
       <Link
         to="/cari"
-        className="mb-3 flex items-center gap-2.5 rounded-nv-md border border-nv-line bg-nv-card px-3.5 py-2.5 text-body text-nv-muted"
+        className="mb-4 flex items-center gap-3 rounded-nv-pill border border-nv-line-soft bg-nv-card px-4 py-3 text-body text-nv-muted"
       >
         <Search size={16} aria-hidden />
         {t('home.searchPlaceholder')}
@@ -135,10 +126,11 @@ export default function BrowsePage() {
         />
       )}
 
+      {/* Kerangka **setinggi barisnya** (brief §14), bukan kotak sembarang. */}
       {query.isPending && (
-        <div className={GRID}>
+        <div className="divide-y divide-nv-line">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-28" />
+            <Skeleton key={i} className="my-3.5 h-20" />
           ))}
         </div>
       )}
@@ -155,19 +147,21 @@ export default function BrowsePage() {
         />
       )}
 
-      <div className={GRID}>
-        {items.map((story) => {
+      <ul className="divide-y divide-nv-line">
+        {items.map((story, i) => {
           const read = progress.get(story.id)
           return (
-            <BrowseRow
-              key={story.id}
-              story={story}
-              saved={savedIds.has(story.id)}
-              {...(read ? { progress: read.scrollPct } : {})}
-            />
+            <li key={story.id}>
+              <BrowseRow
+                story={story}
+                saved={savedIds.has(story.id)}
+                rank={i + 1}
+                {...(read ? { progress: read.scrollPct } : {})}
+              />
+            </li>
           )
         })}
-      </div>
+      </ul>
 
       {/* Skeleton di ujung daftar sekaligus pemicu muat berikutnya. */}
       {query.hasNextPage && (

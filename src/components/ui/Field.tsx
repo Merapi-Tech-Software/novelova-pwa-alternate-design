@@ -9,9 +9,27 @@ import type {
 import { useId } from 'react'
 import { cx } from '@/lib/cx'
 
-const CONTROL =
-  'w-full rounded-nv-md border border-nv-line bg-nv-card px-3.5 py-2.5 text-body ' +
-  'placeholder:text-nv-muted focus:border-nv-accent focus:outline-none ' +
+/**
+ * Dua bentuk kolom, brief §1 — dan pembagiannya bukan selera:
+ *
+ * - **Satu baris → garis bawah 1,5px, teks serif.** Judul cerita, nama pena,
+ *   kode voucher, jumlah penarikan: semuanya isian pendek yang dibaca sebagai
+ *   *isi*, bukan sebagai kontrol.
+ * - **Banyak baris → kotak garis rambut membulat.** Sinopsis dan catatan
+ *   penulis butuh batas yang terlihat karena tingginya berubah-ubah.
+ *
+ * Berbeda dari versi sebelumnya, keduanya **tidak** mematikan `outline`: dengan
+ * kolom yang hanya bergaris bawah, perubahan warna garis saja terlalu tipis
+ * sebagai satu-satunya penanda fokus.
+ */
+const CONTROL_LINE =
+  'w-full border-nv-line-input border-b-[1.5px] bg-transparent px-0 py-2 font-display text-card ' +
+  'placeholder:font-ui placeholder:text-body placeholder:text-nv-disabled focus:border-nv-accent ' +
+  'disabled:cursor-not-allowed disabled:opacity-60'
+
+const CONTROL_BOX =
+  'w-full rounded-nv-md border border-nv-line-soft bg-nv-card px-3.5 py-2.5 font-display text-card ' +
+  'placeholder:font-ui placeholder:text-body placeholder:text-nv-disabled focus:border-nv-accent ' +
   'disabled:cursor-not-allowed disabled:opacity-60'
 
 interface FieldShellProps {
@@ -83,7 +101,7 @@ export function Input({ label, hint, error, counter, className, ref, ...rest }: 
           ref={ref}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={cx(CONTROL, error && 'border-nv-danger', className)}
+          className={cx(CONTROL_LINE, error && 'border-nv-danger', className)}
           {...rest}
         />
       )}
@@ -114,7 +132,7 @@ export function TextArea({ label, hint, error, counter, className, ref, ...rest 
           rows={5}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={cx(CONTROL, 'resize-y', error && 'border-nv-danger', className)}
+          className={cx(CONTROL_BOX, 'resize-y', error && 'border-nv-danger', className)}
           {...rest}
         />
       )}
@@ -137,7 +155,7 @@ export function Select({ label, hint, error, options, className, ...rest }: Sele
           id={id}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={cx(CONTROL, 'cursor-pointer', error && 'border-nv-danger', className)}
+          className={cx(CONTROL_LINE, 'cursor-pointer', error && 'border-nv-danger', className)}
           {...rest}
         >
           {options.map((opt) => {
@@ -161,6 +179,15 @@ export interface SearchInputProps {
   placeholder?: string
   label: string
   autoFocus?: boolean
+  /**
+   * `line` — garis bawah di bilah atas pencarian (`7e`).
+   * `box` — pil bergaris rambut di dalam halaman (`7d`, `/pustaka`, studio).
+   *
+   * Dua bentuk karena keduanya menempati tempat berbeda: yang di bilah atas
+   * **adalah** judul halamannya, yang di dalam halaman satu kontrol di antara
+   * kontrol lain.
+   */
+  variant?: 'line' | 'box'
 }
 
 /** Kolom pencarian dengan tombol hapus. Dipakai `FilterableList` dan `/cari`. */
@@ -170,15 +197,25 @@ export function SearchInput({
   placeholder = 'Cari…',
   label,
   autoFocus,
+  variant = 'line',
 }: SearchInputProps) {
+  const box = variant === 'box'
+
   return (
     <div className="relative">
       <Search
         size={16}
         aria-hidden
-        className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3.5 text-nv-muted"
+        className={cx(
+          '-translate-y-1/2 pointer-events-none absolute top-1/2 text-nv-muted',
+          box ? 'left-4' : 'left-0',
+        )}
       />
       <input
+        // `type="search"` dipertahankan: ia yang memberi `role="searchbox"`.
+        // Tombol hapus bawaan peramban yang datang bersamanya disembunyikan di
+        // `base.css` — komponen ini sudah punya tombol hapus sendiri, dan dua
+        // tanda silang bersebelahan bukan pilihan, itu cacat.
         type="search"
         aria-label={label}
         value={value}
@@ -186,14 +223,21 @@ export function SearchInput({
         autoFocus={autoFocus}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className={cx(CONTROL, 'pr-10 pl-10')}
+        className={cx(
+          box
+            ? 'w-full rounded-nv-pill border border-nv-line-soft bg-nv-card py-3 pr-10 pl-11 font-ui text-body placeholder:text-nv-muted'
+            : cx(CONTROL_LINE, 'pr-9 pl-7'),
+        )}
       />
       {value && (
         <button
           type="button"
           aria-label="Hapus pencarian"
           onClick={() => onChange('')}
-          className="-translate-y-1/2 absolute top-1/2 right-3 text-nv-muted hover:text-nv-accent-strong"
+          className={cx(
+            '-translate-y-1/2 absolute top-1/2 text-nv-muted hover:text-nv-text',
+            box ? 'right-4' : 'right-3',
+          )}
         >
           <X size={16} />
         </button>

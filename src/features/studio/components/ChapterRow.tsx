@@ -138,7 +138,7 @@ function Meta({ chapter }: { chapter: AuthorChapter }) {
 
   if (chapter.authorStatus === 'scheduled' && chapter.publishAt) {
     return (
-      <p className="pt-1.5 text-caption text-nv-accent-strong">
+      <p className="pt-1.5 text-caption text-nv-accent">
         {t('chapters.scheduledMeta')(formatDateTime(new Date(chapter.publishAt)))}
       </p>
     )

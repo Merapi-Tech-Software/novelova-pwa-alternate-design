@@ -153,7 +153,7 @@ function AccessBody({ info }: { info: ChapterAccessInfo }) {
         {t('chapterAccess.forChapter')(info.number, info.title)}
       </p>
 
-      <div className="grid gap-2.5 pt-5">
+      <div className="grid grid-cols-1 gap-2.5 pt-5">
         {TYPES.map((type) => {
           const on = access === type.id
           const blocked =
@@ -206,7 +206,7 @@ function AccessBody({ info }: { info: ChapterAccessInfo }) {
         <p className="pt-2">
           <Link
             to="/karya/daftar-penulis"
-            className="text-caption font-semibold text-nv-accent-strong underline"
+            className="text-caption font-semibold text-nv-accent underline"
           >
             {t('chapterAccess.verifyNow')}
           </Link>
@@ -336,7 +336,7 @@ function AccessBody({ info }: { info: ChapterAccessInfo }) {
       <p className="pt-4 text-center">
         <Link
           to={`/karya/${info.storyId}/bab#bab-${info.number}`}
-          className="text-body text-nv-accent-strong underline"
+          className="text-body text-nv-accent underline"
         >
           {t('chapterAccess.back')}
         </Link>

@@ -39,13 +39,34 @@ import { currentUserId } from './session'
  * `publishAt: null` berarti terbit tanpa jadwal, jadi ia **ikut**; yang
  * dikecualikan hanya bab yang tanggalnya masih di depan.
  */
-async function publishedChapters(storyId: string): Promise<ChapterSummary[]> {
+export async function publishedChapters(storyId: string): Promise<ChapterSummary[]> {
   const now = Date.now()
   return (await db.chapters.where('storyId').equals(storyId).toArray())
     .filter(
       (c) => c.state === 'published' && (c.publishAt === null || Date.parse(c.publishAt) <= now),
     )
     .sort((a, b) => a.number - b.number)
+}
+
+/**
+ * Berapa bab yang sudah selesai, dari berapa — **satu definisi, dua pemakai**:
+ * batang progres `/pustaka` dan baris "Lanjut Membaca" di beranda.
+ *
+ * Dipisah jadi fungsi tersendiri justru karena keduanya menampilkan bar yang
+ * sama untuk cerita yang sama: menghitungnya dua kali membuat kedua layar bisa
+ * berbeda tanpa ada yang salah menurut test mana pun.
+ *
+ * Bab yang sudah dihapus penulisnya tidak ikut dihitung selesai — kalau ikut,
+ * cerita bisa tampil 105% selesai.
+ */
+export async function readingCounts(
+  storyId: string,
+  progress: ReadingProgress | undefined,
+): Promise<{ finishedCount: number; total: number; finished: Set<string> }> {
+  const chapters = await publishedChapters(storyId)
+  const published = new Set(chapters.map((c) => c.id))
+  const finished = new Set((progress?.finishedChapterIds ?? []).filter((id) => published.has(id)))
+  return { finishedCount: finished.size, total: chapters.length, finished }
 }
 
 /**
@@ -67,13 +88,7 @@ async function buildItem(
   progress: ReadingProgress | undefined,
 ): Promise<LibraryItem> {
   const chapters = await publishedChapters(story.id)
-  const total = chapters.length
-  const published = new Set(chapters.map((c) => c.id))
-
-  // Bab yang sudah dihapus penulisnya tidak boleh ikut dihitung selesai —
-  // kalau ikut, cerita bisa tampil 105% selesai.
-  const finished = new Set((progress?.finishedChapterIds ?? []).filter((id) => published.has(id)))
-  const finishedCount = finished.size
+  const { finishedCount, total, finished } = await readingCounts(story.id, progress)
 
   const lastChapter = progress?.lastChapterId
     ? chapters.find((c) => c.id === progress.lastChapterId)

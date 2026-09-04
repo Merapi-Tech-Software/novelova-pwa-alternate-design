@@ -3,6 +3,7 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -79,6 +80,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     timer.current = window.setTimeout(() => setToast(null), options?.durationMs ?? TOAST_MS)
   }, [])
 
+  /*
+   * Timer terakhir dibatalkan saat provider dilepas.
+   *
+   * Tanpa ini `setToast` berjalan pada provider yang sudah tidak ada. Di
+   * aplikasi akibatnya cuma no-op, jadi cacatnya tidak pernah terlihat — tetapi
+   * di test ia muncul sebagai kesalahan **setelah environment dibongkar**,
+   * dilaporkan atas nama berkas test yang kebetulan berjalan terakhir, jauh dari
+   * penyebabnya. Suite-nya lulus 543/543 dan tetap keluar dengan kode 1.
+   */
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+
   const api = useMemo<ToastApi>(() => ({ show, dismiss }), [show, dismiss])
 
   return (
@@ -106,7 +118,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     toast.action?.onClick()
                     dismiss()
                   }}
-                  className="shrink-0 text-nv-accent-strong underline underline-offset-2"
+                  className="shrink-0 text-nv-accent underline underline-offset-2"
                 >
                   {toast.action.label}
                 </button>

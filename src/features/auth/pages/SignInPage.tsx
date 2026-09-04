@@ -113,7 +113,7 @@ export default function SignInPage() {
         />
         <Link
           to="/lupa-sandi"
-          className="shrink-0 pt-1 text-caption font-semibold text-nv-accent-strong underline underline-offset-2"
+          className="shrink-0 pt-1 text-caption font-semibold text-nv-accent underline underline-offset-2"
         >
           {t('auth.forgot')}
         </Link>
@@ -131,10 +131,7 @@ export default function SignInPage() {
 
       <p className="mt-6 text-center text-caption text-nv-muted">
         {t('auth.noAccount')}{' '}
-        <Link
-          to="/daftar"
-          className="font-semibold text-nv-accent-strong underline underline-offset-2"
-        >
+        <Link to="/daftar" className="font-semibold text-nv-accent underline underline-offset-2">
           {t('auth.register')}
         </Link>
       </p>

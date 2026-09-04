@@ -40,9 +40,7 @@ export default function ForgotPasswordPage() {
             aria-current={index === 0 ? 'step' : undefined}
             className={cx(
               'flex-1 rounded-nv-md border px-2 py-2 text-center',
-              index === 0
-                ? 'border-nv-accent text-nv-accent-strong'
-                : 'border-nv-line text-nv-muted',
+              index === 0 ? 'border-nv-accent text-nv-accent' : 'border-nv-line text-nv-muted',
             )}
           >
             <span className="block font-display text-card font-semibold tabular-nums">
@@ -86,10 +84,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       <p className="mt-6 text-center text-caption text-nv-muted">
-        <Link
-          to="/masuk"
-          className="font-semibold text-nv-accent-strong underline underline-offset-2"
-        >
+        <Link to="/masuk" className="font-semibold text-nv-accent underline underline-offset-2">
           {t('auth.signIn')}
         </Link>
       </p>

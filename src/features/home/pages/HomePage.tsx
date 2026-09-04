@@ -1,8 +1,10 @@
 import { Bell, Search } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { AdSlot } from '@/components/patterns/AdSlot'
+import { CoinChip } from '@/components/patterns/CoinChip'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
 import type { SectionKey } from '@/stores/homeSections'
 import { useHomeSections } from '@/stores/homeSections'
@@ -39,9 +41,14 @@ const SWITCH_OF: Record<string, SectionKey> = {
  * kunjungan** (FR-HOME-13), tetapi tombol kembali dan tautan yang dibagikan
  * tetap membawa saringan yang sama.
  */
-/** Bentuk `IconButton` varian ghost, untuk ikon yang sebenarnya tautan. */
+/**
+ * Bentuk `IconButton` varian ghost, untuk ikon yang sebenarnya tautan.
+ *
+ * Tanpa kotak sejak putaran 7 (`7a`): ikon di kepala berdiri sendiri. Target
+ * ketuknya tetap 44px lewat `size-11` — yang hilang cuma garisnya.
+ */
 const ICON_LINK =
-  'grid size-9 shrink-0 place-items-center rounded-nv-pill border border-nv-line bg-nv-card text-nv-muted transition hover:text-nv-accent-strong'
+  'grid size-11 shrink-0 place-items-center rounded-nv-pill text-nv-text transition hover:bg-nv-accent-soft'
 
 export default function HomePage() {
   const [params, setParams] = useSearchParams()
@@ -49,6 +56,7 @@ export default function HomePage() {
   const tabs = useGenreTabs()
   const feed = useHomeFeed(tab)
   const profile = useSession((s) => s.profile)
+  const wallet = useWallet()
   const visible = useHomeSections((s) => s.visible)
 
   function pickTab(next: string | null) {
@@ -75,36 +83,53 @@ export default function HomePage() {
 
   return (
     <div>
-      <header className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-display text-page font-bold">
+      {/* Sapaan dan baris ikon berbagi satu baris; **subjudulnya turun ke bawah
+          keduanya** dan memakai lebar penuh (`7a`). Menaruh subjudul di dalam
+          kolom kiri membuatnya terjepit chip koin + tiga ikon dan pecah jadi
+          dua baris di 390px. */}
+      <header className="mb-5">
+        <div className="flex items-center justify-between gap-2">
+          {/* Tanpa `truncate`, dan mengecil di bawah 360px: di 320 baris ikon
+              memakan 192px, dan sapaan yang dipotong jadi `Hi,…` adalah `<h1>`
+              halaman yang hilang — lebih buruk daripada huruf yang lebih kecil. */}
+          <h1 className="min-w-0 font-display text-section font-bold min-[360px]:text-page">
             {t('home.greeting')(profile?.displayName.split(' ')[0] ?? 'Pembaca')}
           </h1>
-          <p className="text-body text-nv-muted">{t('home.greetingSub')}</p>
-        </div>
 
-        {/* Urutan ikon mengikat: Cari → Notifikasi → Pengaturan (FR-HOME-01).
+          {/* Urutan ikon mengikat: Cari → Notifikasi → Pengaturan (FR-HOME-01).
             Dua yang pertama **tautan**, bukan tombol: keduanya berpindah halaman,
             jadi klik-tengah dan "buka di tab baru" harus tetap bekerja. */}
-        <div className="flex shrink-0 items-center gap-1">
-          <Link
-            to="/cari"
-            aria-label={t('home.search')}
-            title={t('home.search')}
-            className={ICON_LINK}
-          >
-            <Search size={18} aria-hidden />
-          </Link>
-          <Link
-            to="/notifikasi"
-            aria-label={t('home.notifications')}
-            title={t('home.notifications')}
-            className={ICON_LINK}
-          >
-            <Bell size={18} aria-hidden />
-          </Link>
-          <SectionSettings />
+          <div className="flex shrink-0 items-center gap-0.5">
+            {/* Chip saldo — titik saldo "beranda" FR-WALLET-17 sejak `7a`
+              memindahkannya dari FAB ke kepala. Angkanya dari `useWallet` yang
+              sama dengan ruang baca dan halaman isi koin. */}
+            {wallet.data && (
+              <CoinChip
+                amount={wallet.data.balance}
+                size="sm"
+                className="mr-1 rounded-nv-pill border border-nv-line-soft px-2.5 py-1.5"
+              />
+            )}
+            <Link
+              to="/cari"
+              aria-label={t('home.search')}
+              title={t('home.search')}
+              className={ICON_LINK}
+            >
+              <Search size={18} aria-hidden />
+            </Link>
+            <Link
+              to="/notifikasi"
+              aria-label={t('home.notifications')}
+              title={t('home.notifications')}
+              className={ICON_LINK}
+            >
+              <Bell size={18} aria-hidden />
+            </Link>
+            <SectionSettings />
+          </div>
         </div>
+        <p className="pt-0.5 text-body text-nv-muted">{t('home.greetingSub')}</p>
       </header>
 
       {visible['sec-genres'] && (

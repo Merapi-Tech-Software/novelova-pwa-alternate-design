@@ -45,7 +45,10 @@ export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps
     : `/cerita/${story.id}`
 
   return (
-    <article className="flex gap-3 rounded-nv-lg border border-nv-line bg-nv-card p-3">
+    // `<li>` karena ia hidup di dalam `<ul>` sejak `7c` mengubah rak jadi daftar
+    // berpembatas. Kartu bergaris dan berlatar sendiri dihapus: brief §1 menaruh
+    // konten berulang di daftar, bukan di kartu.
+    <li className="flex gap-3 py-4">
       <Link to={`/cerita/${story.id}`} className="relative shrink-0">
         {story.coverUrl ? (
           <img
@@ -137,6 +140,6 @@ export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps
           </IconButton>
         </div>
       </div>
-    </article>
+    </li>
   )
 }

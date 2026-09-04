@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import type { SearchResult } from '@/api/contracts'
 import { StoryCard } from '@/components/patterns/StoryCard'
 import { Chip } from '@/components/ui/Chip'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { t } from '@/i18n/t'
 
 /**
@@ -15,10 +16,24 @@ import { t } from '@/i18n/t'
  * Tujuan tiap hasil berbeda dan disengaja: cerita menuju detailnya, penulis
  * menuju profilnya, tag menuju daftar yang tersaring tag itu.
  */
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({
+  title,
+  count,
+  children,
+}: {
+  title: string
+  count?: string
+  children: React.ReactNode
+}) {
   return (
     <section className="mb-6">
-      <h2 className="mb-2 font-display text-section font-semibold">{title}</h2>
+      <SectionHeader
+        label={title}
+        className="mb-1"
+        {...(count
+          ? { action: <span className="shrink-0 text-caption text-nv-muted">{count}</span> }
+          : {})}
+      />
       {children}
     </section>
   )
@@ -38,18 +53,20 @@ export function SearchResults({
   return (
     <div>
       {stories.length > 0 && (
-        <Group title={t('search.groupStories')}>
-          <div className="grid gap-2 sm:grid-cols-2">
+        <Group title={t('search.groupStories')} count={t('search.resultCount')(stories.length)}>
+          <ul className="divide-y divide-nv-line">
             {stories.map((story) => (
-              <StoryCard key={story.id} story={story} variant="list" />
+              <li key={story.id}>
+                <StoryCard story={story} variant="list" />
+              </li>
             ))}
-          </div>
+          </ul>
         </Group>
       )}
 
       {result.authors.length > 0 && (
         <Group title={t('search.groupAuthors')}>
-          <ul className="divide-y divide-nv-line-soft">
+          <ul className="divide-y divide-nv-line">
             {result.authors.map((author) => (
               <li key={author.id}>
                 <Link
@@ -58,7 +75,7 @@ export function SearchResults({
                 >
                   <span
                     aria-hidden
-                    className="grid size-9 shrink-0 place-items-center rounded-nv-pill bg-nv-accent-soft font-semibold text-caption text-nv-accent-strong"
+                    className="grid size-10 shrink-0 place-items-center rounded-nv-pill bg-nv-paper-2 font-display text-card font-semibold text-nv-text"
                   >
                     {author.displayName.slice(0, 1)}
                   </span>
@@ -80,7 +97,7 @@ export function SearchResults({
 
       {result.tags.length > 0 && (
         <Group title={t('search.groupTags')}>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-3">
             {result.tags.map(({ tag, storyCount }) => (
               // Menjalankan pencarian tag itu di tempat, bukan berpindah
               // halaman: tujuannya sama, dan kolomnya ikut terisi.

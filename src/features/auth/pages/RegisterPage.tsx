@@ -145,18 +145,18 @@ export default function RegisterPage() {
           aria-hidden
           className={cx(
             'mt-0.5 grid size-5 shrink-0 place-items-center rounded-nv-sm border',
-            agree ? 'border-nv-accent bg-nv-accent-soft text-nv-accent-strong' : 'border-nv-line',
+            agree ? 'border-nv-accent bg-nv-accent-soft text-nv-accent' : 'border-nv-line',
           )}
         >
           {agree && <Check size={13} strokeWidth={3} />}
         </span>
         <span className="text-nv-muted">
           {t('auth.agreePrefix')}{' '}
-          <Link to="/legal/ketentuan" className="font-semibold text-nv-accent-strong underline">
+          <Link to="/legal/ketentuan" className="font-semibold text-nv-accent underline">
             {t('auth.terms')}
           </Link>{' '}
           {t('auth.and')}{' '}
-          <Link to="/legal/privasi" className="font-semibold text-nv-accent-strong underline">
+          <Link to="/legal/privasi" className="font-semibold text-nv-accent underline">
             {t('auth.privacy')}
           </Link>
           .
@@ -173,10 +173,7 @@ export default function RegisterPage() {
 
       <p className="mt-6 text-center text-caption text-nv-muted">
         {t('auth.haveAccount')}{' '}
-        <Link
-          to="/masuk"
-          className="font-semibold text-nv-accent-strong underline underline-offset-2"
-        >
+        <Link to="/masuk" className="font-semibold text-nv-accent underline underline-offset-2">
           {t('auth.signIn')}
         </Link>
       </p>

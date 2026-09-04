@@ -37,6 +37,11 @@ test('beranda → detail cerita → baca bab gratis', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Perjanjian Malam Itu' })).toBeVisible()
   await expect(page.getByText('Lanjutkan membaca bab ini')).toBeHidden()
 
+  // **Type A: kontrolnya tersembunyi sampai teks diketuk** (`7u`/`7v`). Ini yang
+  // dilakukan pembaca, jadi ini juga yang dilakukan test — bukan mencari bilah
+  // yang memang belum ada.
+  await page.getByRole('article').click({ position: { x: 60, y: 300 } })
+
   // Navigasi bab ada di dua tempat, dan "sebelumnya" mati di bab pertama.
   await expect(page.getByRole('button', { name: 'Bab sebelumnya' })).toBeDisabled()
   await page.getByRole('button', { name: 'Bab berikutnya' }).first().click()

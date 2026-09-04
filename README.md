@@ -10,7 +10,7 @@ PWA baca novel Indonesia dengan ekonomi koin. Dibangun dari
 ```bash
 cp .env.example .env      # sekali saja
 npm install
-npm run dev               # http://localhost:5173
+npm run dev               # http://localhost:1311
 ```
 
 | Perintah | Isi |
@@ -25,7 +25,7 @@ npm run dev               # http://localhost:5173
 ## Docker
 
 ```bash
-docker compose --profile dev  up            # dev + HMR di :5173
+docker compose --profile dev  up            # dev + HMR di :1311
 docker compose --profile prod up --build    # nginx statis di :8080
 ```
 

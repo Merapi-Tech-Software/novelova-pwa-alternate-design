@@ -1,6 +1,5 @@
-import { BookOpen } from 'lucide-react'
 import type { StoryDetail } from '@/api/contracts'
-import { Badge } from '@/components/ui/Chip'
+import { Cover } from '@/components/patterns/Cover'
 import { t } from '@/i18n/t'
 import { formatCompactCoin } from '@/lib/coin'
 
@@ -10,66 +9,63 @@ const STATUS_LABEL: Record<StoryDetail['status'], string> = {
   hiatus: 'Hiatus',
 }
 
+/** `975` → `16 jam` · `48` → `48 menit`. Jam dibulatkan; menit tidak perlu presisi di sel selebar 80px. */
+function readDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} menit`
+  return `${Math.round(minutes / 60)} jam`
+}
+
 /**
- * Hero sampul · FR-DETAIL-01 · FR-DETAIL-02.
+ * Kepala halaman cerita · FR-DETAIL-01 · FR-DETAIL-02 · mockup `7b`.
  *
- * Gambar penuh dengan gradien di atasnya, bukan kartu kecil: ini satu-satunya
- * tempat sampul yang dipilih penulis ditampilkan sebesar yang ia gambar.
+ * **Panel putih dengan sampul kecil, bukan gambar penuh berscrim.** Putaran 7
+ * membalik bentuknya: sampul jadi benda di atas panel, bukan latar yang ditimpa
+ * teks. Itu sekaligus menghapus satu-satunya gradien besar di layar ini.
  *
- * Tiga metrik di bawahnya **bersumber dari data nyata** (FR-SOCIAL-08) — angka
- * yang dikarang di layar detail adalah janji yang akan ditagih penulis. Karena
- * itu metrik ketiga berbunyi **"Disimpan"**, bukan "Pengikut" seperti tertulis
- * di FR-DETAIL-02: yang benar-benar dihitung model ini adalah `stats.saves`.
+ * **Strip statistik empat sel**, dan sel ketiganya `DURASI BACA` — putaran 7
+ * mengganti metrik pamer dengan angka yang benar-benar dipakai pembaca untuk
+ * memutuskan. Angkanya dari server (`readMinutesTotal`): halaman ini memuat bab
+ * 20 per halaman, jadi menjumlahkannya di layar akan menampilkan durasi cerita
+ * 120 bab dari 20 bab pertamanya saja.
  */
 export function StoryHero({ story }: { story: StoryDetail }) {
-  const stats = [
-    { label: t('story.views'), value: formatCompactCoin(story.stats.reads) },
-    { label: t('story.ratings'), value: `${story.stats.rating.toFixed(1)} / 5` },
-    { label: t('story.followers'), value: formatCompactCoin(story.stats.saves) },
+  const stats: Array<[label: string, value: string]> = [
+    [t('story.ratings'), `★ ${story.stats.rating.toFixed(1).replace('.', ',')}`],
+    [t('story.statChapters'), formatCompactCoin(story.stats.chapterCount)],
+    [t('story.readDuration'), readDuration(story.readMinutesTotal)],
+    [t('story.status'), STATUS_LABEL[story.status]],
   ]
 
   return (
-    <section className="-mx-4 mb-4">
-      <div className="relative flex h-56 items-end overflow-hidden sm:h-64">
-        {story.bannerUrl || story.coverUrl ? (
-          <img
-            src={story.bannerUrl ?? story.coverUrl ?? ''}
-            alt=""
-            className="absolute inset-0 size-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center bg-nv-accent-soft">
-            <BookOpen size={28} aria-hidden className="text-nv-accent-strong" />
-          </div>
-        )}
-        <span
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-nv-scrim to-transparent"
-        />
-
-        <div className="relative w-full px-4 pb-4">
-          {story.badge && (
-            <span className="mb-2 inline-block rounded-nv-pill bg-nv-card px-2.5 py-0.5 text-caption font-semibold tracking-wide text-nv-accent-strong uppercase">
-              {story.badge}
-            </span>
-          )}
-          <h1 className="font-display text-page leading-tight font-bold text-nv-on-scrim">
-            {story.title}
-          </h1>
-          <p className="flex flex-wrap items-center gap-2 pt-1 text-body text-nv-on-scrim/85">
-            {story.penName}
-            <Badge tone="neutral" aria-label={`Status: ${STATUS_LABEL[story.status]}`}>
-              {STATUS_LABEL[story.status]}
-            </Badge>
-          </p>
+    <section className="-mx-4 mb-5">
+      <div className="flex items-start gap-4 border-nv-line border-b bg-nv-card px-4 py-5">
+        <Cover src={story.coverUrl} title={story.title} badge={story.badge} className="w-[94px]" />
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-page leading-tight font-semibold">{story.title}</h1>
+          <p className="pt-1 text-body text-nv-muted">{story.penName}</p>
+          <ul className="flex flex-wrap gap-2 pt-3">
+            {story.genres.map((genre) => (
+              <li
+                key={genre}
+                className="rounded-nv-pill border border-nv-line-soft px-3 py-1 text-caption font-semibold text-nv-text-2"
+              >
+                {genre}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      <dl className="grid grid-cols-3 divide-x divide-nv-line border-nv-line border-b">
-        {stats.map((stat) => (
-          <div key={stat.label} className="px-3 py-3 text-center">
-            <dt className="text-caption text-nv-muted">{stat.label}</dt>
-            <dd className="font-display text-card font-semibold tabular-nums">{stat.value}</dd>
+      {/*
+        Empat sel di atas kertas, bukan di dalam panel — `7b` memisahkannya dari
+        kartu identitas di atasnya. `grid-cols-4` aman sampai 320px: tiap sel
+        ~66px, dan `DURASI BACA` yang terpanjang dibungkus dua baris.
+      */}
+      <dl className="grid grid-cols-4 gap-2 border-nv-line border-b px-4 py-4">
+        {stats.map(([label, value]) => (
+          <div key={label}>
+            <dd className="font-display text-card leading-tight font-bold tabular-nums">{value}</dd>
+            <dt className="nv-section-label pt-1 font-ui">{label}</dt>
           </div>
         ))}
       </dl>

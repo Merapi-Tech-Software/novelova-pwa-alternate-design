@@ -5,6 +5,1051 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-05 · Langkah 52 — R2 & R3: detail cerita, ruang baca Type A, komentar bab
+
+> "oke sekarang lanjutkan untuk melakukan redesign tampilan saja dulu. Ikti todo
+> untuk lakukan perubahan untuk R2 dan R3. Dan pastikan saat di test di preview
+> mobile itu aman dan semua fitur berjalan"
+
+**R2 ternyata sudah selesai** — beranda `7a` dan lembar section `7s` dikerjakan
+di Langkah 50, testnya ada, dan ruang bawah `AppShell` (86 + 76 = 162px) sudah
+melebihi tinggi bilah + FAB. Yang dilakukan cuma memverifikasi lalu
+mencentangnya. Jadi permintaan ini nyaris seluruhnya **R3**.
+
+### R3a · Detail cerita `7b`
+
+Panel kepala putih dengan **strip statistik empat sel** (`★ RATING` · `BAB` ·
+`DURASI BACA` · `STATUS`) — durasi baca menggantikan metrik pamer. Kartu
+monetisasi hairline menjawab satu pertanyaan: berapa gratis, berapa sisanya.
+Bilah bawah lengket menyebut bab terakhir dibaca.
+
+**Tiga angka baru dihitung server, bukan layar** — `readMinutesTotal`,
+`freeChapterCount`, `paidPriceFrom`. Alasannya sama untuk ketiganya: daftar bab
+datang 20 per halaman, jadi menghitungnya di layar akan menjawab pertanyaan
+tentang cerita 120 bab dari 20 bab pertamanya saja. `freeChapterCount` dihitung
+sebagai **awalan** dan berhenti di bab berbayar pertama, karena copy-nya berbunyi
+"N bab *pertama* gratis" — dan itu bohong kalau yang gratis tersebar di tengah.
+
+Bilahnya memakai `bottom-[var(--nv-bottom-nav)]`, bukan `bottom-0`
+(`CLAUDE.md` §8), dan **FAB koin tidak lagi dirender di `/cerita/*`**: dua elemen
+melayang di sudut yang sama saling menindih, dan `7b` juga tidak menggambarnya.
+
+### R3b · Ruang baca Type A `7u` `7v` `7f` `7g`
+
+**Chrome tersembunyi sejak awal.** Yang tampil hanya pembuka bab (`BAB 3`, judul
+serif, garis emas), badan serif, dan hairline progres 1,5px. Satu ketukan pada
+teks memunculkan bilah atas dan bawah melayang; ketukan kedua menyembunyikannya
+lagi. Ketukan pada tautan, tombol, atau kolom **tidak** ikut menutup chrome.
+
+**Bab terkunci dikecualikan** — bilah atasnya selalu terlihat (`7x`). Tanpa itu
+bab terkunci tidak punya tombol kembali sampai pembaca menebak bahwa layar bisa
+diketuk, dan itu jebakan.
+
+### R3c · Komentar bab `7t` + `7w`
+
+Satu komponen `ChapterComments`, dua wadah: halaman penuh dan lembar di atas
+ruang baca. Brief §8 menuntut isi yang sama di keduanya, dan satu-satunya cara
+itu tidak bisa lapuk adalah satu komponen dipakai dua kali — dua komponen yang
+kebetulan mirip akan berselisih pada perubahan berikutnya, dan yang berselisih
+adalah aturan moderasi.
+
+Karena `features/reader` tidak boleh mengimpor `features/story` (aturan struktur
+#2), `ChapterComments`, `CommentRow`, `ModerationActions`, `useComments`, dan
+`useModeration` naik ke `components/patterns/` dan `src/hooks/`.
+
+**Tautan komentar di akhir bab dicabut** (brief §7) — tombolnya hanya hidup di
+overlay. Test yang dulu menjaga keberadaannya **dibalik** jadi menjaga
+ketiadaannya, karena test yang dihapus tidak menahan apa pun.
+
+### Sisa kulit yang hanya terlihat per halaman
+
+`todo-redesign.md` memandang pekerjaan yang sama per halaman, dan sudut itu
+menemukan empat hal yang tidak ada di daftar R3:
+
+- **Sinopsis, judul voucher, dan badan ulasan `RateSheet` jadi serif.** Brief §2
+  menaruh ketiganya di sisi "yang *adalah* cerita", bukan "yang dikatakan
+  aplikasi tentang dirinya".
+- **Halaman komentar mencetak rujukan babnya.** Bilah atas cuma berbunyi
+  "Komentar bab", yang tidak menyebut bab yang mana — dan tautannya memang bisa
+  dibagikan. Lembar `7w` tidak memerlukannya: di sana babnya terbuka di
+  belakangnya. `useChapter` ikut naik ke `src/hooks/`, alasan yang sama dengan
+  R3c; datanya biasanya sudah di cache dari ruang baca, jadi yang membayar satu
+  permintaan hanyalah pembuka tautan langsung.
+
+### Satu test yang balapan, diperbaiki di akarnya
+
+`LibraryPage › pencarian menyaring di server` gagal **tiga kali** di suite penuh
+dan lulus tiap kali dijalankan sendirian. Bukan flake: `useShelf` memakai
+`keepPreviousData` dan tidak ada debounce, jadi `findByText(judul s1)` selesai
+**seketika** — s1 ada di daftar lama maupun daftar tersaring — lalu
+`queryByText(judul s3)` berjalan sinkron selagi permintaan terakhir masih di
+udara. Persis jebakan `CLAUDE.md` §8: *menunggu hal yang sudah benar sejak awal
+berarti tidak menunggu apa pun.* Yang ditunggu sekarang adalah baris yang
+**hilang**, bukan baris yang bertahan.
+
+### Yang tidak dikerjakan, dan kenapa
+
+- **`Pemeriksaan baku` tetap kosong di keempat halaman selesai** — delapan dari
+  sembilan butirnya terpenuhi. Yang menahan butir 8: `Button`/`IconButton`
+  ukuran `sm` tingginya **36px** (`Button.tsx:25,85`), di bawah ambang 44px, dan
+  itulah ukuran baris aksi komentar, bilah melayang ruang baca, serta hampir tiap
+  lembar. Menambalnya per halaman berarti ~30 tempat dan halaman berikutnya akan
+  memakai `sm` lagi; menaikkannya di primitifnya sekali menyentuh seluruh
+  aplikasi. Ia **R7**, yang memang sudah menyebutkan ambang itu — sekarang
+  beserta penyebabnya.
+- **Posisi baca belum dipulihkan per bab.** Bukan test yang belum ditulis:
+  `useReadingProgress` hanya **menyimpan** `scrollPct` dan tidak ada yang
+  membacanya kembali, jadi tiap pembukaan mulai dari atas. Itu perilaku, bukan
+  kulit, dan permintaan ini membatasi diri pada tampilan. Sudah punya rumah di
+  **R7** baris pertama.
+- **R4 tidak disentuh** — reader Type B, auto-unlock, dan pita bundling adalah
+  jalur uang, dan permintaan ini menyebut "redesign tampilan saja dulu".
+
+### Verifikasi
+
+`npm run check` bersih · **543 test unit** · **61 e2e**, termasuk sapuan
+**25 halaman × 5 lebar** (320 · 360 · 390 · 412 · 430) dengan nol luberan.
+Lembar komentar diukur langsung: `awal 500 → ketuk 500 → lembar buka 500 →
+lembar tutup 500`.
+
+---
+
+## 2026-09-04 · Langkah 51 — lihat-semua `7d` dan pustaka `7c`
+
+> "ya" (lanjut ke pustaka `7c` + lihat-semua `7d` + profil `7i`)
+
+**Dua halaman selesai; profil `7i` belum tersentuh** — ia satu-satunya dari
+ketiganya yang masih `<Placeholder>`, jadi ia bukan penggantian kulit melainkan
+halaman baru, dan itu pekerjaan sendiri.
+
+### Lihat-semua `/jelajah/:kategori` · `7d`
+
+Grid dua–tiga kolom jadi **daftar tegak berpembatas bernomor**. Chip periode jadi
+**tab teks bergaris bawah**; pengurut pindah ke kepala `URUTAN` sebagai aksi emas
+rata kanan. Pintasan cari jadi pil. Lencana `HOT`/`BARU` pindah dari sampul ke
+tepi kanan baris — `badge={null}` meniadakan yang di sampul, karena satu cerita
+yang membawa dua lencana di baris yang sama membingungkan.
+
+**Satu cacat lama ikut ketahuan dan diperbaiki.** Chip pertama adalah bawaannya,
+dan urutannya `Hari ini` lebih dulu — jadi halaman ini **selalu terbuka dengan
+"0 cerita"**. Pembaca yang menekan `See all` mendarat di keadaan kosong dan
+menyimpulkan kategorinya memang kosong. `7d` menaruh `Sepanjang masa` sebagai tab
+aktif, dan sekarang begitu pula urutannya.
+
+### Perpustakaan `/pustaka` · `7c`
+
+Empat kartu metrik dan blok hero dihapus; yang tersisa judul serif, **satu baris
+hitungan**, tab teks, lalu satu daftar berpembatas. Kolom cari jadi pil, pengurut
+jadi aksi satu baris.
+
+**Baris hitungannya tetap `<dl>` dengan empat pasang `<dt>`/`<dd>`.**
+Menggabungnya jadi satu string terlihat persis sama — dan itu justru masalahnya:
+pembaca layar kehilangan pasangan label–angkanya, dan tiga test yang menjaga
+urutan FR-LIB-02 kehilangan pegangannya. Percobaan pertama saya memang begitu,
+dan ketiganya langsung gagal.
+
+`LibraryCard` jadi `<li>` karena raknya kini `<ul>`; kartu bergaris dan berlatar
+sendiri dilepas.
+
+### Dua primitif bertambah kecil
+
+- `SearchInput` dapat `variant`: **`line`** untuk bilah atas pencarian (`7e`),
+  **`box`** untuk pil di dalam halaman (`7d`, `/pustaka`, studio). Dua bentuk
+  karena keduanya menempati tempat berbeda — yang di bilah atas **adalah** judul
+  halamannya.
+- `StoryCard` dapat `trailing` (sel kanan baris) dan `badge` yang bisa `null`.
+
+### Verifikasi
+
+`npm run check` bersih · **543 test unit** · **nol luberan** di lima halaman
+(`/`, `/cerita/s1`, `/cari`, `/pustaka`, `/jelajah/populer`) × lima lebar
+(320 · 360 · 390 · 412 · 430).
+
+### Satu kelas flake ditutup, bukan dilewati
+
+E2E gagal tiga kali berturut-turut di **spec yang berganti-ganti** — dua kali di
+Langkah 50 (`karya-dua-lebar`, `rantai-ulasan`), sekali di sini (`/cerita/s1`,
+`/koin/transaksi`) — dan **semuanya lulus saat dijalankan sendirian**. Pola itu
+yang menunjuk penyebabnya: bukan cacat produk, melainkan pengukuran yang terlalu
+dini.
+
+Sapuan lebar mengukur `scrollWidth - clientWidth` **sekali**, tepat setelah
+`networkidle` dan `fonts.ready`. Keduanya bisa tercapai saat React Query masih
+menukar kerangka dengan isinya, dan luberan sesaat di tengah pertukaran itu
+bukan cacat yang dilihat siapa pun.
+
+Sekarang memakai `expect.poll`. Itu **tidak** melemahkan pemeriksaannya — luberan
+sungguhan tetap gagal sampai batas waktunya habis; yang berubah cuma bahwa yang
+diperiksa adalah **tata letak yang sudah tenang**, dan itu memang yang
+dijanjikan. **61 e2e lulus** sesudahnya. Masuk `CLAUDE.md` §8.
+
+### Yang **belum**
+
+- **Profil `7i`** — masih penampung.
+- **FAB koin masih menutupi konten** di semua halaman. Butir R2 yang tercatat:
+  harus jadi lingkaran 48px **dan** pindah ke kiri sekaligus; salah satu saja
+  cuma menukar siapa yang tertutup.
+- Susunan detail cerita belum penuh `7b` (bilah bawah lengket, kartu monetisasi).
+- Studio, dompet, penghasilan: belum disentuh.
+
+---
+
+## 2026-09-04 · Langkah 50 — R3 & R5 sebagian: detail cerita dan pencarian
+
+> "oke sekarang lanjutkan untuk melakukan redesign tampilan saja dulu. Cuman
+> pastikan saat di test di preview mobile itu aman dan semua fitur berjalan"
+
+**Tampilan saja** — perilaku ruang baca (Type A/B, auto-unlock, pita bundling)
+ditahan seluruhnya untuk R4.
+
+### Detail cerita `/cerita/:id` · mockup `7b`
+
+**Kepala dibalik bentuknya.** Dari gambar penuh berscrim jadi **panel putih
+dengan sampul kecil di kiri** — sampul jadi benda di atas panel, bukan latar yang
+ditimpa teks. Itu sekaligus menghapus satu-satunya gradien besar di layar ini.
+
+**Strip statistik jadi empat sel** — `★ RATING` · `BAB` · `DURASI BACA` ·
+`STATUS`. Sel ketiganya baru dan butuh data: `readMinutesTotal` ditambahkan ke
+`StoryDetail` dan **dihitung server**. Alasannya bukan kerapian — halaman ini
+memuat bab 20 per halaman, jadi menjumlahkannya di layar akan menampilkan durasi
+cerita 120 bab dari 20 bab pertamanya saja, **dan angkanya bertambah tiap pembaca
+menekan "muat lagi"**. Hanya bab terbit yang ikut dihitung.
+
+**Daftar bab jadi daftar berpembatas**, judul serif, dan **ketiga penanda
+FR-DETAIL-14 pindah ke sel kanan**: centang (sudah dibaca) · titik emas (sedang
+dibaca) · chevron (belum). Sebelumnya penanda "sedang dibaca" berupa kolom ikon
+kedua di sebelah kiri, sehingga satu baris bisa membawa **dua ikon yang
+mengatakan hal yang sama**. Kepala sectionnya kini label 9,5px + garis + pengurut
+rata kanan, dan jumlah bab tidak lagi diulang di sana — ia sudah ada di strip
+statistik.
+
+### Pencarian `/cari` · mockup `7e`
+
+**Dua cacat nyata, bukan sekadar kulit.**
+
+**1. Tombol hapus muncul dua kali.** Chromium merender tombol hapusnya sendiri di
+dalam `input[type="search"]`, dan `SearchInput` sudah punya satu. Hasilnya dua
+tanda silang bersebelahan — yang satu tidak bisa ditata dan tidak punya nama bagi
+pembaca layar.
+
+Perbaikan pertama saya salah: `type` diganti jadi `text`, dan **17 test langsung
+gagal**. `type="search"` itulah yang memberi `role="searchbox"` — pembaca layar
+bergantung padanya sama seperti test-nya. Perbaikan yang benar menyembunyikan
+tombol bawaan lewat `::-webkit-search-cancel-button` di `base.css`, sekali, di
+tempat semua pemakainya lewat.
+
+**2. Saringan masih empat select bertumpuk**, bukan baris pil `7e`. Sekarang satu
+baris pil mendatar yang bisa digulir — dan tiap pil **membungkus `<select>` asli**
+yang ditumpuk transparan di atasnya. Yang terlihat pil, yang ditekan tetap kontrol
+peramban: navigasi papan ketik, pencarian ketik-huruf, dan perilaku layar sentuh
+tidak perlu ditulis ulang.
+
+Saran sambil mengetik jadi daftar berpembatas dengan ikon kaca pembesar; hasil
+`CERITA` mendapat kepala section + penghitung rata kanan; baris hasil memakai
+anatomi yang sama dengan seluruh aplikasi.
+
+### Satu test diperbarui, dan itu benar
+
+`StoryDetailPage.test.tsx` menguji tiga metrik lama (`Dibaca`, `Disimpan`) yang
+memang diganti empat sel. Assertion-nya diperbarui ke keempat label baru plus
+durasi baca — dan durasinya dibaca **dari selnya**, bukan dari seluruh halaman:
+baris bab juga berbunyi "8 menit", dan pencarian global menemukan keduanya.
+
+### Verifikasi
+
+`npm run check` bersih · **543 test unit** · **nol luberan** di empat halaman
+(`/cerita/s1`, `/cari`, `/pustaka`, `/jelajah/populer`) × lima lebar
+(320 · 360 · 390 · 412 · 430).
+
+### Yang **belum**, dan ini masih terlihat di layar
+
+- **Susunan detail cerita belum mengikuti `7b` sepenuhnya.** Mockup: sampul →
+  statistik → sinopsis → kartu monetisasi → daftar bab → **bilah bawah lengket**
+  berisi bab terakhir dibaca. Sekarang tombol `Lanjutkan — Bab 8` masih blok
+  besar di tengah halaman, dan kartu monetisasi belum ada.
+- **FAB koin masih menutupi konten** di ketiga halaman — butir R2 yang sudah
+  tercatat: harus jadi lingkaran 48px **dan** pindah ke kiri sekaligus.
+- Pustaka, lihat-semua, profil, studio, dompet, penghasilan: belum disentuh.
+
+---
+
+## 2026-09-04 · Langkah 49 — R8 & R9: tujuh belas rute yang tidak punya fase
+
+> "oke untuk todo melakukan redesign sampai halaman di phase 10 apakah sudah
+> selesai semua?" · "iya tambahkan keduanya"
+
+**Pertanyaannya menemukan lubang di rencananya sendiri.** Jawaban atas
+pertanyaan pertama: **belum, dan jauh** — 1 dari 42 halaman selesai (beranda),
+36 dari 303 kotak. Tetapi yang lebih penting muncul saat menghitungnya:
+
+**Fase R hanya menjangkau 13 dari 30 halaman yang sudah dibangun v1.** Tujuh
+belas sisanya ada di `todo-redesign.md` tetapi **tidak punya rumah di fase mana
+pun**:
+
+| Grup | Rute |
+|---|---|
+| Auth | `/masuk` · `/daftar` · `/lupa-sandi` · `/mulai` |
+| Dompet | `/koin` · `/koin/transaksi` · `/koin/transaksi/:txId` |
+| Penghasilan | `/penulis/analitik` · `/penulis/penarikan` · `/penulis/penarikan/riwayat` |
+| Ulasan | `/cerita/:id/ulasan` |
+| Studio | `daftar-penulis` · kelola bab · editor bab ×2 · akses bab · analitik cerita |
+
+**Penyebabnya bisa disebut persis, dan itu kesalahan saya.** Fase R saya susun
+dari urutan bangun brief §15 — dan §15 hanya menyebut layar yang **punya PNG**.
+Saya memperlakukan brief sebagai rencana lengkap padahal 27 PNG cuma menutup 14
+dari 42 rute. Yang jatuh di luarnya justru yang paling mahal kalau salah:
+**seluruh alur uang** dan **editor bab yang memegang naskah belum tersimpan**.
+
+### Yang ditambahkan
+
+**R8 — Auth & dompet · 3–4 hari** (R8a auth · R8b `/koin` · R8c buku besar).
+**R9 — Penghasilan & sisa studio · 3–5 hari** (R9a pencairan · R9b enam rute
+studio · R9c ulasan · R9d penutup).
+
+Keduanya **tanpa mockup**, jadi "cocok dengan PNG" tidak berlaku di sana;
+gantinya `PRD Novelova/prd_01_design_system.md` **§0**, dan aturan lama tetap:
+kalau butuh pola yang belum ada, **tanyakan dulu**.
+
+Tiga pagar dibawa masuk ke kotaknya, bukan diserahkan pada ingatan:
+
+- **`/koin`** layar uang — alur, timer kedaluwarsa, idempotency, dan ledger tidak
+  boleh disederhanakan demi tampilan (keputusan terkunci #4).
+- **Pencairan** — tangga validasi lima tingkat ditegakkan dua kali dari satu
+  berkas; menata ulang layarnya tidak boleh menyentuh `lib/payout.ts` (§1.15).
+- **Editor bab** — autosave dua lapis **tidak disentuh sama sekali**, `DRAFT-409`
+  tetap tidak membekukan editor, dan pesan gagalnya tetap menyatakan tulisanmu
+  aman (§1.4).
+
+Estimasi Fase R **15–22 → 21–31 hari**. Kotak Fase R **110 → 154**.
+
+### Empat cacat kecil di `todo-redesign.md` ikut diperbaiki
+
+Ditemukan saat memeriksa berkasnya, bukan dicari: butir 9 Pemeriksaan baku
+menyelip **sebelum** butir 8 · teks tautan masih tertulis `../todo.md` padahal
+targetnya sudah satu folder · jumlah kotak masih tertulis 300 padahal 303 ·
+paragraf "dua pertiga rute tidak punya mockup" tidak menyebut siapa yang
+mengerjakannya. Jumlahnya sekarang **dihitung ulang dari berkasnya**, bukan
+ditulis dari ingatan.
+
+### Yang **belum** dikerjakan
+
+- **Nol perubahan kode.** Ini penambahan rencana; R3–R9 semuanya masih kosong.
+
+---
+
+## 2026-09-04 · Langkah 48 — pemisahan v1/v2 diperbaiki, PRD diduplikat, data contoh dipisah dari seeder
+
+> "oke saya tidak suka cara anda. Anda tidak ikuti saran saya untuk buat file
+> duplikat todo.md untuk project novelova-v2. Dan untuk data-data kebutuhan tidak
+> dijadikan mocky dan datanya anda taro asal. Sekarang yang ingin saya mau adalah
+> duplikat file todo.md dan architecture.md untuk versi project novelova-v2.
+> Sebelumnya ubah untuk file todo.md dan architecture.md untuk project novelova
+> di adjust jika ada yang berhubungan dengan novelova-v2 supaya lebih rapih.
+> Kemudian untuk folder PRD Novelova juga diduplikat untuk menyesuaikan kebutuhan
+> fungsi novelova-v2. Paham?"
+
+**Keluhannya benar pada ketiga hal, dan akarnya satu: urutan kerjanya terbalik.**
+Fase R, §1.20, dan §1.21 saya tulis ke berkas akar **lebih dulu**, baru saya
+duplikat. Hasilnya bukan pemisahan melainkan penggandaan — kedua salinan
+sama-sama berisi hal v2, dan berkas v1 penuh rujukan ke folder yang bukan
+miliknya.
+
+### 1. Berkas akar dipulihkan jadi v1 murni
+
+Bukan ditambal jejak per jejak: `git checkout HEAD -- todo.md architecture.md`
+mengembalikan versi sebelum satu baris v2 pun masuk. Diperiksa sesudahnya —
+**nol** kecocokan untuk `novelova-v2`, `Fase R`, dan `putaran 7` di keduanya.
+
+Yang ditambahkan cuma **satu blok penunjuk** di kepala masing-masing: v1 berhenti
+di Fase 10, pekerjaan dilanjutkan di `novelova-v2/`, dan tidak ada keputusan v2
+yang dicatat di sini — itu disengaja.
+
+### 2. Dokumen v2 berdiri sendiri
+
+`novelova-v2/todo.md` dan `novelova-v2/architecture.md` kini satu-satunya yang
+hidup, dengan banner yang menyebut ke mana requirement-nya menunjuk. Keduanya
+tetap membawa seluruh keputusan v1 — itu benar, karena kodenya memang salinan v1.
+
+### 3. `PRD Novelova/` diduplikat dan disesuaikan
+
+Tiga belas berkas ke `novelova-v2/PRD Novelova/`. Ketiga belasnya dapat kepala
+yang menyebut statusnya; **empat** benar-benar disesuaikan karena fungsinya
+memang berubah:
+
+| Berkas | Yang berubah |
+|---|---|
+| `prd_01_design_system.md` | **§0 baru** memuat design system putaran 7 yang sebenarnya — permukaan, lima tingkat tinta, **dua emas** beserta kontrasnya, dua muka huruf, bentuk, dan daftar larangan. §3 dan §4 ditandai **digantikan**, tetapi tetap dipertahankan: ia survei terukur atas prototipe dan masih benar sebagai catatan |
+| `prd_05_reader.md` | **FR-READ-19 baru** (tawaran bundel setelah sepuluh bab) lengkap dengan aturan bisnis dan lima acceptance criteria, plus catatan bahwa ruang baca kini dipecah **dua tipe** dan auto-unlock jadi alur utama |
+| `prd_00_overview.md` | Catatan v2 di atas tabel konstanta: skala harga bab yang tidak mungkin benar bersamaan, lencana hemat yang nominal, dan design system yang tidak lagi rose-gold |
+| `prd_03_home_discovery.md` | Anatomi beranda putaran 7 — kesembilan blok tetap, bentuknya yang berganti |
+
+Sisanya bertanda "requirement fungsionalnya sama dengan v1; yang berubah hanya
+kulitnya" — jujur, dan lebih berguna daripada menyunting sembilan berkas tanpa
+alasan.
+
+### 4. Data contoh dipisah dari logika seeding
+
+Keluhan yang paling tepat sasaran. Empat puluh sinopsis yang ditulis di Langkah 46
+saya tempel **langsung ke `seed.ts`**, padahal rantai yang sudah didokumentasikan
+adalah `novelova-data.js` → `seed.ts`. Dan `seed.ts` sendiri memang sudah
+mencampur keduanya: 1.891 baris berisi delapan belas blok data literal berselang
+dengan logika penulisan ke Dexie.
+
+Sekarang ada **`src/api/mock/data/`**:
+
+| Berkas | Isi |
+|---|---|
+| `catalog.ts` | `StorySeed` · penulis · katalog delapan cerita kanvas · 32 pengisi · **`SYNOPSES` (40)** · **`MY_SYNOPSES` (4)** · kosakata tag |
+| `chapters.ts` | Delapan bab `s1` kanvas beserta harganya · `PAID_PRICES` · `PROSE` |
+
+`seed.ts` **1.891 → 1.597 baris** dan sekarang hanya menyusun serta menulis;
+isinya diimpor. Menambah cerita contoh tidak lagi menuntut menyentuh berkas
+seeding. `CLAUDE.md` §1 menyebut folder itu beserta aturannya: **konten baru
+masuk ke sana, bukan ke `seed.ts`.**
+
+### Yang **tidak** dikerjakan, dan alasannya
+
+- **Lima blok data lain tetap di `seed.ts`** — `FOLLOWER_ROWS`, `LIB_SEED`,
+  `REVIEW_SEED`, `NOTIF_SEED`, `PKG_SEED`. Yang dipindah adalah **isi cerita dan
+  bab**, yaitu tempat data saya tadi mendarat dan bagian yang paling sering
+  bertambah. Memindahkan sisanya sekaligus menggandakan risiko pada langkah yang
+  tujuannya justru merapikan; polanya sudah berdiri, dan pemindahan berikutnya
+  tinggal mengikuti.
+- **Sembilan PRD lain tidak disunting isinya.** Fungsinya memang tidak berubah di
+  v2; kepala berkasnya menyatakan itu apa adanya.
+- **`CLAUDE.md` §2 diperbaiki**: aturan changelog masih menunjuk
+  `novelova/CHANGELOG.md`, folder yang sudah beku.
+
+---
+
+## 2026-09-04 · Langkah 47 — dokumen dipisah ke `novelova-v2/`, dan tiga temuan di jalur harga
+
+> "oke saya mau diskusi untuk proses chapter unlock ada update seperti ini …
+> Nah ini untuk novelova-v2 saja jadi saya prefer untuk buat duplikat todo dan
+> architecture untuk novelova-v2 supaya lebih rapih"
+
+### Dokumen
+
+`architecture.md` dan `todo.md` disalin ke `novelova-v2/`. Tujuh tautan relatif
+di dalamnya diperbaiki supaya tidak menunjuk berkas yang salah setelah turun satu
+tingkat, dan `todo-redesign.md` ikut disesuaikan (`../todo.md` → `todo.md`).
+
+**Salinannya diberi tanda, bukan dibiarkan kembar.** Yang di `novelova-v2/`
+bertanda **HIDUP**; yang di akar bertanda **BEKU — milik `novelova/` v1, jangan
+disunting**. Alasannya aturan yang sudah ada di `CLAUDE.md` §5 untuk berkas PRD:
+dua dokumen yang saling membantah lebih buruk daripada satu yang usang. Karena
+`novelova/` memang beku, hanya ada satu dokumen hidup — duplikasinya aman selama
+yang lama benar-benar berhenti disunting.
+
+`CLAUDE.md` §1 kini menunjuk ke salinan v2 sebagai yang berlaku.
+
+### Tiga temuan di jalur harga bab
+
+Ditemukan saat menelusuri alur unlock untuk permintaan di atas, **bukan dicari**.
+Ketiganya sudah ada sejak `novelova/` v1.
+
+**1. `PRICE_SINGLE = 1_500` sudah jadi kode mati.** Nol pemakai di seluruh `src/`.
+Gerbang memakai `Chapter.priceCoins` masing-masing bab — dan itu **benar**, sudah
+diperbaiki sebagai cacat PRD 05 §7 #12. Akibatnya FR-READ-09 yang berbunyi
+*"selalu memakai harga satuan 1.500"* tidak lagi menggambarkan kodenya: harga
+bab di seed bervariasi **1.500 · 1.800 · 2.000**.
+
+Ini penting justru untuk alur baru: "auto unlock sampai koin habis" menguras
+saldo dengan **laju yang berubah-ubah**, dan pembaca tidak bisa menghitungnya
+dari satu angka.
+
+**2. Lencana hemat PRD tidak cocok dengan aritmetikanya sendiri.** `prd_00` §6
+menulis bundel "hemat ±5%" dan tamat "±10%". Dengan harga seed, sepuluh bab
+satuan ≈ 15.000–20.000 melawan bundel 12.000 — **20–40%**, bukan 5%. Kodenya
+sudah benar: `UnlockOption.individualCoins` menghitung total satuan sungguhan dan
+lencananya diturunkan dari situ, dengan komentar yang menyebut alasannya. Jadi
+aplikasi jujur dan angka PRD-nya yang nominal. **Konsekuensi untuk fitur baru:**
+copy "tawaran menarik" harus mengambil angka dari `individualCoins`, tidak boleh
+menulis persentase tetap.
+
+**3. Skala harga bab tidak cocok dengan skala paket koin — dan ini yang berat.**
+
+| | Koin |
+|---|---|
+| Paket isi koin **terbesar** | **2.000** (Rp 185.000) |
+| Buka **satu** bab | **1.500 – 2.000** |
+| Bundel 10 bab | **12.000** |
+| Buka sampai tamat | **36.900** |
+
+Paket terbesar yang bisa dibeli hanya cukup untuk **satu bab**. Bundel sepuluh
+bab menuntut membeli paket terbesar **enam kali** (Rp 1.110.000), dan akses penuh
+satu novel Rp 2.049.000.
+
+Di sisi lain `prd_07` FR-STUDIO menetapkan penulis mematok harga bab **1–50 koin,
+bawaan 3** — dan kodenya menegakkan itu (`PRICE_MIN = 1`, `PRICE_MAX = 50`).
+Jadi bab seharga 1.500 koin **tidak mungkin dibuat lewat UI penulis**.
+
+Dugaan yang paling cocok dengan semua angkanya: **1.500 / 12.000 / 36.900 di
+prototipe adalah rupiah, bukan koin.** Dibagi kurs 130 hasilnya ~11,5 · ~92 ·
+~284 koin — ketiganya masuk akal terhadap paket 50–2.000 koin, dan ~11,5 masuk
+rentang penulis 1–50.
+
+**Kenapa ini menghalangi fitur yang diminta.** Inti permintaannya adalah
+"buka terus sampai koin habis". Dengan konstanta sekarang, seluruh isi paket
+terbesar habis **sebelum bab kedua**, dan lembar "saldo kurang" akan muncul di
+tiap bab — persis kebalikan dari alur mulus yang diminta. Ditanyakan sebelum satu
+baris pun ditulis.
+
+### Keputusan yang diambil di diskusi ini
+
+| Pertanyaan | Jawaban |
+|---|---|
+| Skala harga bab | **Dibiarkan dulu**, alurnya dikerjakan lebih dulu |
+| Kapan tawaran bundling muncul | **Setelah 10 bab** |
+| Isi tawaran | **Selalu bundel 10**, tetapi ambangnya **dapat diatur** |
+| Bentuk tawaran | **Pita non-blocking di pembuka bab** |
+
+Ditulis jadi `architecture.md` §**1.21** dan sepuluh kotak baru di `todo.md`
+**Fase R4**.
+
+**Satu akibat yang baru terlihat setelah keputusannya digabung.** Membiarkan
+skala harga + ambang di 10 membuat pita tawarannya **tidak terjangkau dari saldo
+contoh**: tiga bab pertama gratis, sepuluh bab berbayar berikutnya berjumlah
+17.200, sementara saldo contoh 15.300 — pembaca kehabisan koin di bab ke-12, dua
+bab sebelum ambang.
+
+Itu bukan cacat; itu alurnya bekerja, dan lembar saldo kurang memang muncul.
+Yang tidak bekerja cuma **mencobanya dengan tangan**. Jalan keluarnya mengikuti
+kebiasaan yang sudah ada — satu sakelar dev di `/dev/kitchen-sink`, tempat yang
+sama dengan tiga sakelar sesi dan tiga hasil pembayaran. **Saldo seed sengaja
+tidak dinaikkan**: `15,3rb` tercetak di `7a`, `7x`, dan `7i`.
+
+### Spec disiapkan sampai tingkat berkas
+
+> "dipersiapkan todo nya dan architecture nya biar pasti pas implementasi"
+
+Kode ditelusuri lebih dulu, dan **dua hal ternyata tidak seperti dikira**:
+
+**1. `readerPrefs.autoUnlockStoryIds` belum ada.** §1.19 menulisnya seolah
+keadaan (*"Tempatnya `readerPrefs.autoUnlockStoryIds`, sebelah
+`hiddenStoryIds`"*) padahal itu rencana. `ReaderPrefsSchema` hanya punya empat
+kolom. §1.19 diberi koreksi di tempatnya supaya tidak menyesatkan sesi
+berikutnya.
+
+**2. Izin buka-otomatis hari ini melanggar aturan struktur #5.** Ia sakelar
+global di `stores/readerSettings.ts`, dibaca `ReaderPage.tsx:130`. Aturan #5:
+*"Kalau harus ikut saat pengguna berganti perangkat, ia bukan urusan
+`stores/`."* Sakelar ini memberi wewenang **memotong koin**. Pelanggarannya
+lahir sebelum §1.19 memutuskan sebaliknya, dan R4b yang menutupnya — jadi
+memindahkannya bukan pekerjaan tambahan, melainkan bagian dari pekerjaan yang
+sama.
+
+**`architecture.md` §1.21 bertambah lima bagian:** keadaan kode sekarang · model
+data (tiga kolom baru di `ReaderPrefs`, beserta alasan kenapa
+`bundleOfferSeenStoryIds` tetap perlu walau penghitungnya sudah ada) · seam (tiga
+metode baru, `NovelovaApi` **109 → 112**, dan dua bendera di `UnlockInput` yang
+masing-masing punya alasan tepat) · kenapa **saldo tidak diperiksa klien** ·
+daftar berkas yang sakelar globalnya dicabut.
+
+**Fase R4 ditulis ulang: 30 → 57 kotak, delapan sub-langkah berurutan**
+(R4a data & seam → R4b cabut sakelar → R4c gerbang → R4d setelah terbuka →
+R4e saldo kurang → R4f iklan → R4g pita bundling → R4h test). Urutannya mengikat:
+server dulu, layar belakangan — empat kolom data dan tiga metode seam dipakai
+hampir semua kotak sesudahnya. Estimasi Fase R naik **14–19 → 15–22 hari**.
+
+`todo-redesign.md` diberi penunjuk ke R4a–R4h supaya jelas mana daftar urutan
+kerja dan mana daftar anatomi layar.
+
+### Yang **belum** dikerjakan
+
+- **Nol perubahan kode.** Yang berubah di langkah ini hanya dokumen: dua salinan,
+  §1.21 beserta lima bagian tekniknya, R4 yang ditulis ulang, dan koreksi §1.19.
+- Empat dari lima butir alur yang dijelaskan pengguna **sudah jadi FR-READ-09
+  versi revisi 4 September** dan sudah terencana di Fase R4. Yang benar-benar baru
+  hanya **tawaran bundling setelah N bab**.
+
+---
+
+## 2026-09-04 · Langkah 46 — R2: beranda dibangun ulang mengikuti `7a` dan `7s`
+
+> "bukan seperti itu design saya mau. coba lihat folder Novel reader UI
+> redesign\putaran7 untuk design refersnsi"
+>
+> "fokus dibagian itu"
+
+**Benar, dan keluhannya tepat.** Langkah 43 hanya mengganti token dan primitif —
+warna dan huruf berubah, susunan halamannya tidak. Beranda masih memakai pil
+sebagai tab genre, banner masih kartu bergambar penuh berscrim, kepala section
+masih judul serif besar, dan FAB koin masih pil di kanan bawah. Tidak satu pun
+dari itu ada di `7a`.
+
+### Delapan hal yang berubah, semuanya dari `7a`
+
+| | Sebelum | Sekarang |
+|---|---|---|
+| Kepala | sapaan + 3 ikon berkotak | sapaan serif, **chip koin**, tiga ikon polos; subjudul melebar penuh di bawahnya |
+| Tab genre | deret **pil** | **tab teks bergaris bawah 2px** |
+| Banner | gambar penuh + scrim + gradien | **kartu garis rambut**: sampul 66×88 kiri, judul serif, caption, pil `Baca sekarang` terisi |
+| Kepala section | `<h2>` serif 20px | label 9,5px/800/`.16em` + garis 1px + `See all` emas |
+| Kartu Populer | sampul + judul + **lencana genre** | lencana peringkat `#1 Populer`, judul serif, penulis, **`★ rating` emas + jumlah baca** |
+| Baru & Naik Cepat | sama dengan Populer | + **garis pertumbuhan emas** dari `weeklyReads` |
+| Section tematik | deret mendatar | **daftar tegak bernomor** |
+| Lanjut Membaca | kartu daftar | daftar tegak + **batang progres garis rambut, persentase, tombol putar terisi** |
+| Iklan | kartu putus-putus | **pita garis rambut** berlabel `BERSPONSOR` |
+| FAB koin | pil `15,3rb` di **kanan** bawah | **lingkaran 48px di kiri bawah** |
+| Pengaturan section | popover sudut | **lembar** `7s`: judul serif, sembilan baris berpembatas, `Selesai` + `Atur ulang` |
+
+### Progres "Lanjut Membaca" — satu angka, satu sumber
+
+`7a` §9 menuntut batang progres di baris Lanjut Membaca, dan `HomeSection` tidak
+punya datanya. Yang **tidak** dilakukan: menghitungnya di klien dari
+`chapterCount`. Itu akan membuat beranda dan `/pustaka` menampilkan bar yang
+sama untuk cerita yang sama dari dua perhitungan berbeda — persis jebakan yang
+sudah tercatat di `CLAUDE.md` §8.
+
+Yang dilakukan: perhitungan di `handlers/library.ts` diangkat jadi
+**`readingCounts()`**, dipakai `/pustaka` **dan** handler beranda. `HomeSection`
+mendapat satu kolom `progress` yang hanya diisi `lanjut-baca`. Handler beranda
+sudah memuat `db.progress` sejak dulu, jadi datanya memang sudah ada di sana.
+
+### Dua hal yang sempat tertahan, dan bagaimana keduanya selesai
+
+**1. Kutipan serif Editor's Picks (`7a` §7) sempat dilepas.** Satu-satunya sumber
+teks di kontrak adalah `synopsis`, dan seluruh **40 cerita contoh berbagi satu
+`const SYNOPSIS`** di `seed.ts` — ketiga kartunya menampilkan kalimat yang persis
+sama. Sudah dipasang, dilihat hasilnya, lalu dilepas: kutipan identik tiga kali
+terbaca sebagai kerusakan, bukan kurasi.
+
+Ditanyakan, dan jawabannya **tulis sinopsis per cerita di seed**. Sekarang ada
+`SYNOPSES` (40) dan `MY_SYNOPSES` (4), masing-masing dua kalimat, dan **kalimat
+pertamanya ditulis supaya berdiri sendiri** — itulah yang diambil jadi kutipan.
+Alasannya sudah punya preseden di berkas yang sama: kosakata tag dulu diseragamkan
+lalu harus dibedakan begitu delapan section kurasi dibangun di atasnya.
+
+Efek sampingnya bagus dan gratis: halaman detail cerita berhenti menampilkan
+sinopsis yang sama untuk empat puluh judul berbeda.
+
+**2. Label section tetap Bahasa Indonesia.** Brief §0 menyatakan `POPULAR`,
+`NEW & TRENDING`, `EDITOR'S PICKS`, `TOP ROMANCE`, `CONTINUE READING` final karena
+*"they come from the home PRD"*. **`prd_03_home_discovery.md` tidak memuat satu pun
+label itu** — sudah diperiksa. Jadi ini bukan mockup-vs-PRD melainkan brief yang
+keliru menyebut sumbernya, dan menimpa aturan terkunci #3 (UI Bahasa Indonesia)
+atas klaim yang tidak terbukti bukan keputusan yang boleh diambil sendiri.
+
+Ditanyakan, dan jawabannya **tetap Bahasa Indonesia**. Judul dari server dipakai
+apa adanya; yang berubah cuma gayanya — huruf besar 9,5px oleh kepala section.
+Keputusan #3 utuh.
+
+### Emoji dibuang
+
+`greetingSub` berbunyi `'Enjoy your reading today ✨'`. Brief §14 melarang emoji
+tanpa syarat. Satu-satunya di seluruh `i18n/id.ts`.
+
+### Satu cacat lama yang ketahuan di jalan
+
+Suite unit lulus **543/543 tetapi keluar dengan kode 1**: `ToastProvider`
+memasang `setTimeout` dan **tidak pernah membatalkannya saat unmount**, jadi
+`setToast` berjalan pada provider yang sudah dilepas. Di aplikasi akibatnya cuma
+no-op — itulah kenapa ia tidak pernah terlihat. Di test ia muncul sebagai
+kesalahan **setelah environment dibongkar**, dilaporkan atas nama berkas test
+yang kebetulan berjalan terakhir (`AnalyticsPage.test.tsx`), jauh dari
+penyebabnya. Berkas itu lulus bersih saat dijalankan sendirian.
+
+Diperbaiki dengan `useEffect(() => () => clearTimeout(timer.current), [])`.
+
+### Verifikasi
+
+`npm run check` bersih · **543 test unit** · **61 e2e** · beranda **nol luberan**
+di 320 · 360 · 430. Diperiksa dengan mata di 320 dan 390: di 320 sapaan
+`Hi, Anna` turun jadi dua baris alih-alih terpotong jadi `Hi,…` — `<h1>` halaman
+yang terpenggal lebih buruk daripada huruf yang lebih kecil.
+
+**Halaman lain belum disentuh.** R2 hanya beranda; `/cari`, `/jelajah`, detail
+cerita, ruang baca, dan seluruh studio masih tata letak lama dengan kulit baru.
+
+---
+
+## 2026-09-04 · Langkah 45 — port dev `novelova-v2/` jadi 1311
+
+> "ubah port nya menjadi 1311 untuk novelova-v2"
+
+Enam berkas, satu angka — tetapi angkanya hidup di enam tempat, dan melewatkan
+satu di antaranya membuat gejalanya muncul jauh dari sebabnya.
+
+| Berkas | Dari | Jadi |
+|---|---|---|
+| `vite.config.ts` | `server.port: 5173` | **1311** + `strictPort: true` |
+| `playwright.config.ts` | `baseURL` & `webServer.url` :5173 | **:1311** |
+| `docker-compose.yml` | `'5173:5173'` | **`'1311:1311'`** |
+| `Dockerfile` | `EXPOSE 5173` | **`EXPOSE 1311`** |
+| `README.md` | dua sebutan :5173 | **:1311** |
+| `../CLAUDE.md` §7 | perintah jalan + catatan `--port 5174` | **:1311**, catatan manualnya dihapus |
+
+**`novelova/` tetap di 5173**, jadi keduanya boleh hidup bersamaan — dan catatan
+lama di `CLAUDE.md` yang menyuruh menambahkan `--port 5174` untuk folder kedua
+sudah tidak berlaku, jadi dihapus supaya tidak ada yang mengikutinya.
+
+### Kenapa `strictPort` ikut ditambahkan
+
+Ini satu-satunya baris yang tidak diminta, dan alasannya spesifik untuk keadaan
+sekarang: ada **dua** aplikasi Novelova di mesin ini. Tanpa `strictPort`, Vite
+diam-diam pindah ke port berikutnya saat 1311 terpakai. Playwright menunggu di
+1311 dengan `reuseExistingServer: true`, menemukan apa pun yang kebetulan ada di
+sana, dan **lulus dengan tenang sambil menguji aplikasi yang salah**. Gagal keras
+di detik pertama jauh lebih murah daripada suite hijau yang bohong.
+
+### Yang **tidak** diubah
+
+- **Profil `prod` tetap `:8080`** di kedua folder. Permintaannya satu port, dan
+  yang dibuka sehari-hari adalah dev server. Kalau kedua profil prod perlu hidup
+  bersamaan, sebutkan — itu satu baris di `docker-compose.yml`.
+- **`.env.example` `VITE_API_BASE_URL=http://localhost:8080/api`** dibiarkan: itu
+  alamat **backend** yang kelak menggantikan mock, bukan port aplikasi ini.
+
+`npm run check` bersih · **543 test unit** · **61 e2e lulus di port 1311** —
+e2e-nya menjalankan dev server sendiri, jadi lulusnya sekaligus membuktikan port
+barunya benar-benar terpasang.
+
+---
+
+## 2026-09-04 · Langkah 44 — lima lebar telepon, dan dua cacat yang sudah ada sejak v1
+
+> "apakah sudah pastikan ketika berjalan di layar smartphone (large, xlarge,
+> medium, small) tidak rusak design nya. Saya ingin tidak rusak saat di layar
+> tertentu."
+>
+> "Ini dimasukan ke CLAUDE.md untuk pengingat"
+
+**Belum, dan ternyata memang ada yang rusak.** Di Langkah 43 saya memeriksa 390px
+saja lalu melaporkannya sebagai sudah diperiksa, dengan catatan "belum diperiksa
+di 1440px" — kalimat yang menyembunyikan bahwa 320px dan 360px juga belum pernah
+dibuka.
+
+### Sapuannya
+
+26 halaman × 7 lebar (320 · 360 · 390 · 430 · 480 · 768 · 1440), mengukur
+`scrollWidth − clientWidth` **dan** mencari elemen yang tepi kanannya melewati
+lebar layar. Elemen yang memang menggulir sendiri (carousel) tidak dihitung
+sebagai cacat — luberan tanpa nama penyebabnya hanya memberi tahu bahwa ada yang
+salah, bukan di mana.
+
+**Hasil awal: 10 kombinasi rusak dari 182.** Semuanya di empat halaman Author
+Studio, dan **semuanya di ≤390px** — nol di 412px ke atas. Itu persis
+menjelaskan kenapa e2e yang ada tidak pernah menangkapnya: ia hanya diuji di
+Pixel 7 (412px), lebar yang paling pemaaf.
+
+**Sapuan yang sama terhadap `novelova/` v1 menemukan 7 kombinasi rusak di
+halaman yang sama.** Cacatnya sudah ada sebelum redesign; R1 hanya melebarkan
+sedikit sehingga ikut muncul di 390px.
+
+### Dua akar
+
+**1. `grid gap-*` tanpa `grid-cols-*`.** Grid tanpa kolom eksplisit membuat satu
+track `auto`, dan track `auto` tidak pernah turun di bawah min-content anaknya.
+Jejak penelusurannya lugas:
+
+```
+256px  <div class="space-y-3">
+256px  <div class="grid gap-2.5">   grid-cols: 369.797px   ← track 370px di kotak 256px
+370px  <article>                    ← MELUBER
+340px  <div class="flex flex-wrap"> ← tidak pernah membungkus, karena muat di 370
+```
+
+Tiga belas tempat diberi `grid-cols-1` (= `minmax(0,1fr)`, minimumnya nol).
+Satu-satunya yang dilewati adalah matriks QR di `PaymentOverlay`, yang memang
+punya `gridTemplateColumns` sendiri.
+
+**2. `<fieldset>` mengalahkan `overflow-x: auto`.** Stylesheet bawaan peramban
+memberinya `min-inline-size: min-content`, jadi deretan chip rentang waktu
+mendorong badan halaman alih-alih menggulir sendiri — `overflow-x-auto` terlihat
+sudah dipasang dan tetap tidak bekerja. Diperbaiki **sekali** di `base.css`,
+bukan 17 kali di tiap `<fieldset>`.
+
+**Sapuan ulang: 0 dari 182.** `npm run check` bersih, **543 test unit lulus**, dan **61 e2e lulus** — naik dari 58 karena tiga halaman ditambahkan ke daftar sapuan.
+
+### Penjaga permanennya
+
+`tests/e2e/isi-koin-di-hp.spec.ts` — daftar halamannya dipertahankan dan
+**ditambah tiga** (`/jelajah/populer`, `/cerita/s1`, ruang baca), lalu tiap
+halaman disapu di **lima lebar**: 320 · 360 · 390 · 412 · 430. Lima lebar dalam
+satu test per halaman, bukan 125 test terpisah — pesan gagalnya sudah menyebut
+lebar mana yang rusak, dan memecahnya hanya membuat suite lima kali lebih lambat
+tanpa memberi tahu apa pun yang baru.
+
+### Yang dicatat sebagai pengingat
+
+Atas permintaan pengguna, aturannya masuk **`CLAUDE.md` §2** beserta kalimat
+aslinya, tabel lima lebar, dan catatan bahwa **320 dan 360 yang menemukan
+cacatnya, bukan 412**. Kedua akar di atas masuk **§8 Jebakan**. Butir kesembilan
+"lulus di lima lebar" ditambahkan ke Pemeriksaan baku di `todo-redesign.md`,
+jadi ia berlaku untuk keempat puluh dua halaman, bukan cuma yang sedang
+dikerjakan.
+
+### Yang **tidak** diperbaiki, dan kenapa
+
+**FAB koin masih menutupi baris tab saringan di 320px** (`/karya`,
+`/karya/:id/bab`). Bentuknya sekarang pil `15,3rb` selebar ~110px di kanan bawah;
+brief §2 memintanya jadi **lingkaran 48px di kiri bawah**. Memindahkannya ke kiri
+tanpa sekaligus mengecilkannya hanya menukar siapa yang tertutup — di 320px
+tab `Semua` justru ada di kiri. Keduanya harus sekaligus, dan itu sudah jadi
+butir **R2**; catatan "diperiksa di 320px juga" ditambahkan ke sana.
+
+Ini juga bukan cacat khusus layar sempit: FAB-nya menutupi hal yang sama di 390
+dan 412, dan menggulir mengeluarkannya. Yang membuatnya layak diperbaiki bukan
+lebarnya, melainkan brief-nya.
+
+---
+
+## 2026-09-04 · Langkah 43 — R1 selesai: token, tipografi & primitif putaran 7
+
+> "oke sekarang lanjutkan perubahan novelova-v2 untuk redesign nya"
+
+**Seluruh aplikasi berganti kulit dalam satu langkah**, dan `npm run check`
+bersih dengan **543 test masih lulus** — nol test yang perlu disesuaikan, karena
+tidak ada satu pun yang menguji warna atau nama kelas.
+
+### Token
+
+`tokens.css` ditulis ulang. Yang membuatnya murah: **satu nilai `--nv-accent`
+mengubah 191 pemakaian sekaligus.** Aksennya sekarang tinta `#1c1a18`, bukan
+emas — brief §1 menyebutnya lugas, tombol utama isi gelap dan emas *"never for
+large fills"*. Jadi tombol, tab aktif, dan garis bawah tab ikut benar tanpa satu
+pun komponen disentuh.
+
+Empat nama token diganti karena perannya melebar, lewat satu lintasan `sed`:
+
+| Lama | Baru | Kenapa |
+|---|---|---|
+| `--nv-coin` | `--nv-gold` `#7d5411` | emas teks kini juga dipakai rating dan `See all`, bukan cuma koin |
+| `--nv-coin-icon` | `--nv-gold-line` `#b68235` | emas garis: batang progres, titik tab, garis judul bab |
+| `--nv-accent-strong` | `--nv-accent` | putaran 7 tidak punya "aksen yang lebih kuat" — dua nama untuk satu hex |
+| `--nv-accent-2` | `--nv-gold-line` | dua pemakainya (garis sisipan, konfeti) memang menginginkan emas |
+
+Pembagian `--nv-coin` / `--nv-coin-icon` yang lama ternyata **sudah** memecah
+persis hal yang benar, dengan alasan yang sama. Yang berubah cuma namanya.
+
+Tiga token dibuang karena nol pemakai di `.tsx`: `--nv-cat-popular`,
+`--nv-cat-trending`, `--nv-cat-editors`. Tiga ditambah: `--nv-text-2`,
+`--nv-disabled`, `--nv-read-ink`. Ditambah `--nv-jacket-1..3` untuk sampul tanpa
+artwork, yang membawa **satu-satunya gradien yang diizinkan brief §14**.
+
+**Tema gelap = mode malam `7g`, bukan inversi mekanis.** Di sana emaslah yang
+jadi aksi — sakelar nyala dan tombol `Bab 4 ›` — dan isi bab sengaja lebih redup
+(`--nv-read-ink` `#ddd6cd`) daripada teks antarmuka, supaya tidak menyilaukan.
+
+### Tipografi
+
+`@fontsource-variable/lora` + `@fontsource-variable/plus-jakarta-sans`
+menggantikan Manrope + Cormorant Garamond. **Tukar dua, bukan tambah dua.**
+
+### Primitif
+
+- **`Tabs` jadi tab teks bergaris bawah 2px**, bukan pil. Brief §1 memisahkan
+  keduanya tegas; `Chip` tetap pil dan yang terpilih kini **terisi**, bukan
+  sekadar berlatar samar.
+- **`Field` pecah jadi dua bentuk**: satu baris → garis bawah 1,5px teks serif;
+  banyak baris → kotak garis rambut. Keduanya **tidak lagi mematikan `outline`**
+  — dengan kolom yang cuma bergaris bawah, perubahan warna garis saja terlalu
+  tipis sebagai satu-satunya penanda fokus.
+- **`Switch`** 44×26, knob 20. Angka brief menyebut padding 3, tetapi garis 1px
+  memakan tepi di keempat sisi, jadi paddingnya jadi 2 — yang tetap persis
+  adalah **jarak tempuhnya**, 18px.
+- **`BottomNav` → `ModernTabBar`**: putih penuh, 86px, titik emas 5px di bawah
+  tab aktif. Titiknya `aria-hidden` (yang menyampaikan "halaman ini" adalah
+  `aria-current`) dan tetap dirender saat tab tidak aktif dengan `opacity-0`,
+  supaya tinggi barisnya tidak berubah saat tab berpindah.
+- **`IconButton` melepas kotaknya** — ikon di `7a`, `7v`, `7x` berdiri sendiri.
+  Target ketuk tetap ≥44px.
+- **`danger` tidak lagi terisi merah**, jadi pil bergaris. Brief menyebutnya
+  lugas; tetapi tetap dibedakan, karena tombol hapus yang tidak bisa dibedakan
+  dari tombol batal adalah cacat yang lain lagi.
+- **Bayangan dicabut dari `nv-card`.** Yang tersisa dua: `shadow-nv-soft` untuk
+  sampul, `shadow-nv` untuk yang benar-benar melayang.
+
+### Dua primitif baru — dan satu yang sengaja tidak dibuat
+
+**`Cover` diangkat, bukan ditulis ulang.** Ia sudah ada sebagai komponen privat
+di dalam `StoryCard`; yang dilakukan memindahkannya keluar dan menaikkannya ke
+spesifikasi putaran 7 — radius 5px, bayangan sampul, dan **jaket satu huruf**
+menggantikan ikon buku generik yang membuat sepuluh cerita terlihat sebagai
+sepuluh salinan. Hurufnya diambil dari huruf pertama yang *terlihat*, bukan
+`title[0]`: judul boleh diawali tanda kutip, dan jaket bertuliskan `"` tidak
+menandai apa pun.
+
+**`SectionHeader`** (+ `SeeAllAction`) — label 9,5px/800/`.16em`, garis 1px yang
+mengisi sisa lebar, aksi rata kanan.
+
+**`ListRow` sengaja tidak dibuat.** Empat daftar yang seharusnya ia layani —
+`7a` Top Romance, `7c` pustaka, `7d` lihat-semua, `7j` karya — berbeda terlalu
+jauh: peringkat, batang progres, kata status, baris aksi. Satu komponen bersama
+hanya akan jadi selusin prop. Yang benar-benar sama cuma pembatasnya, dan itu
+sudah berupa satu utility (`divide-y divide-nv-line`). Dibuka lagi kalau R2 dan
+R5 ternyata menulis anatomi baris yang persis sama dua kali.
+
+### Satu pengecualian ukuran huruf yang perlu diketahui
+
+PRD 01 §4.4 menetapkan **12px sebagai lantai** karena prototipe memakai 9–11px
+sebanyak 298×. Brief putaran 7 §1 menetapkan kepala section **9,5px** / 800 /
+`.16em` huruf besar. Keduanya dipertahankan: `--text-label` 9,5px ada dan
+**hanya** untuk label pendek berbobot 800 dengan jarak huruf lebar
+(`POPULAR`, `BERSPONSOR`, `KOIN KAMU`) — 12px tetap lantai untuk kalimat.
+
+### Satu kesalahan lama yang ditemukan dan diperbaiki
+
+`CLAUDE.md` §9 dan `architecture.md` menyebut **"runtime tetap 11 paket"**.
+Hitungannya salah sejak dulu: `novelova/` punya **12** dependensi runtime, dan
+`novelova-v2/` juga 12 setelah pertukaran font. Empat berkas dikoreksi. Tidak
+ada dependensi yang ditambah — yang salah cuma angkanya.
+
+### Yang **belum** dikerjakan
+
+- **Halaman belum ditata ulang.** Beranda masih memakai `Chip` sebagai tab genre,
+  banner masih kartu bergambar penuh, kepala section masih judul serif besar, dan
+  FAB koin masih di kanan bawah. Semuanya isi **R2** — R1 hanya menyentuh token
+  dan primitif.
+- Diperiksa dengan mata di `/`, `/pustaka`, `/cari`, dan `/dev/kitchen-sink`,
+  terang dan gelap, di viewport 390px. Belum diperiksa di 1440px.
+
+---
+
+## 2026-09-04 · Langkah 42 — todo redesign per halaman
+
+> "oke di novelova-v2 buat todo untuk setiap halaman untuk dilakukan redesign"
+
+**`todo-redesign.md`** lahir di `novelova-v2/`: **42 rute, satu bagian
+masing-masing, 300 kotak.** Daftar rutenya diambil dari
+`src/routes/index.tsx`, bukan dikarang — termasuk status tiap rute
+(`ADA` vs `PENAMPUNG`), yang membedakan "ganti kulit" dari "bangun baru".
+
+Fase R di `../todo.md` tidak diganti. Ia menyusun pekerjaan menurut **urutan
+bangun**; berkas baru ini menyusunnya menurut **apa yang dibuka pengguna**. Dua
+sudut pandang atas pekerjaan yang sama, dan Fase R kini menaut ke sana.
+
+### Tiga hal yang baru terlihat setelah dipetakan per rute
+
+**1. Hanya 14 dari 42 rute punya mockup.** 27 PNG putaran 7 terdengar banyak
+sampai dipetakan ke rute: `7o`–`7r` semuanya satu halaman, `7u`/`7v`/`7f`/`7g`/
+`7x`/`7y`/`7z`/`7aa` semuanya satu halaman. Yang **tidak** tergambar justru yang
+paling mahal kalau salah — seluruh alur uang (`/koin`, riwayat transaksi, dan
+ketiga halaman pencairan), editor bab yang memegang naskah belum tersimpan, dan
+kedua halaman analitik. Semuanya diberi tanda "tanpa mockup" dan diikat ke §1
+brief, dengan aturan tegas: kalau butuh pola yang belum ada, **tanya dulu**.
+
+**2. `/profil` adalah penampung yang punya mockup.** Brief §10 memintanya
+dibangun, jadi ia maju dari Fase 13 ke R5 — membangunnya nanti berarti
+membangunnya dua kali. Ia juga menutup **titik ke-5 dari enam** yang dijanjikan
+FR-WALLET-17. Titik ke-6 (pusat hadiah) tetap menunggu Fase 12.
+
+**3. Sebelas penampung lain tidak punya mockup dan bukan pekerjaan Fase R.**
+Tetap didaftar, dengan satu kotak "kalau dibangun" masing-masing — supaya tidak
+ada sesi berikutnya yang membangunnya dengan palet lama.
+
+### Yang **tidak** dikerjakan
+
+- **Masih nol perubahan kode.** Ini berkas rencana; R1 belum disentuh.
+- **Tidak ada 8 × 42 kotak pemeriksaan baku.** Delapan aturan yang berlaku di
+  semua halaman ditulis **sekali** di kepala berkas; tiap halaman merujuknya
+  dengan satu kotak. 240 kotak identik bukan ketelitian, itu kebisingan.
+- **`/karya/baru` + `/karya/:id/ubah` dan kedua rute editor bab digabung** satu
+  bagian masing-masing — keduanya memang satu komponen dua mode, dan memecahnya
+  di todo mengundang orang memecahnya di kode.
+
+---
+
+## 2026-09-04 · Langkah 41 — `novelova-v2/` lahir: redesign putaran 7 dimulai
+
+> "Nah disini kan ada folder novelova yang isinya adalah pwa, akan tetapi disini
+> saya merasa desain nya kurang menarik jadi saya ingin kamu buat folder baru
+> kemudian isinya adalah copy an dari folder novelova. Untuk planning design nya
+> bisa cek file redesign-novelova.md ini untuk color yang saya inginkan.
+> Kemudian untuk preview tampilan bisa cek di folder Novel reader UI
+> redesign/putaran7. Itu adalah contoh tampilan yang ingin saya redesign. Untuk
+> todo ikuti terakhir di file todo.md. Jika ada yang kurang paham tolong selalu
+> konfirmasi"
+
+**Belum ada satu baris desain yang berubah.** Langkah ini hanya membuat
+salinannya dan menuliskan rencananya. Itu disengaja: garis dasar yang bisa
+di-`git diff` lebih berguna daripada commit pertama yang sudah campur aduk.
+
+### Yang dikerjakan
+
+- **`novelova-v2/`** — salinan `novelova/` pada commit `26fdb68`, tanpa
+  `node_modules`, `dist`, `test-results`, dan riwayat git-nya. 341 berkas di
+  kedua sisi, dihitung dan dicocokkan.
+- `npm ci` lalu **verifikasi sebelum menyentuh apa pun**: `npm run check` bersih
+  (biome 277 berkas · `tsc --noEmit` · nol hex di luar `tokens.css`) dan
+  **543 test lulus di 51 berkas**. Angka yang sama dengan asalnya.
+- `git init` + satu commit garis dasar. Repo baru, riwayat `novelova/` tidak
+  ikut — sesuai pilihan.
+- **`todo.md` → Fase R** (14–19 hari, tujuh bagian R1–R7) beserta barisnya di
+  Ringkasan Fase, dan blok kemajuan di kepala berkas yang kini menyebut dua
+  trek.
+- **`architecture.md` §1.20** — pembatalan keputusan terkunci #1, ruang
+  lingkupnya, dan tiga hal yang diputuskan sendiri karena doc-nya tidak
+  menyebutkan (di bawah).
+
+### Empat pertanyaan yang ditanyakan lebih dulu
+
+Aturannya dipakai lagi, dan sekali lagi membayar dirinya: dua dari empat
+jawabannya bukan yang paling saya duga.
+
+| Pertanyaan | Jawaban |
+|---|---|
+| Kulit saja, atau termasuk perilaku yang disebut doc? | **Kulit + perilaku** — doc §7 memecah ruang baca jadi dua tipe, dan Type B **adalah** Fase 5b |
+| Keputusan #1 dibatalkan — dicatat di mana? | **`architecture.md` saja.** PRD 01 tidak disunting |
+| Nama folder & git? | **`novelova-v2`**, repo baru |
+| "ikuti terakhir di todo.md" maksudnya? | **Tulis fase redesign baru di `todo.md`** |
+
+### Tiga hal yang tidak ada di dokumen dan harus diputuskan
+
+Disebut di sini karena ketiganya akan terlihat seperti salah salin kalau tidak
+dicatat.
+
+**1. Tiga berkas acuan yang dirujuk doc tidak ada.** `redesign-novelova.md` §0
+menyebut `Novel Reader Redesign.dc.html`, `ModernTabBar.dc.html`, dan
+`PrintRow.dc.html` — tidak satu pun ada di folder kerja. Yang ada 27 PNG di
+`Novel reader UI redesign/putaran7/`. Doc-nya sendiri menetapkan urutan
+otoritasnya: *"where a mockup and this document disagree, follow the mockup"*.
+Jadi PNG-nya yang berlaku, dan nilai yang tidak disebut doc diambil dari
+pikselnya.
+
+**2. Doc tidak pernah menyebut hex emasnya** — hanya `var(--color-accent)`.
+Sampel piksel menunjukkan mockup-nya memakai **dua** emas dengan pembagian tugas
+yang tegas:
+
+| Nilai | Dipakai untuk | Kontras di `#f4f2ef` |
+|---|---|---|
+| `#7d5411` | **teks** — saldo koin, rating, harga terkunci, `See all`, `+23 bonus`, badge mahkota | **5,98:1** ✓ |
+| `#b68235` | **bukan teks** — garis emas judul bab, batang progres, titik tab aktif, seluruh aksen malam | 3,01:1, dan itu tidak apa-apa |
+
+Kalau `#b68235` dipakai untuk teks — bacaan paling wajar dari doc yang hanya
+menyebut satu "accent (gold)" — seluruh angka koin, rating, dan harga di
+aplikasi ini gagal AA sekaligus.
+
+**3. Mockup-nya sendiri gagal AA di dua tempat**, dan itu diperbaiki:
+
+| Peran | Mockup | Kontras | Dipakai |
+|---|---|---|---|
+| Teks metadata — penulis, caption, label section | `#8a827a` | 3,38:1 | `#6f6862` (4,90:1) |
+| Label `BERSPONSOR` | `#b8b0a8` | 2,3:1 | tinta metadata yang sama |
+
+Preseden identik sudah ada di berkas yang sama: `--nv-muted` dulu dinaikkan dari
+`#928582` ke `#6f6462` atas alasan yang persis sama (PRD 01 §9.2 rec #8).
+`#c4bcb2` tetap apa adanya sebagai `--nv-disabled` — WCAG 1.4.3 memang
+mengecualikan kontrol nonaktif.
+
+### Yang **tidak** dikerjakan, dan kenapa
+
+- **Tidak ada satu pun perubahan visual.** Diminta "buat folder baru berisi
+  salinan" lebih dulu; redesign-nya dipecah jadi R1–R7 supaya bisa diverifikasi
+  per tahap seperti fase-fase sebelumnya.
+- **`novelova/` tidak disentuh** — tetap rose-gold, tetap 543 test. Entri
+  Langkah 40 di `novelova/CHANGELOG.md` masih belum di-commit di repo itu, dan
+  saya biarkan apa adanya.
+- **PRD tidak disunting.** Bawaan Langkah 24 berlaku lagi; §1.19 (FR-READ-09)
+  tetap satu-satunya PRD yang pernah direvisi.
+- **Belum ada paket font baru.** `@fontsource/lora` +
+  `@fontsource-variable/plus-jakarta-sans` menggantikan Cormorant Garamond +
+  Manrope di R1, bukan sekarang — runtime tetap **12 paket**, tukar dua, bukan
+  tambah dua.
+
+---
+
 ## 2026-09-04 · Langkah 40 — PRD Reader direvisi: auto-unlock jadi izin per cerita
 
 > "oke kalau gitu prd untuk chapter read/unlock tolong diadjust sesuai permintaan

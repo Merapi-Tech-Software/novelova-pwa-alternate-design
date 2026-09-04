@@ -1,77 +1,122 @@
 /*
- * Novelova — token desain.
+ * Novelova — token desain, **putaran 7**.
  * SATU-SATUNYA tempat warna dan ukuran hidup (architecture.md §3 aturan struktur,
  * §9.1). Satu hex di luar berkas ini = bug lint.
- * Sumber: prd_01_design_system.md §3.1 & §5, dengan dua koreksi kontras yang
- * ditandai di bawah.
+ *
+ * Sumber: `redesign-novelova.md` §1 + piksel PNG di
+ * `Novel reader UI redesign/putaran7/`. Alasan pergantiannya dari rose-gold PRD 01,
+ * dan tiga hal yang diputuskan sendiri karena brief-nya tidak menyebutkan,
+ * ada di architecture.md **§1.20**.
+ *
+ * Tiga aturan yang gampang dilanggar dari berkas ini:
+ *   1. Aksi utama adalah **tinta gelap**, bukan emas. Emas tidak pernah jadi isi besar.
+ *   2. Emas ada **dua**, dan pembagiannya bukan selera: `--nv-gold` untuk teks,
+ *      `--nv-gold-line` untuk yang bukan teks. Menukarnya membuat setiap angka
+ *      koin, rating, dan harga di aplikasi ini gagal AA sekaligus.
+ *   3. Bayangan hanya untuk **sampul** dan **elemen melayang**. Panel diberi garis.
  */
 
 :root {
   /* ── permukaan ─────────────────────────────────────────────────────────── */
-  --nv-bg: #f4efea;
-  --nv-card: #fffdfc;
-  --nv-paper: #fffdfa;
-  --nv-paper-2: #fff8f4;
+  --nv-bg: #f4f2ef; /* kertas halaman */
+  --nv-card: #ffffff; /* panel putih */
+  --nv-paper: #faf8f5; /* permukaan baca — sedikit lebih hangat dari kertas */
+  --nv-paper-2: #f4f2ef; /* isian di dalam panel: skeleton, alur progres, sel mati */
 
-  /* ── teks ──────────────────────────────────────────────────────────────── */
-  --nv-text: #2e2625;
-  --nv-muted: #6f6462; /* dinaikkan dari #928582 — PRD 01 §9.2 rec #8, kontras AA */
-  --nv-line: rgb(46 38 37 / 0.08);
-  --nv-line-soft: rgb(46 43 43 / 0.06);
+  /* ── tinta ─────────────────────────────────────────────────────────────── */
+  --nv-text: #1c1a18;
+  --nv-text-2: #4a443e; /* teks sekunder — 8,6:1 */
+  /*
+   * Mockup memakai #8a827a untuk teks metadata: **3,38:1, gagal AA**.
+   * Dinaikkan ke 4,90:1. Preseden identik ada di versi rose-gold berkas ini,
+   * yang menaikkan #928582 → #6f6462 atas alasan yang persis sama
+   * (PRD 01 §9.2 rec #8). Label `BERSPONSOR` juga memakai ini, bukan #b8b0a8
+   * mockup yang cuma 2,3:1 — label iklan yang tidak terbaca bukan sekadar
+   * cacat kontras.
+   */
+  --nv-muted: #6f6862;
+  --nv-disabled: #c4bcb2; /* nilai mockup apa adanya — WCAG 1.4.3 mengecualikan kontrol nonaktif */
+  --nv-read-ink: #1c1a18; /* isi bab; berbeda dari --nv-text hanya di tema gelap */
 
-  /* ── aksen ─────────────────────────────────────────────────────────────── */
-  --nv-accent: #d09a93;
-  --nv-accent-2: #f0c9c2;
-  --nv-accent-soft: rgb(208 154 147 / 0.18);
-  --nv-accent-strong: #b8695f;
+  /* ── garis, bukan bayangan ─────────────────────────────────────────────── */
+  --nv-line: #e6e2db; /* pembatas di dalam daftar */
+  --nv-line-soft: #e2ddd5; /* tepi wadah — sedikit lebih tegas, bukan lebih lembut */
+  --nv-line-input: #dcd6cd; /* garis bawah input, 1,5px */
 
-  /* ── domain ────────────────────────────────────────────────────────────── */
-  --nv-coin: #bf8f46; /* dinaikkan dari #d7ad64 untuk kontras teks */
-  --nv-coin-icon: #d7ad64; /* nilai asli PRD, khusus ikon */
+  /* ── aksi ──────────────────────────────────────────────────────────────── */
+  /*
+   * Aksennya **tinta**, bukan emas: brief §1 menyebutnya lugas — tombol utama
+   * isi #1c1a18, dan emas *"never for large fills"*. Karena token ini yang
+   * dipakai 190-an tempat, satu nilai di sini membuat seluruh tombol, tab aktif,
+   * dan garis bawah tab ikut benar tanpa disentuh satu per satu.
+   */
+  --nv-accent: #1c1a18;
+  --nv-accent-soft: rgb(28 26 24 / 0.06); /* latar keadaan aktif & hover */
+
+  /* ── emas — dua nilai, dua tugas ───────────────────────────────────────── */
+  /*
+   * Diambil dari piksel mockup; brief-nya sendiri hanya menulis
+   * `var(--color-accent)` tanpa hex sama sekali (architecture.md §1.20).
+   */
+  --nv-gold: #7d5411; /* TEKS: saldo koin, rating, harga bab terkunci, `See all`, `+23 bonus` — 5,98:1 */
+  --nv-gold-line: #b68235; /* BUKAN TEKS: garis judul bab, batang progres, titik tab aktif, aksen malam */
+  --nv-gold-soft: #fff3e4; /* latar badge & pil diskon */
+
+  /* ── jaket sampul ──────────────────────────────────────────────────────── */
+  /*
+   * Dasar sampul untuk cerita tanpa artwork. Tiga, bukan satu, supaya satu
+   * deretan kartu tidak terlihat sebagai satu blok — persis seperti baris
+   * `POPULAR` di `7a`. Glow radialnya **satu-satunya gradien** yang diizinkan
+   * brief §14, dan ia hidup di sini supaya tidak ditulis ulang per komponen.
+   */
+  --nv-jacket-glow: radial-gradient(circle at 50% 32%, rgb(255 255 255 / 0.09), transparent 62%);
+  --nv-jacket-1: var(--nv-jacket-glow), #2d2b2b;
+  --nv-jacket-2: var(--nv-jacket-glow), #3a270d;
+  --nv-jacket-3: var(--nv-jacket-glow), #5a3b0a;
 
   /* ── status ────────────────────────────────────────────────────────────── */
-  --nv-success: #3f8e60;
-  --nv-success-bg: #e8f3e9;
-  --nv-danger: #a34436;
-  --nv-danger-bg: #f6d9d2;
-  --nv-warning: #9b604b;
-  --nv-warning-bg: #f5e2d0;
-  --nv-info: #487083;
+  /* Dipakai untuk **kata status dan garis**, tidak pernah untuk isi penuh:
+     brief §1 menyebut destruktif tetap abu, tidak pernah isi merah. */
+  --nv-success: #3f6b4e;
+  --nv-success-bg: #eaf0ea;
+  --nv-danger: #9a4a3c;
+  --nv-danger-bg: #f6e9e5;
+  --nv-warning: #8a6432;
+  --nv-warning-bg: #f6eede;
+  --nv-info: #40606e;
 
   /* ── di atas gambar ────────────────────────────────────────────────────── */
   /* Scrim gelap dan teks terang untuk judul yang berdiri di atas gambar apa pun
      (banner beranda). Nilainya sama di tema terang maupun gelap: yang menentukan
      kontras di sini gambarnya, bukan temanya. */
-  --nv-scrim: rgb(32 31 29 / 0.72);
-  --nv-on-scrim: #fdfbf9;
+  --nv-scrim: rgb(28 26 24 / 0.72);
+  --nv-on-scrim: #faf8f5;
 
   /* ── meter kekuatan kata sandi — lima warna, satu per skor (FR-AUTH-06) ── */
-  --nv-strength-0: #d9b3ac;
-  --nv-strength-1: #d9a37f;
-  --nv-strength-2: #cbb46a;
-  --nv-strength-3: #7fb08a;
-  --nv-strength-4: #5a9e6e;
+  /* Diselaraskan ke palet hangat; tetap lima langkah karena meter tanpa
+     perbedaan warna berhenti menyampaikan apa pun. */
+  --nv-strength-0: #a34a3c;
+  --nv-strength-1: #a8703a;
+  --nv-strength-2: #8d803a;
+  --nv-strength-3: #5f8a5a;
+  --nv-strength-4: #3f6b4e;
 
   /* ── warna merek penyedia OAuth (FR-AUTH-04) ───────────────────────────── */
-  /* Dipertahankan apa adanya: tombol masuk pihak ketiga dikenali dari warnanya,
-     dan menggantinya dengan rose-gold justru membuatnya tidak terbaca sebagai
-     tombol Google/Facebook. Satu-satunya warna di berkas ini yang bukan milik
-     Novelova — dan tetap di sini, karena hex hanya boleh ada di berkas ini. */
+  /* Dipertahankan apa adanya: tombol masuk pihak ketiga dikenali dari warnanya.
+     Satu-satunya warna di berkas ini yang bukan milik Novelova — dan tetap di
+     sini, karena hex hanya boleh ada di berkas ini. */
   --nv-brand-google: #db4437;
   --nv-brand-facebook: #1877f2;
 
-  /* ── aksen kategori — token turunan, PRD 01 §9.2 rec #2 ────────────────── */
-  --nv-cat-popular: var(--nv-accent);
-  --nv-cat-trending: #55a7b1;
-  --nv-cat-editors: #9f7a54;
-
   /* ── radius ────────────────────────────────────────────────────────────── */
+  /* Sampul kecil dan potret. Ubin "album art" membulat dilarang brief §1. */
+  --nv-r-cover: 5px;
   --nv-r-pill: 999px;
-  --nv-r-sm: 12px;
-  --nv-r-md: 14px;
-  --nv-r-lg: 18px;
-  --nv-r-xl: 22px;
-  --nv-r-sheet: 28px 28px 0 0;
+  --nv-r-sm: 6px;
+  --nv-r-md: 10px;
+  --nv-r-lg: 12px;
+  --nv-r-xl: 16px;
+  --nv-r-sheet: 20px 20px 0 0;
 
   /* ── elevasi ───────────────────────────────────────────────────────────── */
   /*
@@ -85,29 +130,67 @@
    *
    * `env(safe-area-inset-bottom)` ikut karena tingginya berubah di perangkat
    * berponi; angka tetap akan meleset di sana saja, dan meleset diam-diam.
+   *
+   * Putaran 7 menaikkannya: `ModernTabBar` setinggi 86px, bukan 60px.
    */
-  --nv-bottom-nav: calc(3.75rem + max(0.5rem, env(safe-area-inset-bottom)));
+  --nv-bottom-nav: calc(5.375rem + max(0.5rem, env(safe-area-inset-bottom)));
 
-  --nv-shadow-soft: 0 6px 16px rgb(30 30 30 / 0.06);
-  --nv-shadow: 0 10px 26px rgb(30 30 30 / 0.08);
+  /*
+   * Dua bayangan, dan hanya dua.
+   * `soft` = sampul buku, supaya sampul terbaca sebagai benda fisik.
+   * `nv`   = elemen yang benar-benar melayang di atas halaman — modal, popover,
+   *          toast, FAB, dan bilah reader yang mengambang. Panel biasa tidak
+   *          termasuk: panel diberi garis.
+   */
+  --nv-shadow-soft: 0 4px 12px rgb(28 26 24 / 0.14);
+  --nv-shadow: 0 8px 24px rgb(28 26 24 / 0.12);
 
-  /* ── tipografi ─────────────────────────────────────────────────────────── */
-  --nv-font-ui: "Manrope Variable", system-ui, sans-serif;
-  --nv-font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
-  --nv-font-read: Georgia, "Times New Roman", serif; /* isi bab, FR-READ-01 */
+  /* ── tipografi — dua muka, satu tugas masing-masing (brief §1) ─────────── */
+  /* Serif = yang *adalah* cerita. Sans = yang dikatakan aplikasi tentang dirinya. */
+  --nv-font-ui: "Plus Jakarta Sans Variable", system-ui, sans-serif;
+  --nv-font-display: "Lora Variable", "Iowan Old Style", Georgia, serif;
+  --nv-font-read: "Lora Variable", Georgia, "Times New Roman", serif; /* isi bab, FR-READ-01 */
   --nv-font-mono: ui-monospace, Consolas, monospace; /* nomor VA */
 }
 
+/*
+ * Tema gelap = mode malam mockup `7g`. Bukan inversi mekanis: emas naik jadi
+ * aksen aksi (sakelar nyala, tombol `Bab 4 ›`), dan isi bab sengaja lebih redup
+ * daripada teks antarmuka supaya tidak menyilaukan di ruang gelap.
+ */
 [data-theme="dark"] {
-  --nv-bg: #12151a;
-  --nv-card: #1b2028;
-  --nv-paper: #161a20;
-  --nv-paper-2: #1b2028;
-  --nv-text: #efe9e6;
-  --nv-muted: #b4adb0;
-  --nv-line: rgb(238 230 226 / 0.24);
-  --nv-line-soft: rgb(238 230 226 / 0.12);
-  --nv-accent-soft: rgb(208 154 147 / 0.22);
-  --nv-shadow-soft: 0 6px 16px rgb(0 0 0 / 0.35);
-  --nv-shadow: 0 10px 26px rgb(0 0 0 / 0.45);
+  --nv-bg: #171513;
+  --nv-card: #211d19;
+  --nv-paper: #171513;
+  --nv-paper-2: #2a2521;
+
+  --nv-text: #f0ece7; /* 15,5:1 */
+  --nv-text-2: #c4beb7;
+  --nv-muted: #8b857d; /* 4,99:1 */
+  --nv-disabled: #5f5a54;
+  --nv-read-ink: #ddd6cd; /* isi bab — lebih redup dari teks antarmuka, sesuai `7g` */
+
+  --nv-line: #302b26;
+  --nv-line-soft: #3a342d;
+  --nv-line-input: #453e37;
+
+  /* Di malam hari emaslah yang jadi aksi — `7g` menunjukkannya di sakelar nyala
+     dan tombol bab berikutnya. #b68235 di atas #171513 = 5,41:1. */
+  --nv-accent: #b68235;
+  --nv-accent-soft: rgb(182 130 53 / 0.16);
+
+  --nv-gold: #b68235; /* teks emas ikut naik: yang gelap tidak terbaca di sini */
+  --nv-gold-line: #b68235;
+  --nv-gold-soft: rgb(182 130 53 / 0.14);
+
+  --nv-success: #7ab48c;
+  --nv-success-bg: rgb(122 180 140 / 0.14);
+  --nv-danger: #d98a7a;
+  --nv-danger-bg: rgb(217 138 122 / 0.14);
+  --nv-warning: #cfa15e;
+  --nv-warning-bg: rgb(207 161 94 / 0.14);
+  --nv-info: #7ea6b8;
+
+  --nv-shadow-soft: 0 4px 12px rgb(0 0 0 / 0.45);
+  --nv-shadow: 0 8px 24px rgb(0 0 0 / 0.55);
 }

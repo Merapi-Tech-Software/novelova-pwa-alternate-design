@@ -18,6 +18,11 @@ export interface TabsProps<T extends string> {
 /**
  * Tab saringan. Memakai `role="tablist"` dengan navigasi panah — pengguna
  * keyboard berpindah tab dengan ← →, bukan menekan Tab lima kali.
+ *
+ * **Putaran 7: tab teks bergaris bawah 2px, bukan pil.** Brief §1 memisahkannya
+ * tegas — saringan adalah tab teks; pil hanya dipakai di tempat mockup memang
+ * menggambar pil (genre tambahan, tag, saran pencarian). Yang dipilih ditandai
+ * garis, bukan latar, supaya deretan tab tidak berubah jadi deretan tombol.
  */
 export function Tabs<T extends string>({ items, value, onChange, label, className }: TabsProps<T>) {
   const move = (delta: number) => {
@@ -30,7 +35,13 @@ export function Tabs<T extends string>({ items, value, onChange, label, classNam
     <div
       role="tablist"
       aria-label={label}
-      className={cx('flex gap-2 overflow-x-auto pb-1', className)}
+      className={cx(
+        'flex gap-5 overflow-x-auto border-nv-line border-b',
+        // Bilah gulir disembunyikan: garis bawah tab adalah garisnya sendiri,
+        // dan scrollbar di atasnya membuat dua garis sejajar yang tebalnya beda.
+        '[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        className,
+      )}
       onKeyDown={(e) => {
         if (e.key === 'ArrowRight') {
           e.preventDefault()
@@ -53,15 +64,18 @@ export function Tabs<T extends string>({ items, value, onChange, label, classNam
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(item.value)}
             className={cx(
-              'shrink-0 rounded-nv-pill border px-3.5 py-1.5 text-caption font-semibold transition',
+              // `-mb-px` menaruh garis bawah tab tepat di atas garis tablist,
+              // bukan 1px di bawahnya — tanpa itu keduanya terlihat sebagai dua
+              // garis kembar.
+              '-mb-px shrink-0 border-b-2 px-0.5 pt-1 pb-2.5 text-body transition',
               selected
-                ? 'border-nv-accent bg-nv-accent-soft text-nv-accent-strong'
-                : 'border-nv-line bg-nv-card text-nv-muted hover:border-nv-accent',
+                ? 'border-nv-accent font-bold text-nv-text'
+                : 'border-transparent font-medium text-nv-muted hover:text-nv-text-2',
             )}
           >
             {item.label}
             {item.count !== undefined && (
-              <span className="ml-1.5 opacity-70 tabular-nums">{item.count}</span>
+              <span className="ml-1.5 text-nv-muted tabular-nums">{item.count}</span>
             )}
           </button>
         )

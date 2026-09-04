@@ -1,9 +1,10 @@
-import { SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Chip } from '@/components/ui/Chip'
 import { Select } from '@/components/ui/Field'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import type { BrowseConfig } from '../browseConfig'
 import { GENRE_OPTIONS } from '../browseConfig'
 
@@ -37,21 +38,61 @@ export function BrowseControls({ config, value, onChange }: BrowseControlsProps)
   const active = value.tab || value.extra ? 1 : 0
 
   return (
-    <div className="sticky top-0 z-20 -mx-4 mb-4 border-nv-line border-b bg-nv-bg/95 px-4 pb-3 backdrop-blur">
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <Select
-            label={t('home.sortLabel')}
-            value={value.sort}
-            onChange={(e) => onChange({ sort: e.target.value })}
-            options={config.sorts}
-          />
-        </div>
+    <div className="-mx-4 mb-4 px-4">
+      {/* `7d`: chip periode jadi **tab teks bergaris bawah**, bukan deret pil. */}
+      <div className="flex gap-5 overflow-x-auto border-nv-line border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {config.chips.map((chip) => {
+          const on = value.chip === chip.value
+          return (
+            <button
+              key={chip.value}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onChange({ chip: chip.value })}
+              className={cx(
+                '-mb-px shrink-0 border-b-2 px-0.5 pt-1 pb-2.5 text-body transition',
+                on
+                  ? 'border-nv-accent font-bold text-nv-text'
+                  : 'border-transparent font-medium text-nv-muted hover:text-nv-text-2',
+              )}
+            >
+              {chip.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Kepala `URUTAN` + pengurut sebagai aksi emas rata kanan (`7d`). */}
+      <SectionHeader
+        label={t('home.sortLabel')}
+        className="mt-4 mb-1"
+        action={
+          <span className="relative inline-flex shrink-0 items-center gap-1 font-bold text-caption text-nv-gold">
+            {config.sorts.find((s) => s.value === value.sort)?.label ?? config.sorts[0]?.label}
+            <ChevronDown size={12} aria-hidden />
+            <select
+              aria-label={t('home.sortLabel')}
+              value={value.sort}
+              onChange={(e) => onChange({ sort: e.target.value })}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            >
+              {config.sorts.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </span>
+        }
+      />
+
+      <div className="flex justify-end pt-1">
         <Button
-          variant="secondary"
+          size="sm"
+          variant="ghost"
           onClick={() => setOpen((on) => !on)}
           aria-expanded={open}
-          iconLeft={<SlidersHorizontal size={15} />}
+          iconLeft={<SlidersHorizontal size={14} />}
         >
           {active > 0 ? t('home.filterActive') : t('home.filter')}
         </Button>
@@ -78,18 +119,6 @@ export function BrowseControls({ config, value, onChange }: BrowseControlsProps)
           )}
         </div>
       )}
-
-      <div className="mt-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {config.chips.map((chip) => (
-          <Chip
-            key={chip.value}
-            selected={value.chip === chip.value}
-            onClick={() => onChange({ chip: chip.value })}
-          >
-            {chip.label}
-          </Chip>
-        ))}
-      </div>
     </div>
   )
 }

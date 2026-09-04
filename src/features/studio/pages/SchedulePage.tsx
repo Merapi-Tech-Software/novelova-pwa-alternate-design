@@ -170,7 +170,7 @@ export default function SchedulePage() {
           }
         >
           {(list) => (
-            <ul className="grid gap-2.5">
+            <ul className="grid grid-cols-1 gap-2.5">
               {list.map((entry) => (
                 <li key={entry.id} className="rounded-nv-lg border border-nv-line bg-nv-card p-3.5">
                   <p className="font-semibold text-body text-nv-text">{entry.storyTitle}</p>

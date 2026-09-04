@@ -180,6 +180,7 @@ export const storyHandlers: Pick<
       finished: progress?.finishedChapterIds.includes(chapterId) ?? false,
       content: owned ? content : [],
       preview: body.slice(0, 2),
+      storyTitle: (await db.stories.get(chapter.storyId))?.title ?? '',
       prevChapterId: siblings[at - 1]?.id ?? null,
       nextChapterId: siblings[at + 1]?.id ?? null,
       nextTitle: siblings[at + 1]?.title ?? null,
@@ -212,8 +213,29 @@ export const storyHandlers: Pick<
       ? await db.chapters.get(progress.lastChapterId)
       : undefined
 
+    // Hanya bab yang benar-benar terbit ikut dihitung — durasi yang memuat draf
+    // penulis adalah janji yang tidak bisa ditepati pembaca.
+    const publishedChapters = (await db.chapters.where('storyId').equals(storyId).toArray())
+      .filter((c) => c.state === 'published')
+      .sort((a, b) => a.number - b.number)
+
+    const readMinutesTotal = publishedChapters.reduce((sum, c) => sum + c.readMinutes, 0)
+
+    // **Bab gratis dihitung sebagai awalan, bukan sebagai jumlah.** Copy-nya
+    // berbunyi "N bab *pertama* gratis"; kalau yang gratis tersebar di
+    // tengah-tengah, kalimat itu bohong. Jadi yang dihitung panjang deret gratis
+    // dari bab pertama, dan berhenti di bab berbayar pertama.
+    const firstPaid = publishedChapters.findIndex((c) => c.access === 'paid')
+    const freeChapterCount = firstPaid === -1 ? publishedChapters.length : firstPaid
+
+    const paidPrices = publishedChapters.filter((c) => c.access === 'paid').map((c) => c.priceCoins)
+    const paidPriceFrom = paidPrices.length > 0 ? Math.min(...paidPrices) : null
+
     return {
       ...story,
+      readMinutesTotal,
+      freeChapterCount,
+      paidPriceFrom,
       editorNote: null,
       growthNote: null,
       inLibrary: entry !== undefined && !entry.removed,

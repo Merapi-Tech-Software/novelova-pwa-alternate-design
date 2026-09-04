@@ -1,12 +1,12 @@
-import { ArrowDownUp, Check, Circle, Dot } from 'lucide-react'
+import { ArrowDownUp } from 'lucide-react'
 import type { ChapterSummary, StoryDetail } from '@/api/contracts'
 import { ChapterRow } from '@/components/patterns/ChapterRow'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SearchInput } from '@/components/ui/Field'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { t } from '@/i18n/t'
-import { cx } from '@/lib/cx'
 
 /** Di bawah ini kolom pencarian bab tidak muncul (FR-DETAIL-14). */
 const SEARCH_THRESHOLD = 20
@@ -24,28 +24,6 @@ export interface ChapterListProps {
   onMore: () => void
 }
 
-/**
- * Tiga penanda di luar status kunci · FR-DETAIL-14.
- *
- * Sudah dibaca, sedang dibaca, belum dibaca — pembaca yang kembali setelah
- * seminggu tidak ingat bab mana yang ia tinggalkan, dan daftar tanpa penanda
- * memaksanya menebak.
- */
-function Mark({ chapter, current }: { chapter: ChapterSummary; current: boolean }) {
-  const [Icon, label, tone] = chapter.finished
-    ? [Check, t('story.markFinished'), 'text-nv-success']
-    : current
-      ? [Dot, t('story.markReading'), 'text-nv-accent-strong']
-      : [Circle, t('story.markUnread'), 'text-nv-line']
-
-  return (
-    <span className={cx('inline-flex items-center gap-1 text-caption', tone)}>
-      <Icon size={14} aria-hidden />
-      <span className="sr-only">{label}</span>
-    </span>
-  )
-}
-
 export function ChapterList({
   story,
   chapters,
@@ -60,14 +38,25 @@ export function ChapterList({
 }: ChapterListProps) {
   return (
     <section>
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-section font-semibold">{t('story.chapters')}</h2>
-        <span className="text-caption text-nv-muted tabular-nums">
-          {t('story.chapterCount')(total)}
-        </span>
-      </div>
+      {/* `7b`: label kecil + garis + pengurut rata kanan. Jumlah babnya sudah
+          tampil di strip statistik atas, jadi di sini ia cuma pengulangan. */}
+      <SectionHeader
+        label={t('story.chapters')}
+        className="mb-1"
+        action={
+          <button
+            type="button"
+            onClick={onSort}
+            className="flex shrink-0 items-center gap-1 font-bold text-caption text-nv-text"
+          >
+            {sort === 'asc' ? t('story.sortAsc') : t('story.sortDesc')}
+            <ArrowDownUp size={12} aria-hidden />
+          </button>
+        }
+      />
+      <span className="sr-only">{t('story.chapterCount')(total)}</span>
 
-      <div className="mb-3 flex items-end gap-2">
+      <div className="mb-2 flex items-end gap-2">
         {/* Kolom pencarian hanya muncul saat daftarnya memang panjang. */}
         {story.stats.chapterCount > SEARCH_THRESHOLD && (
           <div className="flex-1">
@@ -79,9 +68,6 @@ export function ChapterList({
             />
           </div>
         )}
-        <Button size="sm" variant="secondary" onClick={onSort} iconLeft={<ArrowDownUp size={14} />}>
-          {sort === 'asc' ? t('story.sortAsc') : t('story.sortDesc')}
-        </Button>
       </div>
 
       {loading && chapters.length === 0 && (
@@ -103,13 +89,10 @@ export function ChapterList({
         />
       )}
 
-      <ul className="divide-y divide-nv-line-soft">
+      <ul className="divide-y divide-nv-line">
         {chapters.map((chapter) => (
-          <li key={chapter.id} className="flex items-center gap-2">
-            <Mark chapter={chapter} current={chapter.id === story.continueChapterId} />
-            <div className="min-w-0 flex-1">
-              <ChapterRow chapter={chapter} />
-            </div>
+          <li key={chapter.id}>
+            <ChapterRow chapter={chapter} current={chapter.id === story.continueChapterId} />
           </li>
         ))}
       </ul>

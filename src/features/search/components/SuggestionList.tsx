@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react'
 import type { Suggestion } from '@/api/contracts'
 import { t } from '@/i18n/t'
 
@@ -28,7 +29,7 @@ export function SuggestionList({
   return (
     <ul
       aria-label={t('search.suggestions')}
-      className="mb-4 overflow-hidden rounded-nv-lg border border-nv-line bg-nv-card"
+      className="mb-4 divide-y divide-nv-line border-nv-line border-b"
     >
       {suggestions.map((item) => {
         const before = item.label.slice(0, item.matchStart)
@@ -36,15 +37,16 @@ export function SuggestionList({
         const after = item.label.slice(item.matchStart + item.matchLength)
 
         return (
-          <li key={item.id} className="border-nv-line-soft border-b last:border-b-0">
+          <li key={item.id}>
             <button
               type="button"
               onClick={() => onPick(item.label)}
-              className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-body"
+              className="flex w-full items-center gap-3 py-3.5 text-left text-body"
             >
-              <span className="min-w-0 truncate">
+              <Search size={15} aria-hidden className="shrink-0 text-nv-muted" />
+              <span className="min-w-0 flex-1 truncate">
                 {before}
-                <strong className="font-semibold text-nv-accent-strong">{hit}</strong>
+                <strong className="font-bold text-nv-text">{hit}</strong>
                 {after}
               </span>
               <span className="shrink-0 text-caption text-nv-muted">{KIND_LABEL[item.kind]}</span>

@@ -43,17 +43,21 @@ export function Switch({
         aria-describedby={description ? descId : undefined}
         disabled={locked}
         onClick={() => !locked && onChange(!checked)}
+        // Ukuran brief §1: jalur 44×26, knob 20, jarak tempuh 18px.
+        // Garis 1px memakan tepi di keempat sisi, jadi kotak dalamnya 42×24 dan
+        // paddingnya jadi 2, bukan 3 seperti angka brief — yang harus tetap
+        // persis adalah **jarak tempuhnya**: 42 − 20 − 2 − 2 = 18.
         className={cx(
-          'relative h-6 w-11 shrink-0 rounded-nv-pill border transition',
-          on ? 'border-nv-accent bg-nv-accent' : 'border-nv-line bg-nv-paper-2',
+          'relative h-[26px] w-11 shrink-0 rounded-nv-pill border transition',
+          on ? 'border-nv-accent bg-nv-accent' : 'border-nv-line-soft bg-nv-paper-2',
           locked ? 'cursor-not-allowed' : 'cursor-pointer',
         )}
       >
         <span
           aria-hidden
           className={cx(
-            'absolute top-0.5 size-4.5 rounded-nv-pill bg-nv-card shadow-nv-soft transition-all',
-            on ? 'left-[calc(100%-1.25rem)]' : 'left-0.5',
+            'absolute top-[2px] size-5 rounded-nv-pill bg-nv-card shadow-nv-soft transition-all',
+            on ? 'left-[20px]' : 'left-[2px]',
           )}
         />
       </button>
@@ -102,7 +106,7 @@ export function Slider({ value, min, max, step = 1, onChange, label, valueText }
         aria-label={label}
         aria-valuetext={valueText}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-nv-pill bg-nv-paper-2 accent-[var(--nv-accent-strong)]"
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-nv-pill bg-nv-paper-2 accent-[var(--nv-accent)]"
       />
     </label>
   )

@@ -10,6 +10,7 @@ import { approveAllPendingAsAdmin } from '@/api/mock/handlers/schedule'
 import { AdSlot } from '@/components/patterns/AdSlot'
 import { ChapterRow } from '@/components/patterns/ChapterRow'
 import { CoinChip } from '@/components/patterns/CoinChip'
+import { Cover } from '@/components/patterns/Cover'
 import { DangerZone } from '@/components/patterns/DangerZone'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { ReportSheet } from '@/components/patterns/ReportSheet'
@@ -30,10 +31,12 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { CharCounter, Input, SearchInput, Select, TextArea } from '@/components/ui/Field'
 import { Modal, Sheet } from '@/components/ui/Modal'
 import { Popover } from '@/components/ui/Popover'
+import { SectionHeader, SeeAllAction } from '@/components/ui/SectionHeader'
 import { Slider, Switch } from '@/components/ui/Switch'
 import { Tabs } from '@/components/ui/Tabs'
 import { useToast } from '@/components/ui/Toast'
 import { formatCompactCoin } from '@/lib/coin'
+import { cx } from '@/lib/cx'
 import { formatRelative, formatRupiah } from '@/lib/format'
 import { setMockPaymentOutcome } from '@/payments/mock'
 import { useApp } from '@/stores/app'
@@ -154,6 +157,26 @@ const DEMO_USER: UserRowData = {
   isFollowing: false,
 }
 
+/**
+ * Petak warna. Ada di sini, bukan di berkas token, supaya pergantian tema bisa
+ * diperiksa dengan mata dalam satu tarikan — termasuk yang paling gampang
+ * lolos: tinta metadata dan dua emas.
+ */
+const SWATCHES = [
+  { name: 'text', className: 'bg-nv-text text-nv-card' },
+  { name: 'text-2', className: 'bg-nv-text-2 text-nv-card' },
+  { name: 'muted', className: 'bg-nv-muted text-nv-card' },
+  { name: 'disabled', className: 'bg-nv-disabled text-nv-text' },
+  { name: 'accent', className: 'bg-nv-accent text-nv-card' },
+  { name: 'accent-soft', className: 'bg-nv-accent-soft text-nv-text' },
+  { name: 'gold', className: 'bg-nv-gold text-nv-card' },
+  { name: 'gold-line', className: 'bg-nv-gold-line text-nv-text' },
+  { name: 'gold-soft', className: 'bg-nv-gold-soft text-nv-gold' },
+  { name: 'card', className: 'bg-nv-card text-nv-text' },
+  { name: 'paper', className: 'bg-nv-paper text-nv-text' },
+  { name: 'paper-2', className: 'bg-nv-paper-2 text-nv-text' },
+] as const
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
@@ -196,6 +219,47 @@ export default function KitchenSink() {
           {dark ? <Sun size={18} /> : <Moon size={18} />}
         </IconButton>
       </header>
+
+      <Section title="Putaran 7 — dasar">
+        <SectionHeader label="POPULAR" action={<SeeAllAction>See all</SeeAllAction>} />
+        <div className="grid grid-cols-4 gap-3">
+          <Cover title="Cinta di Balik Kontrak" badge="#1 Popular" />
+          <Cover title="Perjanjian Musim Hujan" badge="#2 Popular" />
+          <Cover title="Rahasia Lantai Dua Belas" badge="Hot" />
+          <Cover title="“Senja” yang Tertunda" />
+        </div>
+        <p className="text-caption text-nv-muted">
+          Sampul tanpa artwork memakai jaket satu huruf. Huruf keempat diambil dari huruf pertama
+          yang <em>terlihat</em> — bukan tanda kutipnya.
+        </p>
+
+        <div className="space-y-1 border-nv-line border-t pt-3">
+          <p className="font-display text-section">Serif — judul, isi bab, isi komentar</p>
+          <p className="text-body text-nv-muted">
+            Sans — label, metadata, tombol, chip, penghitung
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5 border-nv-line border-t pt-3 text-caption">
+          {SWATCHES.map(({ name, className }) => (
+            <span
+              key={name}
+              className={cx(
+                'rounded-nv-sm border border-nv-line px-2 py-1 font-semibold',
+                className,
+              )}
+            >
+              {name}
+            </span>
+          ))}
+        </div>
+        <p className="text-caption text-nv-muted">
+          Dua emas, dua tugas: <span className="font-bold text-nv-gold">teks</span> memakai
+          <code className="px-1">--nv-gold</code>, garis dan batang progres memakai
+          <code className="px-1">--nv-gold-line</code>. Menukarnya membuat setiap angka koin,
+          rating, dan harga gagal AA sekaligus.
+        </p>
+      </Section>
 
       <Section title="Tombol">
         <div className="flex flex-wrap items-center gap-2">

@@ -218,7 +218,7 @@ export default function AnalyticsPage() {
                       className={
                         metric.changePct < 0
                           ? 'text-caption text-nv-danger'
-                          : 'text-caption text-nv-accent-strong'
+                          : 'text-caption text-nv-accent'
                       }
                     >
                       {t('analytics.change')(metric.changePct)}
@@ -351,7 +351,7 @@ export default function AnalyticsPage() {
                             chapter.purchases,
                           )}
                         </span>
-                        <span className="block pt-0.5 text-caption text-nv-accent-strong">
+                        <span className="block pt-0.5 text-caption text-nv-accent">
                           {chapter.note}
                         </span>
                         {/* Batang skor relatif · FR-STUDIO-29. */}
@@ -475,10 +475,10 @@ export default function AnalyticsPage() {
                   <p className="text-body tabular-nums">
                     {t('analytics.sheetRetention')(openChapter.retentionPct)}
                   </p>
-                  <p className="text-body text-nv-accent-strong">{openChapter.note}</p>
+                  <p className="text-body text-nv-accent">{openChapter.note}</p>
                   <Link
                     to={`/karya/${storyId}/bab/${openChapter.chapterId}/ubah`}
-                    className="inline-block text-body text-nv-accent-strong underline"
+                    className="inline-block text-body text-nv-accent underline"
                   >
                     {t('analytics.sheetOpen')}
                   </Link>

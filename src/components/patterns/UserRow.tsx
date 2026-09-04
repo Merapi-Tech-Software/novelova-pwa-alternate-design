@@ -35,7 +35,7 @@ export function UserRow({ user, onToggleFollow, pending = false, className }: Us
     <div className={cx('flex items-center gap-3 py-2.5', className)}>
       <Link
         to={`/pengguna/${user.id}`}
-        className="grid size-11 shrink-0 place-items-center rounded-nv-pill bg-nv-accent-soft font-semibold text-caption text-nv-accent-strong"
+        className="grid size-11 shrink-0 place-items-center rounded-nv-pill bg-nv-accent-soft font-semibold text-caption text-nv-accent"
         aria-hidden
       >
         {initials(user.displayName)}

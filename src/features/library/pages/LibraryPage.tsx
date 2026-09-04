@@ -1,13 +1,13 @@
-import { Compass } from 'lucide-react'
+import { ChevronDown, Compass } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import type { LibraryItem, LibraryParams } from '@/api/contracts'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
-import { Chip } from '@/components/ui/Chip'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { SearchInput, Select } from '@/components/ui/Field'
+import { SearchInput } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { LibraryCard } from '../components/LibraryCard'
 import {
   useRemoveFromLibrary,
@@ -107,22 +107,30 @@ export default function LibraryPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-10">
+      {/*
+        `7c` menghapus empat kartu metrik dan blok hero: yang tersisa judul,
+        satu baris hitungan, lalu daftarnya. Angkanya **tidak hilang** — ia
+        pindah ke baris hitungan, dan tetap dibaca dari ringkasan supaya nol
+        tetap tampil saat rak kosong (FR-LIB-12).
+      */}
       <header className="px-4 pt-4">
-        <h1 className="font-display text-title font-bold text-nv-text">{t('library.title')}</h1>
-        <p className="pt-1 text-body text-nv-muted">{t('library.subtitle')}</p>
+        <h1 className="font-display text-page font-semibold text-nv-text">{t('library.title')}</h1>
+        {/*
+          Satu baris, tetapi **tetap `<dl>` dengan empat pasang `<dt>`/`<dd>`**.
+          Menggabungnya jadi satu string memang terlihat sama, dan itu justru
+          masalahnya: pembaca layar kehilangan pasangan label–angkanya, dan
+          empat assertion yang menjaga urutan FR-LIB-02 ikut kehilangan
+          pegangannya.
+        */}
+        <dl className="flex flex-wrap items-baseline gap-x-3 pt-0.5 text-body text-nv-muted">
+          {stats.map((stat) => (
+            <div key={stat.label} className="inline-flex items-baseline gap-1.5">
+              <dd className="font-semibold text-nv-text tabular-nums">{stat.value}</dd>
+              <dt>{stat.label}</dt>
+            </div>
+          ))}
+        </dl>
       </header>
-
-      {/* Ringkasan tetap tampil saat rak kosong — dengan angka nol (FR-LIB-12). */}
-      <dl className="grid grid-cols-4 gap-2 px-4 pt-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="rounded-nv-lg bg-nv-surface px-3 py-2.5 text-center">
-            <dt className="text-caption text-nv-muted">{stat.label}</dt>
-            <dd className="pt-0.5 font-display font-bold text-section text-nv-text tabular-nums">
-              {stat.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
 
       {shelfIsEmpty ? (
         <div className="px-4 pt-6">
@@ -131,7 +139,7 @@ export default function LibraryPage() {
             title={t('library.emptyTitle')}
             description={t('library.emptyBody')}
             secondary={
-              <Link to="/jelajah/populer" className="text-body text-nv-accent-strong underline">
+              <Link to="/jelajah/populer" className="text-body text-nv-accent underline">
                 {t('library.emptyPopular')}
               </Link>
             }
@@ -151,38 +159,60 @@ export default function LibraryPage() {
               value={q}
               onChange={(value) => patch({ q: value, page: null })}
               placeholder={t('library.search')}
+              variant="box"
             />
           </div>
 
           {/* `fieldset` + `legend`, bukan `div role="group"`: empat tombol
               saringan memang satu kelompok kontrol, dan elemen aslinya sudah
               membawa peran itu tanpa ARIA. */}
-          <fieldset className="flex flex-wrap gap-2 border-0 px-4 pt-3">
+          <fieldset className="mx-4 flex gap-5 overflow-x-auto border-nv-line border-b border-0 pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <legend className="sr-only">{t('library.filtersLabel')}</legend>
-            {TABS.map((tab) => (
-              <Chip
-                key={tab.id}
-                selected={tab.id === state}
-                onClick={() => patch({ state: tab.id === 'all' ? null : tab.id, page: null })}
-              >
-                {tab.label}
-              </Chip>
-            ))}
+            {TABS.map((tab) => {
+              const on = tab.id === state
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => patch({ state: tab.id === 'all' ? null : tab.id, page: null })}
+                  className={cx(
+                    '-mb-px shrink-0 border-b-2 px-0.5 pt-1 pb-2.5 text-body transition',
+                    on
+                      ? 'border-nv-accent font-bold text-nv-text'
+                      : 'border-transparent font-medium text-nv-muted hover:text-nv-text-2',
+                  )}
+                >
+                  {tab.label}
+                </button>
+              )
+            })}
           </fieldset>
 
-          <div className="flex items-end justify-between gap-3 px-4 pt-3">
+          <div className="flex items-center justify-between gap-3 px-4 pt-3">
             {/* Penghitung menampilkan hasil yang **terlihat**, bukan total
                 koleksi — itu tugas ringkasan di atas (FR-LIB-06). */}
-            <p className="pb-2 text-caption text-nv-muted tabular-nums">
+            <p className="text-caption text-nv-muted tabular-nums">
               {t('library.count')(shelf.data?.total ?? 0)}
             </p>
-            <Select
-              label={t('library.sortLabel')}
-              value={sort}
-              options={SORTS}
-              onChange={(event) => patch({ sort: event.target.value, page: null })}
-              className="w-44"
-            />
+            {/* Satu baris: label pengurut ada di `aria-label`, bukan dicetak di
+                atasnya — `7c` menaruhnya sebagai aksi, bukan sebagai kolom. */}
+            <span className="relative inline-flex shrink-0 items-center gap-1 font-bold text-caption text-nv-text">
+              {SORTS.find((s) => s.value === sort)?.label ?? SORTS[0]?.label}
+              <ChevronDown size={12} aria-hidden />
+              <select
+                aria-label={t('library.sortLabel')}
+                value={sort}
+                onChange={(event) => patch({ sort: event.target.value, page: null })}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              >
+                {SORTS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </span>
           </div>
 
           <div className="px-4 pt-2">
@@ -208,7 +238,7 @@ export default function LibraryPage() {
             >
               {(data) => (
                 <>
-                  <div className="grid gap-2.5">
+                  <ul className="divide-y divide-nv-line">
                     {data.items.map((item) => (
                       <LibraryCard
                         key={item.story.id}
@@ -217,7 +247,7 @@ export default function LibraryPage() {
                         onRemove={onRemove}
                       />
                     ))}
-                  </div>
+                  </ul>
 
                   {data.hasMore && (
                     <Button

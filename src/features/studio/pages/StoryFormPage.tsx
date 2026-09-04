@@ -268,7 +268,7 @@ function FormBody({ mode, storyId, initial, chapterCount, readers, buyers }: For
             {t('storyForm.successBody')(created.title)}
           </p>
 
-          <div className="grid gap-2 pt-5">
+          <div className="grid grid-cols-1 gap-2 pt-5">
             <Link
               to={`/karya/${created.id}/bab/baru`}
               className="inline-flex h-11 items-center justify-center rounded-nv-pill bg-nv-accent font-semibold text-body text-nv-card"
@@ -283,7 +283,7 @@ function FormBody({ mode, storyId, initial, chapterCount, readers, buyers }: For
             >
               {t('storyForm.successSchedule')}
             </Link>
-            <Link to="/karya" className="pt-1 text-body text-nv-accent-strong underline">
+            <Link to="/karya" className="pt-1 text-body text-nv-accent underline">
               {t('storyForm.successBackToStudio')}
             </Link>
           </div>
@@ -669,7 +669,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section className="pt-6">
       <h2 className="font-display text-section font-bold text-nv-text">{title}</h2>
-      <div className="grid gap-4 pt-3">{children}</div>
+      <div className="grid grid-cols-1 gap-4 pt-3">{children}</div>
     </section>
   )
 }

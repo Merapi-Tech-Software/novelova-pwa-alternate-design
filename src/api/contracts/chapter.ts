@@ -78,6 +78,13 @@ export const ChapterSchema = ChapterSummarySchema.extend({
    * memperlihatkan awal bab, bukan layar kosong (FR-READ-06).
    */
   preview: z.array(z.string()),
+  /**
+   * Judul ceritanya — bilah atas ruang baca menampilkan **cerita**, bukan bab
+   * (`7v`). Judul babnya sudah jadi tajuk besar tepat di bawahnya, jadi
+   * mengulangnya di bilah membuang satu-satunya baris yang bisa menjawab
+   * "aku sedang di buku mana".
+   */
+  storyTitle: z.string(),
   prevChapterId: IdSchema.nullable(),
   nextChapterId: IdSchema.nullable(),
   /**

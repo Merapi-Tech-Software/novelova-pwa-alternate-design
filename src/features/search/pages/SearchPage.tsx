@@ -184,7 +184,7 @@ export default function SearchPage() {
               }
             : {})}
           secondary={
-            <Link to="/jelajah/populer" className="font-semibold text-nv-accent-strong underline">
+            <Link to="/jelajah/populer" className="font-semibold text-nv-accent underline">
               {t('search.browsePopular')}
             </Link>
           }

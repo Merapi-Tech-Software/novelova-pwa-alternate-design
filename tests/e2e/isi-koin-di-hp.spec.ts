@@ -28,18 +28,33 @@ test('layar HP: tombol bayar tidak tertutup bilah navigasi bawah', async ({ page
 })
 
 /**
- * Sapuan lebar: tidak ada halaman yang menggeser badan halaman ke samping.
+ * Sapuan lebar: tidak ada halaman yang menggeser badan halaman ke samping —
+ * **di lima lebar telepon**, bukan satu.
  *
  * Gulir horizontal di HP hampir selalu tidak disengaja, dan hampir selalu
- * datang dari satu elemen yang lebih lebar daripada layarnya. Memeriksanya
- * sekali per halaman jauh lebih murah daripada menemukannya dari laporan.
+ * datang dari satu elemen yang lebih lebar daripada layarnya.
+ *
+ * Sebelumnya ini hanya diuji di lebar Pixel 7 (412px) — dan 412 justru lebar
+ * yang **paling pemaaf**. Sapuan Langkah 44 menemukan sepuluh kombinasi rusak,
+ * semuanya di 320–390px dan **tidak satu pun** di 412 ke atas: di lebar
+ * sempitlah strip empat sel, baris aksi, dan deretan chip mulai tidak muat.
+ * Menambah lebar di sini, bukan halaman, yang membuat test ini menangkapnya.
+ *
+ * Lima lebar dalam satu test per halaman, bukan lima test: pesan gagalnya sudah
+ * menyebut lebar mana yang rusak, dan memecahnya jadi 110 test membuat suite ini
+ * lima kali lebih lambat tanpa memberi tahu apa pun yang baru.
  */
+const LEBAR_HP = [320, 360, 390, 412, 430] as const
+
 for (const path of [
   '/',
   '/pustaka',
   '/koin',
   '/koin/transaksi',
   '/cari',
+  '/jelajah/populer',
+  '/cerita/s1',
+  '/cerita/s1/bab/s1-c5',
   '/karya',
   '/karya/daftar-penulis',
   '/karya/ms1/bab',
@@ -59,13 +74,37 @@ for (const path of [
   '/cerita/s1/bab/s1-c5/komentar',
 ]) {
   test(`layar HP: ${path} tidak menggeser halaman ke samping`, async ({ page }) => {
-    await page.goto(path)
-    await page.waitForLoadState('networkidle')
+    for (const width of LEBAR_HP) {
+      await page.setViewportSize({ width, height: 844 })
+      await page.goto(path)
+      await page.waitForLoadState('networkidle')
+      // **Tunggu fontnya, bukan cuma jaringannya.** Lora dan Plus Jakarta Sans
+      // masuk di putaran 7, dan `networkidle` bisa tercapai saat keduanya masih
+      // menukar diri dari font fallback — pada saat itu lebar tiap teks masih
+      // memakai metrik yang salah. Gejalanya: dua halaman gagal hanya saat suite
+      // penuh berjalan paralel, dan lulus bersih saat dijalankan sendirian.
+      await page.evaluate(() => document.fonts.ready)
 
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    )
-    expect(overflow).toBeLessThanOrEqual(0)
+      // **Diukur berulang sampai tenang, bukan sekali.** `networkidle` dan
+      // `fonts.ready` sama-sama bisa tercapai saat React Query masih menukar
+      // kerangka dengan isinya, dan luberan sesaat di tengah pertukaran itu
+      // bukan cacat yang dilihat siapa pun. Gejalanya khas: gagal **hanya** saat
+      // suite penuh berjalan paralel, lulus bersih saat dijalankan sendirian,
+      // dan tiga spec berbeda kena bergantian.
+      //
+      // `toPass` tidak melemahkan pemeriksaannya — luberan sungguhan tetap
+      // gagal sampai batas waktunya habis. Yang berubah cuma: yang diperiksa
+      // adalah **tata letak yang sudah tenang**, dan itu memang yang dijanjikan.
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            ),
+          { message: `${path} meluber di lebar ${width}px`, timeout: 5_000 },
+        )
+        .toBeLessThanOrEqual(0)
+    }
   })
 }
 

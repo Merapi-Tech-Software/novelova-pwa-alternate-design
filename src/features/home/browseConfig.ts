@@ -56,11 +56,18 @@ export const BROWSE: Record<string, BrowseConfig> = {
       { value: 'saved', label: 'Paling banyak disimpan' },
       { value: 'updated', label: 'Terbaru diperbarui' },
     ],
+    /*
+     * **`semua` lebih dulu, dan itu memperbaiki cacat.** Chip pertama adalah
+     * bawaannya, jadi selama `hari` di depan halaman ini selalu terbuka dengan
+     * "0 cerita" — pembaca yang menekan "See all" mendarat di keadaan kosong dan
+     * menyimpulkan kategorinya memang kosong. `7d` juga menaruh
+     * "Sepanjang masa" sebagai tab aktif.
+     */
     chips: [
+      { value: 'semua', label: 'Sepanjang masa' },
       { value: 'hari', label: 'Hari ini' },
       { value: 'minggu', label: 'Minggu ini' },
       { value: 'bulan', label: 'Bulan ini' },
-      { value: 'semua', label: 'Sepanjang masa' },
     ],
     extra: { param: 'status', label: 'Status', options: STATUS },
   },

@@ -22,19 +22,33 @@ import { formatCompactCoin } from '@/lib/coin'
 export function TopupFab() {
   const { pathname } = useLocation()
   const wallet = useWallet()
-  if (pathname.startsWith('/koin')) return null
+  // **Tidak dirender di halaman yang sudah punya bilah aksi sendiri.** Detail
+  // cerita membawa bilah lengket "Lanjutkan" di posisi yang sama, dan dua
+  // elemen melayang di sudut yang sama saling menindih — `7b` juga tidak
+  // menggambar FAB di sana. Pintasan yang menutupi aksi utama bukan pintasan.
+  if (pathname.startsWith('/koin') || pathname.startsWith('/cerita')) return null
 
   return (
     <Link
       to="/koin"
-      aria-label={t('home.topup')}
+      // Saldonya tidak lagi tercetak di FAB (`7a` menggambarnya sebagai lingkaran
+      // polos) tetapi **tetap diumumkan** di sini, dan tetap terlihat mata lewat
+      // chip koin di kepala beranda. FR-WALLET-17 menuntut saldo terlihat di
+      // beranda, bukan menuntut ia ada di tombol ini.
+      aria-label={
+        wallet.data
+          ? `${t('home.topup')} · saldo ${formatCompactCoin(wallet.data.balance)} koin`
+          : t('home.topup')
+      }
       title={t('home.topup')}
-      className="fixed right-4 bottom-[calc(var(--nv-bottom-nav)+0.75rem)] z-40 flex h-14 items-center gap-2 rounded-nv-pill bg-nv-accent px-4 font-semibold text-body text-nv-card shadow-nv transition hover:bg-nv-accent-strong lg:hidden"
+      // Lingkaran 48px di **kiri** bawah (`7a`). Dua hal berubah sekaligus, dan
+      // memang harus sekaligus: pil selebar ~110px di kanan menindih `See all`
+      // yang rata kanan, sedangkan memindahkannya ke kiri tanpa mengecilkan
+      // hanya menukar siapa yang tertutup — di 320px tab genre justru ada di
+      // kiri. Saldonya tetap terbaca lewat nama aksesibel dan chip di kepala.
+      className="fixed bottom-[calc(var(--nv-bottom-nav)+0.75rem)] left-4 z-40 grid size-12 place-items-center rounded-nv-pill bg-nv-accent text-nv-card shadow-nv transition lg:hidden"
     >
-      <Coins size={22} aria-hidden />
-      {wallet.data && (
-        <span className="tabular-nums">{formatCompactCoin(wallet.data.balance)}</span>
-      )}
+      <Coins size={20} aria-hidden />
     </Link>
   )
 }
@@ -48,7 +62,7 @@ export function TopupSidebarButton() {
   return (
     <Link
       to="/koin"
-      className="mt-auto flex items-center gap-3 rounded-nv-pill bg-nv-accent px-4 py-2.5 text-body font-semibold text-nv-card transition hover:bg-nv-accent-strong"
+      className="mt-auto flex items-center gap-3 rounded-nv-pill bg-nv-accent px-4 py-2.5 text-body font-semibold text-nv-card transition hover:bg-nv-accent"
     >
       <Coins size={18} aria-hidden />
       {t('home.topup')}

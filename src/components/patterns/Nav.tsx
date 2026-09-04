@@ -28,7 +28,15 @@ function useActiveTab(): string {
   return NAV_TABS.find((t) => t.match.test(pathname))?.to ?? ''
 }
 
-/** Bilah bawah untuk `<1024`. */
+/**
+ * Bilah bawah untuk `<1024` — `ModernTabBar` putaran 7: putih penuh, 86px,
+ * label di bawah ikon, dan **titik emas 5px** di bawah tab aktif.
+ *
+ * Titiknya `aria-hidden`: yang menyampaikan "halaman ini" ke pembaca layar
+ * adalah `aria-current`, bukan lingkaran kecil. Ia dirender walau tab tidak
+ * aktif — dengan `opacity-0` — supaya tinggi barisnya tidak berubah saat tab
+ * berpindah, yang tanpa itu menggeser seluruh bilah satu-dua piksel.
+ */
 export function BottomNav() {
   const active = useActiveTab()
 
@@ -37,9 +45,9 @@ export function BottomNav() {
       aria-label="Navigasi utama"
       // `min-h` mengikat tingginya ke `--nv-bottom-nav`, jadi tokennya
       // **menentukan** tinggi bilah ini — bukan sekadar menebaknya.
-      className="fixed inset-x-0 bottom-0 z-40 min-h-[var(--nv-bottom-nav)] border-nv-line border-t bg-nv-card/95 backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 min-h-[var(--nv-bottom-nav)] border-nv-line border-t bg-nv-card lg:hidden"
     >
-      <ul className="mx-auto flex max-w-lg items-stretch justify-between px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <ul className="mx-auto flex max-w-lg items-stretch justify-between px-2 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {NAV_TABS.map(({ to, label, Icon }) => {
           const on = active === to
           return (
@@ -48,12 +56,19 @@ export function BottomNav() {
                 to={to}
                 aria-current={on ? 'page' : undefined}
                 className={cx(
-                  'flex flex-col items-center gap-1 rounded-nv-md py-1.5 text-caption transition',
-                  on ? 'font-semibold text-nv-accent-strong' : 'font-medium text-nv-muted',
+                  'flex flex-col items-center gap-1.5 py-1 text-caption transition',
+                  on ? 'font-bold text-nv-text' : 'font-medium text-nv-muted',
                 )}
               >
-                <Icon size={20} strokeWidth={on ? 2.2 : 1.7} aria-hidden />
+                <Icon size={22} strokeWidth={on ? 2 : 1.6} aria-hidden />
                 {label}
+                <span
+                  aria-hidden
+                  className={cx(
+                    'size-[5px] rounded-nv-pill bg-nv-gold-line transition-opacity',
+                    on ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
               </NavLink>
             </li>
           )
@@ -83,7 +98,7 @@ export function SideNav() {
             className={cx(
               'flex items-center gap-3 rounded-nv-md px-3 py-2.5 text-body transition',
               on
-                ? 'bg-nv-accent-soft font-semibold text-nv-accent-strong'
+                ? 'bg-nv-accent-soft font-semibold text-nv-accent'
                 : 'font-medium text-nv-muted hover:bg-nv-accent-soft',
             )}
           >

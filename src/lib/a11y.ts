@@ -133,11 +133,29 @@ export function useScrollLock(active: boolean): void {
     if (!active) return
     const { overflow, paddingRight } = document.body.style
     const gap = window.innerWidth - document.documentElement.clientWidth
+
+    /*
+     * Posisi gulir disimpan **sebelum** dikunci, lalu dipulihkan saat dilepas.
+     *
+     * `overflow: hidden` meruntuhkan wadah gulirnya, dan peramban menyetel
+     * `scrollY` ke nol pada saat itu. Tanpa memulihkannya, **menutup lembar atau
+     * modal apa pun melemparkan pengguna ke puncak halaman** — dan di ruang baca
+     * itu berarti kehilangan tempat membaca, yang persis dilarang brief §8.
+     *
+     * Diperbaiki di sini, bukan di lembar komentar saja: satu pengunci dipakai
+     * setiap overlay di aplikasi ini, jadi cacatnya juga ada di lembar voucher,
+     * rating, cetak, dan saldo kurang.
+     */
+    const scrollY = window.scrollY
     document.body.style.overflow = 'hidden'
     if (gap > 0) document.body.style.paddingRight = `${gap}px`
     return () => {
       document.body.style.overflow = overflow
       document.body.style.paddingRight = paddingRight
+      // `documentElement.scrollTop`, bukan `window.scrollTo`: `scroll-behavior:
+      // smooth` di `base.css` membuat yang kedua **menganimasikan** pemulihannya,
+      // dan pengguna melihat halaman meluncur tiap kali menutup lembar.
+      document.documentElement.scrollTop = scrollY
     }
   }, [active])
 }

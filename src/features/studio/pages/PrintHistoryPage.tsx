@@ -141,7 +141,7 @@ export default function PrintHistoryPage() {
           title: t('print.emptyTitle'),
           description: EMPTY_BODY[tab],
           secondary: (
-            <Link to="/karya" className="text-body text-nv-accent-strong underline">
+            <Link to="/karya" className="text-body text-nv-accent underline">
               {t('print.toStories')}
             </Link>
           ),

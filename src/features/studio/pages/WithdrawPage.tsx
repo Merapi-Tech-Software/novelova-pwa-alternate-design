@@ -128,7 +128,7 @@ export default function WithdrawPage() {
                 <span
                   className={
                     account.data?.payoutVerified
-                      ? 'rounded-nv-pill border border-nv-accent px-2 py-0.5 text-caption text-nv-accent-strong uppercase'
+                      ? 'rounded-nv-pill border border-nv-accent px-2 py-0.5 text-caption text-nv-accent uppercase'
                       : 'rounded-nv-pill border border-nv-danger px-2 py-0.5 text-caption text-nv-danger uppercase'
                   }
                 >
@@ -143,7 +143,7 @@ export default function WithdrawPage() {
               <legend className="text-caption tracking-widest text-nv-muted uppercase">
                 {t('withdraw.purpose')}
               </legend>
-              <div className="grid gap-2 pt-2">
+              <div className="grid grid-cols-1 gap-2 pt-2">
                 {PAYOUT_PURPOSES.map((option) => (
                   <Chip
                     key={option}
@@ -195,7 +195,7 @@ export default function WithdrawPage() {
                   <dt>{t('withdraw.fee')}</dt>
                   <dd>{formatRupiah(fee)}</dd>
                 </div>
-                <div className="mt-2 flex justify-between border-nv-line border-t pt-2 text-nv-accent-strong">
+                <div className="mt-2 flex justify-between border-nv-line border-t pt-2 text-nv-accent">
                   <dt>{t('withdraw.net')}</dt>
                   <dd>{formatRupiah(net)}</dd>
                 </div>
@@ -225,7 +225,7 @@ export default function WithdrawPage() {
 
             <Link
               to="/penulis/penarikan/riwayat"
-              className="mt-3 inline-block text-body text-nv-accent-strong underline"
+              className="mt-3 inline-block text-body text-nv-accent underline"
             >
               {t('withdraw.history')}
             </Link>

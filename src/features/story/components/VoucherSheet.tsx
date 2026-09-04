@@ -109,15 +109,16 @@ export function VoucherSheet({ open, onClose, storyId, chapters }: VoucherSheetP
         </div>
       ) : (
         <>
-          <p className="mb-2 text-caption tracking-wide text-nv-muted uppercase">
-            {t('story.voucherOwned')}
-          </p>
+          <p className="nv-section-label mb-2">{t('story.voucherOwned')}</p>
           {vouchers.data && vouchers.data.length > 0 ? (
             <ul className="mb-5 divide-y divide-nv-line-soft">
               {vouchers.data.map((voucher) => (
                 <li key={voucher.id} className="flex items-center gap-3 py-2.5">
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-body font-semibold">{voucher.title}</span>
+                    {/* Judul voucher serif — ia nama sebuah barang, bukan label kontrol. */}
+                    <span className="block truncate font-display text-card font-semibold">
+                      {voucher.title}
+                    </span>
                     <span className="block text-caption text-nv-muted">
                       {t('story.voucherExpires')(formatDate(new Date(voucher.expiresAt)))}
                     </span>

@@ -81,7 +81,7 @@ export function ChapterScheduleSheet({
         </>
       }
     >
-      <p className="font-semibold text-body text-nv-accent-strong">
+      <p className="font-semibold text-body text-nv-accent">
         Bab {chapter.number} · {chapter.title}
       </p>
       <p className="pt-1 text-caption text-nv-muted">{t('chapters.schedOnlyChapter')}</p>

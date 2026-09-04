@@ -97,7 +97,7 @@ export function FailureNotice({
           <button
             type="button"
             onClick={retry}
-            className="shrink-0 text-caption font-semibold text-nv-accent-strong underline underline-offset-2"
+            className="shrink-0 text-caption font-semibold text-nv-accent underline underline-offset-2"
           >
             {label}
           </button>
@@ -145,8 +145,8 @@ export function FailureNotice({
             // Layar penuh memberi jaminan itu kotaknya sendiri (kanvas layar 36).
             // Di situlah mata berhenti, dan itu satu-satunya kalimat yang
             // benar-benar menjawab "uangku bagaimana?".
-            <div className="rounded-nv-md border border-nv-accent-2 bg-nv-accent-soft px-4 py-3 text-left">
-              <p className="text-caption font-semibold tracking-wide text-nv-accent-strong uppercase">
+            <div className="rounded-nv-md border border-nv-gold-line bg-nv-accent-soft px-4 py-3 text-left">
+              <p className="text-caption font-semibold tracking-wide text-nv-accent uppercase">
                 Yang tetap aman
               </p>
               <p className="mt-1 text-body text-nv-text">{safety}</p>

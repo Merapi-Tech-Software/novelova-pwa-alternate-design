@@ -22,14 +22,23 @@ function renderStory(id = 's1') {
 }
 
 describe('halaman detail cerita', () => {
-  it('menampilkan hero, tiga metrik, dan daftar bab', async () => {
+  it('menampilkan hero, strip empat metrik, dan daftar bab', async () => {
     renderStory()
 
     expect(
       await screen.findByRole('heading', { name: 'Cinta di Balik Kontrak' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Dibaca')).toBeInTheDocument()
-    expect(screen.getByText('Disimpan')).toBeInTheDocument()
+
+    // Putaran 7 mengganti tiga metrik pamer dengan empat sel `7b`, dan sel
+    // ketiganya — durasi baca — datang dari server (`readMinutesTotal`), bukan
+    // dijumlahkan dari 20 bab yang kebetulan sudah termuat.
+    for (const label of ['Rating', 'Bab', 'Durasi baca', 'Status']) {
+      expect(screen.getByText(label)).toBeInTheDocument()
+    }
+    // Dibaca dari **selnya**, bukan dari seluruh halaman: baris bab juga
+    // berbunyi "8 menit", dan pencarian global akan menemukan keduanya.
+    expect(screen.getByText('Durasi baca').parentElement).toHaveTextContent(/\d+ (jam|menit)/)
+
     expect(await screen.findByRole('heading', { name: 'Daftar bab' })).toBeInTheDocument()
   })
 

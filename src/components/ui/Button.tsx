@@ -5,11 +5,20 @@ import { cx } from '@/lib/cx'
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
+/**
+ * Tiga tingkat brief §1 — utama terisi tinta, sekunder pil garis rambut,
+ * tersier teks tebal tinta redup — plus `danger`.
+ *
+ * **`danger` tidak pernah terisi merah.** Brief menyebutnya lugas: aksi
+ * destruktif tetap teks, tidak pernah bidang merah. Ia tetap dibedakan lewat
+ * garis dan warna teksnya, karena tombol hapus yang tidak bisa dibedakan dari
+ * tombol batal adalah cacat yang lain lagi.
+ */
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'bg-nv-accent-strong text-nv-card hover:brightness-110 active:brightness-95',
-  secondary: 'border border-nv-accent text-nv-accent-strong bg-transparent hover:bg-nv-accent-soft',
-  ghost: 'text-nv-muted hover:bg-nv-accent-soft hover:text-nv-accent-strong',
-  danger: 'bg-nv-danger text-nv-card hover:brightness-110',
+  primary: 'bg-nv-accent text-nv-card hover:brightness-110 active:brightness-95',
+  secondary: 'border border-nv-accent text-nv-accent bg-transparent hover:bg-nv-accent-soft',
+  ghost: 'text-nv-muted hover:bg-nv-accent-soft hover:text-nv-text',
+  danger: 'border border-nv-danger bg-transparent text-nv-danger hover:bg-nv-danger-bg',
 }
 
 const SIZE: Record<ButtonSize, string> = {
@@ -95,9 +104,10 @@ export function IconButton({
       className={cx(
         'grid shrink-0 place-items-center rounded-nv-pill transition',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        variant === 'ghost'
-          ? 'border border-nv-line bg-nv-card text-nv-muted hover:text-nv-accent-strong'
-          : VARIANT[variant],
+        // Putaran 7 melepas garisnya: ikon di bilah atas dan di kepala beranda
+        // berdiri sendiri tanpa kotak (`7a`, `7v`, `7x`). Target ketuknya tetap
+        // ≥44px lewat `ICON_SIZE`, jadi yang hilang cuma gambarnya.
+        variant === 'ghost' ? 'text-nv-text hover:bg-nv-accent-soft' : VARIANT[variant],
         ICON_SIZE[size],
         className,
       )}

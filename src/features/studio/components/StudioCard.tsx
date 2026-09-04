@@ -74,7 +74,7 @@ export function StudioCard({ item, onSchedule, onPrint, onDelete }: StudioCardPr
           <p className="truncate pt-0.5 text-caption text-nv-muted">{story.genres.join(' · ')}</p>
           <p className="pt-0.5 text-caption text-nv-muted tabular-nums">{story.updatedAt}</p>
           {item.scheduledAt && (
-            <p className="pt-0.5 text-caption text-nv-accent-strong">
+            <p className="pt-0.5 text-caption text-nv-accent">
               {t('studio.scheduledFor')(formatDateTime(new Date(item.scheduledAt)))}
             </p>
           )}
@@ -98,13 +98,13 @@ export function StudioCard({ item, onSchedule, onPrint, onDelete }: StudioCardPr
           <div className="flex flex-wrap gap-3 pt-1.5">
             <Link
               to={`/karya/${story.id}/bab/baru`}
-              className="text-caption font-semibold text-nv-accent-strong underline"
+              className="text-caption font-semibold text-nv-accent underline"
             >
               {t('studio.nudgeSchedule')}
             </Link>
             <Link
               to={`/karya/${story.id}/bab`}
-              className="text-caption font-semibold text-nv-accent-strong underline"
+              className="text-caption font-semibold text-nv-accent underline"
             >
               {t('studio.nudgeAccess')}
             </Link>

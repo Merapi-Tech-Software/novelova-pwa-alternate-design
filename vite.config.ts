@@ -59,7 +59,16 @@ export default defineConfig({
     // syarat minimum PWA ini.
     target: 'es2022',
   },
-  server: { port: 5173, host: true },
+  /*
+   * Port 1311 khusus `novelova-v2/` — `novelova/` tetap di 5173, jadi keduanya
+   * bisa hidup berdampingan tanpa saling menendang.
+   *
+   * `strictPort` penting justru karena ada dua aplikasi: tanpa itu Vite diam-diam
+   * pindah ke port berikutnya saat 1311 terpakai, dan Playwright yang menunggu di
+   * 1311 akan menemukan **versi yang salah** — `reuseExistingServer` membuatnya
+   * lulus dengan tenang sambil menguji aplikasi lain. Lebih baik gagal keras.
+   */
+  server: { port: 1311, host: true, strictPort: true },
   test: {
     globals: true,
     environment: 'jsdom',

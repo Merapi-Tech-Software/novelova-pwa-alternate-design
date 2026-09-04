@@ -124,7 +124,7 @@ function Detail({ tx, onCopy }: { tx: TransactionDetail; onCopy: (id: string) =>
         {tx.refLabel && (
           <Row label={t('tx.forWhat')}>
             {tx.refLink ? (
-              <Link to={tx.refLink} className="text-body text-nv-accent-strong underline">
+              <Link to={tx.refLink} className="text-body text-nv-accent underline">
                 {tx.refLabel}
               </Link>
             ) : (
@@ -152,7 +152,7 @@ function Detail({ tx, onCopy }: { tx: TransactionDetail; onCopy: (id: string) =>
         <Button variant="ghost" size="sm" onClick={() => window.print()}>
           <Printer size={14} aria-hidden /> {t('tx.invoice')}
         </Button>
-        <Link to="/bantuan" className="self-center text-body text-nv-accent-strong underline">
+        <Link to="/bantuan" className="self-center text-body text-nv-accent underline">
           {t('tx.support')}
         </Link>
       </div>

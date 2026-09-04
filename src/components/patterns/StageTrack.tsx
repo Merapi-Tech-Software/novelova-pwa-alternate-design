@@ -37,7 +37,7 @@ export function StageTrack({ stages, current, className }: StageTrackProps) {
                 className={cx(
                   'grid size-5 shrink-0 place-items-center rounded-nv-pill border text-[10px]',
                   done && 'border-nv-accent bg-nv-accent text-nv-card',
-                  now && 'border-nv-accent bg-nv-accent-soft text-nv-accent-strong',
+                  now && 'border-nv-accent bg-nv-accent-soft text-nv-accent',
                   !done && !now && 'border-nv-line bg-nv-card text-nv-muted',
                 )}
               >
@@ -54,7 +54,7 @@ export function StageTrack({ stages, current, className }: StageTrackProps) {
             <span
               className={cx(
                 'text-center text-[11px] leading-tight',
-                now ? 'font-semibold text-nv-accent-strong' : 'text-nv-muted',
+                now ? 'font-semibold text-nv-accent' : 'text-nv-muted',
               )}
             >
               {stage}

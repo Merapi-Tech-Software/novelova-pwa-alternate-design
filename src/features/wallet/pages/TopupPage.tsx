@@ -305,7 +305,7 @@ export default function TopupPage() {
               </span>
               <span className="block pt-0.5 text-caption text-nv-muted">{p.note}</span>
               {suggested?.id === p.id && (
-                <span className="block pt-1 text-caption font-semibold text-nv-accent-strong">
+                <span className="block pt-1 text-caption font-semibold text-nv-accent">
                   {t('wallet.fitsChapter')}
                 </span>
               )}
@@ -348,7 +348,7 @@ export default function TopupPage() {
           {groups.map((group) => (
             <div key={group.label} className="px-4 pb-3">
               <p className="pb-1.5 text-caption text-nv-muted">{group.label}</p>
-              <div className="grid gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 {group.methods.map((m) => (
                   <button
                     key={`${group.label}-${m.id}`}

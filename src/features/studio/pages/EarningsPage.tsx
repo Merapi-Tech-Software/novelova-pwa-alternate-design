@@ -120,7 +120,7 @@ export default function EarningsPage() {
             <div className="grid gap-2 pt-6 sm:grid-cols-2">
               <Link
                 to="/penulis/penarikan"
-                className="inline-flex h-11 items-center justify-center rounded-nv-md border border-nv-accent px-4 text-body text-nv-accent-strong"
+                className="inline-flex h-11 items-center justify-center rounded-nv-md border border-nv-accent px-4 text-body text-nv-accent"
               >
                 {t('earnings.withdraw')}
               </Link>
@@ -132,7 +132,7 @@ export default function EarningsPage() {
               </Link>
               <Link
                 to="/penulis/penarikan/riwayat"
-                className="text-body text-nv-accent-strong underline sm:col-span-2"
+                className="text-body text-nv-accent underline sm:col-span-2"
               >
                 {t('earnings.history')}
               </Link>
@@ -167,9 +167,7 @@ function RevenueView({ report }: { report: Report }) {
             {t('earnings.openRate')}
           </dt>
           <dd className="pt-0.5 font-display text-page tabular-nums">{openRatePct}%</dd>
-          <dd className="text-caption text-nv-accent-strong">
-            {t('earnings.change')(openRateChangePct)}
-          </dd>
+          <dd className="text-caption text-nv-accent">{t('earnings.change')(openRateChangePct)}</dd>
           <dd className="pt-0.5 text-caption text-nv-muted">{t('earnings.openRateHint')}</dd>
         </Card>
         <Card className="p-3">
@@ -177,9 +175,7 @@ function RevenueView({ report }: { report: Report }) {
             {t('earnings.newFans')}
           </dt>
           <dd className="pt-0.5 font-display text-page tabular-nums">{formatNumber(newFans)}</dd>
-          <dd className="text-caption text-nv-accent-strong">
-            {t('earnings.change')(newFansChangePct)}
-          </dd>
+          <dd className="text-caption text-nv-accent">{t('earnings.change')(newFansChangePct)}</dd>
         </Card>
       </dl>
 
@@ -375,7 +371,7 @@ function TrafficView({ report }: { report: Report }) {
         {report.traffic.scheduleLink && (
           <Link
             to={report.traffic.scheduleLink}
-            className="mt-2 inline-flex h-11 items-center justify-center rounded-nv-md border border-nv-accent px-4 text-body text-nv-accent-strong"
+            className="mt-2 inline-flex h-11 items-center justify-center rounded-nv-md border border-nv-accent px-4 text-body text-nv-accent"
           >
             {t('earnings.scheduleNow')}
           </Link>

@@ -17,7 +17,7 @@ export default defineConfig({
   fullyParallel: true,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:1311',
     locale: 'id-ID',
     timezoneId: 'Asia/Jakarta',
     trace: 'on-first-retry',
@@ -25,7 +25,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
+    url: 'http://localhost:1311',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

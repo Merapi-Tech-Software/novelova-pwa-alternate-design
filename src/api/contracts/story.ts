@@ -118,6 +118,30 @@ export const StoryDetailSchema = StorySchema.extend({
   continueChapterId: IdSchema.nullable(),
   continueChapterNumber: z.number().int().nullable(),
   myRating: z.number().int().min(1).max(5).nullable(),
+  /**
+   * Total menit baca seluruh bab terbit — sel `DURASI BACA` di strip statistik
+   * (`7b`), yang di putaran 7 menggantikan metrik pamer.
+   *
+   * Dihitung **server**, bukan klien: halaman detail memuat bab 20 per halaman,
+   * jadi menjumlahkannya di layar akan menampilkan durasi cerita 120 bab dari 20
+   * bab pertamanya saja — dan angkanya bertambah tiap pembaca menekan "muat
+   * lagi".
+   */
+  readMinutesTotal: z.number().int().nonnegative(),
+  /**
+   * Berapa bab pembuka yang gratis, dan harga bab berbayar termurah — dua angka
+   * kartu monetisasi `7b` ("7 bab pertama gratis · sisanya mulai 1.500 koin per
+   * bab").
+   *
+   * Dihitung **server**, alasan yang sama dengan `readMinutesTotal`: daftar bab
+   * datang 20 per halaman, jadi menghitungnya di layar akan menjawab
+   * "berapa yang gratis" dengan melihat sebagian bab saja — dan jawabannya
+   * berubah tiap pembaca menekan "muat lagi".
+   *
+   * `paidPriceFrom` `null` berarti tidak ada bab berbayar sama sekali.
+   */
+  freeChapterCount: z.number().int().nonnegative(),
+  paidPriceFrom: z.number().int().nonnegative().nullable(),
 })
 export type StoryDetail = z.infer<typeof StoryDetailSchema>
 
@@ -233,6 +257,16 @@ export const HomeSectionSchema = z.object({
   /** Kata rute lihat-semua, atau `null` bila tautannya bukan `/jelajah/*`. */
   seeAll: z.string().nullable(),
   stories: z.array(StorySchema),
+  /**
+   * Progres baca per cerita, 0–1 — **hanya diisi `lanjut-baca`**, `null` di
+   * section lain.
+   *
+   * Datang dari server, bukan dihitung ulang di klien: angkanya harus persis
+   * sama dengan batang progres `/pustaka`, dan satu-satunya cara itu tidak bisa
+   * lapuk adalah memakai **satu fungsi** di kedua tempat
+   * (`readingCounts` di `api/mock/handlers/library.ts`).
+   */
+  progress: z.record(IdSchema, z.number().min(0).max(1)).nullable(),
 })
 
 export type HomeSection = z.infer<typeof HomeSectionSchema>

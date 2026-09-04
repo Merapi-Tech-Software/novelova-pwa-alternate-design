@@ -12,7 +12,7 @@ WORKDIR /app
 ENV NODE_ENV=development
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-EXPOSE 5173
+EXPOSE 1311
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # ── build ───────────────────────────────────────────────────────────────────

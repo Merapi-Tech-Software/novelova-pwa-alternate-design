@@ -78,7 +78,7 @@ export function ReportSheet({
               value={r.value}
               checked={reason === r.value}
               onChange={() => setReason(r.value)}
-              className="mt-0.5 accent-[var(--nv-accent-strong)]"
+              className="mt-0.5 accent-[var(--nv-accent)]"
             />
             <span className="min-w-0">
               <span className="block text-body font-semibold">{r.label}</span>

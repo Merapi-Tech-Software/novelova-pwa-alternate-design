@@ -4,8 +4,8 @@ import { isApiError } from '@/api/errors'
 import { ReportSheet } from '@/components/patterns/ReportSheet'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
+import { useBlocks, useBlockUser, useReport } from '@/hooks/useModeration'
 import { t } from '@/i18n/t'
-import { useBlocks, useBlockUser, useReport } from '../hooks/useModeration'
 
 export interface ModerationActionsProps {
   targetType: ReportInput['targetType']

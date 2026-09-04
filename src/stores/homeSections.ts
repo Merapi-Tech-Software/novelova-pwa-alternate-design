@@ -77,14 +77,27 @@ function write(map: VisibilityMap): void {
 
 interface HomeSectionsState {
   visible: VisibilityMap
-  /** Menyimpan seketika — popover ini tidak punya tombol Simpan (FR-HOME-06). */
+  /** Menyimpan seketika — lembar ini tidak punya tombol Simpan (FR-HOME-06). */
   toggle: (key: SectionKey) => void
+  /**
+   * Kembali ke bawaan — `Atur ulang` di dasar lembar (`7s`).
+   *
+   * Ada karena sembilan sakelar yang dimatikan satu per satu tidak punya jalan
+   * pulang yang wajar: mengingat mana saja yang bawaannya menyala adalah
+   * pekerjaan aplikasi, bukan pekerjaan pengguna.
+   */
+  reset: () => void
 }
 
 export const useHomeSections = create<HomeSectionsState>()((set, get) => ({
   visible: read(),
   toggle: (key) => {
     const next = { ...get().visible, [key]: !get().visible[key] }
+    write(next)
+    set({ visible: next })
+  },
+  reset: () => {
+    const next = defaultVisibility()
     write(next)
     set({ visible: next })
   },

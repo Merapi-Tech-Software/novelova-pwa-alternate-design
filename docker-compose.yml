@@ -5,7 +5,7 @@ services:
       context: .
       target: dev
     ports:
-      - '5173:5173'
+      - '1311:1311'
     volumes:
       - .:/app
       # node_modules tetap milik container — biar binary Linux tidak tertimpa

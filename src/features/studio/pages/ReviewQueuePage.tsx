@@ -63,7 +63,7 @@ export default function ReviewQueuePage() {
           empty={{ title: t('review.emptyTitle'), description: t('review.emptyBody') }}
         >
           {(list) => (
-            <ul className="grid gap-2.5">
+            <ul className="grid grid-cols-1 gap-2.5">
               {list.map((item) => {
                 const status = STATUS[item.status] ?? STATUS.in_review
                 return (

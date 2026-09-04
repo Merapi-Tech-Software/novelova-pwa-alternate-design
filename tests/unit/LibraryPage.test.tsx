@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -85,9 +85,13 @@ describe('perpustakaan · FR-LIB-01 · FR-LIB-02 · FR-LIB-03', () => {
       (story?.penName ?? '').slice(0, 5).toUpperCase(),
     )
 
-    expect(await screen.findByText(story?.title ?? '')).toBeInTheDocument()
+    // Yang ditunggu adalah baris yang **hilang**, bukan baris yang bertahan: `s1`
+    // ada di daftar lama maupun daftar tersaring, jadi menunggunya selesai
+    // seketika — sementara `keepPreviousData` masih menahan daftar lama yang
+    // berisi `s3` (CLAUDE.md §8).
     const other = await db.stories.get('s3')
-    expect(screen.queryByText(other?.title ?? '')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText(other?.title ?? '')).not.toBeInTheDocument())
+    expect(screen.getByText(story?.title ?? '')).toBeInTheDocument()
   })
 
   it('ringkasan koleksi tidak ikut berubah saat mencari', async () => {

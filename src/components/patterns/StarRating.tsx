@@ -18,7 +18,7 @@ function StarGlyph({ fill, size }: { fill: number; size: number }) {
     <span className="relative block" style={{ width: size, height: size }} aria-hidden>
       <Star size={size} className="absolute inset-0 text-nv-line" />
       <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
-        <Star size={size} className="text-nv-coin-icon" fill="currentColor" />
+        <Star size={size} className="text-nv-gold-line" fill="currentColor" />
       </span>
     </span>
   )

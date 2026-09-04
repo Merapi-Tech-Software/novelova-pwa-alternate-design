@@ -17,6 +17,8 @@ export interface BrowseRowProps {
   story: Story
   saved: boolean
   progress?: number
+  /** Nomor peringkat `01` `02` di kiri baris (`7d`). */
+  rank?: number
 }
 
 /**
@@ -30,7 +32,7 @@ export interface BrowseRowProps {
  * `Bagikan` memakai Web Share API bila tersedia, dan jatuh ke papan klip bila
  * tidak — keduanya berakhir dengan tautan yang benar-benar bisa dikirim.
  */
-export function BrowseRow({ story, saved, progress }: BrowseRowProps) {
+export function BrowseRow({ story, saved, progress, rank }: BrowseRowProps) {
   const [open, setOpen] = useState(false)
   const [drag, setDrag] = useState(0)
   const startX = useRef<number | null>(null)
@@ -57,7 +59,7 @@ export function BrowseRow({ story, saved, progress }: BrowseRowProps) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-nv-lg">
+    <div className="relative overflow-hidden">
       <div
         className="absolute inset-y-0 right-0 flex items-stretch gap-px"
         style={{ width: REVEAL }}
@@ -68,7 +70,7 @@ export function BrowseRow({ story, saved, progress }: BrowseRowProps) {
             toggleLibrary.mutate(story.id)
             setOpen(false)
           }}
-          className="flex flex-1 flex-col items-center justify-center gap-1 bg-nv-accent-soft text-caption font-semibold text-nv-accent-strong"
+          className="flex flex-1 flex-col items-center justify-center gap-1 bg-nv-accent-soft text-caption font-semibold text-nv-text"
         >
           {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
           {saved ? t('home.saved') : t('home.save')}
@@ -87,7 +89,7 @@ export function BrowseRow({ story, saved, progress }: BrowseRowProps) {
             hideStory.mutate(story.id)
             toast.show(t('home.hidden'))
           }}
-          className="flex flex-1 flex-col items-center justify-center gap-1 bg-nv-danger-bg text-caption font-semibold text-nv-danger"
+          className="flex flex-1 flex-col items-center justify-center gap-1 bg-nv-paper-2 text-caption font-semibold text-nv-danger"
         >
           <EyeOff size={16} />
           {t('home.hide')}
@@ -118,9 +120,29 @@ export function BrowseRow({ story, saved, progress }: BrowseRowProps) {
           setDrag(0)
         }}
       >
-        <StoryCard story={story} variant="list" {...(progress === undefined ? {} : { progress })} />
+        {/*
+          `7d`: lencana pindah dari sampul ke tepi kanan baris, dan nomor
+          peringkat menempati kolom kiri. `badge={null}` meniadakan yang di
+          sampul — dua lencana untuk satu cerita di baris yang sama membingungkan.
+        */}
+        <StoryCard
+          story={story}
+          variant="list"
+          badge={null}
+          {...(rank === undefined ? {} : { rank })}
+          {...(story.badge
+            ? {
+                trailing: (
+                  <span className="shrink-0 font-bold text-[10px] text-nv-gold uppercase tracking-wide">
+                    {story.badge}
+                  </span>
+                ),
+              }
+            : {})}
+          {...(progress === undefined ? {} : { progress })}
+        />
 
-        <div className="flex items-center gap-2 px-3 pb-3">
+        <div className="flex items-center gap-2 pb-3.5 pl-14">
           <Button
             size="sm"
             variant={saved ? 'secondary' : 'primary'}

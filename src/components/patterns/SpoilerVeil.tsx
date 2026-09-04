@@ -26,7 +26,7 @@ export function SpoilerVeil({ children, className }: SpoilerVeilProps) {
       <button
         type="button"
         onClick={() => setRevealed(true)}
-        className="absolute inset-0 grid place-items-center bg-nv-card/40 text-caption font-semibold text-nv-accent-strong backdrop-blur-[2px]"
+        className="absolute inset-0 grid place-items-center bg-nv-card/40 text-caption font-semibold text-nv-accent backdrop-blur-[2px]"
       >
         Spoiler — ketuk untuk melihat
       </button>
