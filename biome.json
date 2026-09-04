@@ -1,0 +1,71 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": ["**", "!dist", "!dev-dist", "!node_modules", "!playwright-report", "!test-results"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "css": {
+    "parser": { "tailwindDirectives": true }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all",
+      "jsxQuoteStyle": "double"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUnusedImports": "error",
+        "useExhaustiveDependencies": "warn"
+      },
+      "style": {
+        "useConst": "error",
+        "noNonNullAssertion": "error",
+        "useImportType": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noConsole": { "level": "warn", "options": { "allow": ["warn", "error"] } }
+      },
+      "nursery": { "preset": "none" }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["scripts/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    },
+    {
+      "includes": ["**/*.css"],
+      "linter": { "rules": { "suspicious": { "noUnknownAtRules": "off" } } }
+    },
+    {
+      "includes": ["src/**/*.{ts,tsx}", "!src/api/mock/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "dexie": "Dexie hidup di sisi server dari seam API. Impor hanya dari src/api/mock/ (architecture.md §5)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

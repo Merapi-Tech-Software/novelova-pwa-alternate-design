@@ -1,0 +1,113 @@
+/*
+ * Novelova — token desain.
+ * SATU-SATUNYA tempat warna dan ukuran hidup (architecture.md §3 aturan struktur,
+ * §9.1). Satu hex di luar berkas ini = bug lint.
+ * Sumber: prd_01_design_system.md §3.1 & §5, dengan dua koreksi kontras yang
+ * ditandai di bawah.
+ */
+
+:root {
+  /* ── permukaan ─────────────────────────────────────────────────────────── */
+  --nv-bg: #f4efea;
+  --nv-card: #fffdfc;
+  --nv-paper: #fffdfa;
+  --nv-paper-2: #fff8f4;
+
+  /* ── teks ──────────────────────────────────────────────────────────────── */
+  --nv-text: #2e2625;
+  --nv-muted: #6f6462; /* dinaikkan dari #928582 — PRD 01 §9.2 rec #8, kontras AA */
+  --nv-line: rgb(46 38 37 / 0.08);
+  --nv-line-soft: rgb(46 43 43 / 0.06);
+
+  /* ── aksen ─────────────────────────────────────────────────────────────── */
+  --nv-accent: #d09a93;
+  --nv-accent-2: #f0c9c2;
+  --nv-accent-soft: rgb(208 154 147 / 0.18);
+  --nv-accent-strong: #b8695f;
+
+  /* ── domain ────────────────────────────────────────────────────────────── */
+  --nv-coin: #bf8f46; /* dinaikkan dari #d7ad64 untuk kontras teks */
+  --nv-coin-icon: #d7ad64; /* nilai asli PRD, khusus ikon */
+
+  /* ── status ────────────────────────────────────────────────────────────── */
+  --nv-success: #3f8e60;
+  --nv-success-bg: #e8f3e9;
+  --nv-danger: #a34436;
+  --nv-danger-bg: #f6d9d2;
+  --nv-warning: #9b604b;
+  --nv-warning-bg: #f5e2d0;
+  --nv-info: #487083;
+
+  /* ── di atas gambar ────────────────────────────────────────────────────── */
+  /* Scrim gelap dan teks terang untuk judul yang berdiri di atas gambar apa pun
+     (banner beranda). Nilainya sama di tema terang maupun gelap: yang menentukan
+     kontras di sini gambarnya, bukan temanya. */
+  --nv-scrim: rgb(32 31 29 / 0.72);
+  --nv-on-scrim: #fdfbf9;
+
+  /* ── meter kekuatan kata sandi — lima warna, satu per skor (FR-AUTH-06) ── */
+  --nv-strength-0: #d9b3ac;
+  --nv-strength-1: #d9a37f;
+  --nv-strength-2: #cbb46a;
+  --nv-strength-3: #7fb08a;
+  --nv-strength-4: #5a9e6e;
+
+  /* ── warna merek penyedia OAuth (FR-AUTH-04) ───────────────────────────── */
+  /* Dipertahankan apa adanya: tombol masuk pihak ketiga dikenali dari warnanya,
+     dan menggantinya dengan rose-gold justru membuatnya tidak terbaca sebagai
+     tombol Google/Facebook. Satu-satunya warna di berkas ini yang bukan milik
+     Novelova — dan tetap di sini, karena hex hanya boleh ada di berkas ini. */
+  --nv-brand-google: #db4437;
+  --nv-brand-facebook: #1877f2;
+
+  /* ── aksen kategori — token turunan, PRD 01 §9.2 rec #2 ────────────────── */
+  --nv-cat-popular: var(--nv-accent);
+  --nv-cat-trending: #55a7b1;
+  --nv-cat-editors: #9f7a54;
+
+  /* ── radius ────────────────────────────────────────────────────────────── */
+  --nv-r-pill: 999px;
+  --nv-r-sm: 12px;
+  --nv-r-md: 14px;
+  --nv-r-lg: 18px;
+  --nv-r-xl: 22px;
+  --nv-r-sheet: 28px 28px 0 0;
+
+  /* ── elevasi ───────────────────────────────────────────────────────────── */
+  /*
+   * Tinggi bilah navigasi bawah di `<1024`.
+   *
+   * **Satu angka, empat pemakai**: bilah navigasinya sendiri (`min-height`),
+   * ruang bawah `AppShell`, FAB isi koin, dan setiap bilah aksi yang menempel di
+   * dasar layar. Di layar HP ada dua bilah yang sama-sama ingin `bottom: 0`, dan
+   * tanpa angka bersama ini yang satu menutupi yang lain — persis yang terjadi
+   * pada tombol bayar di `/koin`.
+   *
+   * `env(safe-area-inset-bottom)` ikut karena tingginya berubah di perangkat
+   * berponi; angka tetap akan meleset di sana saja, dan meleset diam-diam.
+   */
+  --nv-bottom-nav: calc(3.75rem + max(0.5rem, env(safe-area-inset-bottom)));
+
+  --nv-shadow-soft: 0 6px 16px rgb(30 30 30 / 0.06);
+  --nv-shadow: 0 10px 26px rgb(30 30 30 / 0.08);
+
+  /* ── tipografi ─────────────────────────────────────────────────────────── */
+  --nv-font-ui: "Manrope Variable", system-ui, sans-serif;
+  --nv-font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --nv-font-read: Georgia, "Times New Roman", serif; /* isi bab, FR-READ-01 */
+  --nv-font-mono: ui-monospace, Consolas, monospace; /* nomor VA */
+}
+
+[data-theme="dark"] {
+  --nv-bg: #12151a;
+  --nv-card: #1b2028;
+  --nv-paper: #161a20;
+  --nv-paper-2: #1b2028;
+  --nv-text: #efe9e6;
+  --nv-muted: #b4adb0;
+  --nv-line: rgb(238 230 226 / 0.24);
+  --nv-line-soft: rgb(238 230 226 / 0.12);
+  --nv-accent-soft: rgb(208 154 147 / 0.22);
+  --nv-shadow-soft: 0 6px 16px rgb(0 0 0 / 0.35);
+  --nv-shadow: 0 10px 26px rgb(0 0 0 / 0.45);
+}

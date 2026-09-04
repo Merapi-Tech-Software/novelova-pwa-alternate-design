@@ -1,0 +1,50 @@
+import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
+
+export interface OnboardingStepsProps {
+  step: number
+  total: number
+  onSkip: () => void
+}
+
+/**
+ * Kepala onboarding: posisi, dan **"Lewati" yang selalu terlihat** (FR-AUTH-11).
+ *
+ * Tombol lewati sengaja ada di tiap langkah, bukan hanya di langkah pertama:
+ * onboarding yang tidak bisa ditinggalkan di tengah adalah dinding, bukan
+ * perkenalan.
+ */
+export function OnboardingSteps({ step, total, onSkip }: OnboardingStepsProps) {
+  return (
+    <header className="mb-5">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-caption tracking-wide text-nv-muted uppercase tabular-nums">
+          {t('auth.stepOf')(step, total)}
+        </span>
+        <button
+          type="button"
+          onClick={onSkip}
+          className="text-caption font-semibold text-nv-muted underline underline-offset-4"
+        >
+          {t('auth.skip')}
+        </button>
+      </div>
+
+      <ol className="flex gap-1.5 pt-3">
+        {Array.from({ length: total }, (_, i) => (
+          <li
+            // biome-ignore lint/suspicious/noArrayIndexKey: titik langkah tidak punya identitas selain posisinya
+            key={i}
+            aria-current={i + 1 === step ? 'step' : undefined}
+            className={cx(
+              'h-1 flex-1 rounded-nv-pill',
+              i + 1 <= step ? 'bg-nv-accent' : 'bg-nv-line',
+            )}
+          >
+            <span className="sr-only">{t('auth.stepOf')(i + 1, total)}</span>
+          </li>
+        ))}
+      </ol>
+    </header>
+  )
+}

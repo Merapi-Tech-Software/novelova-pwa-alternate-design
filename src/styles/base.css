@@ -1,0 +1,190 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Font self-host — syarat offline PWA (PRD 01 §4.2). Tanpa CDN. */
+@import "@fontsource-variable/manrope";
+@import "@fontsource/cormorant-garamond/400.css";
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/600.css";
+
+/*
+ * Token → utility Tailwind v4. Ini yang membuat `bg-nv-card`, `text-nv-muted`,
+ * `rounded-nv-lg` tersedia tanpa menulis hex kedua kalinya (architecture.md §9.1).
+ */
+@theme {
+  --color-nv-bg: var(--nv-bg);
+  --color-nv-card: var(--nv-card);
+  --color-nv-paper: var(--nv-paper);
+  --color-nv-paper-2: var(--nv-paper-2);
+
+  --color-nv-text: var(--nv-text);
+  --color-nv-muted: var(--nv-muted);
+  --color-nv-line: var(--nv-line);
+  --color-nv-line-soft: var(--nv-line-soft);
+
+  --color-nv-accent: var(--nv-accent);
+  --color-nv-accent-2: var(--nv-accent-2);
+  --color-nv-accent-soft: var(--nv-accent-soft);
+  --color-nv-accent-strong: var(--nv-accent-strong);
+
+  --color-nv-coin: var(--nv-coin);
+  --color-nv-coin-icon: var(--nv-coin-icon);
+
+  --color-nv-success: var(--nv-success);
+  --color-nv-success-bg: var(--nv-success-bg);
+  --color-nv-danger: var(--nv-danger);
+  --color-nv-danger-bg: var(--nv-danger-bg);
+  --color-nv-warning: var(--nv-warning);
+  --color-nv-warning-bg: var(--nv-warning-bg);
+  --color-nv-info: var(--nv-info);
+
+  --color-nv-scrim: var(--nv-scrim);
+  --color-nv-on-scrim: var(--nv-on-scrim);
+
+  --color-nv-strength-0: var(--nv-strength-0);
+  --color-nv-strength-1: var(--nv-strength-1);
+  --color-nv-strength-2: var(--nv-strength-2);
+  --color-nv-strength-3: var(--nv-strength-3);
+  --color-nv-strength-4: var(--nv-strength-4);
+
+  --color-nv-brand-google: var(--nv-brand-google);
+  --color-nv-brand-facebook: var(--nv-brand-facebook);
+
+  --color-nv-cat-popular: var(--nv-cat-popular);
+  --color-nv-cat-trending: var(--nv-cat-trending);
+  --color-nv-cat-editors: var(--nv-cat-editors);
+
+  --radius-nv-pill: var(--nv-r-pill);
+  --radius-nv-sm: var(--nv-r-sm);
+  --radius-nv-md: var(--nv-r-md);
+  --radius-nv-lg: var(--nv-r-lg);
+  --radius-nv-xl: var(--nv-r-xl);
+
+  --shadow-nv-soft: var(--nv-shadow-soft);
+  --shadow-nv: var(--nv-shadow);
+
+  --font-ui: var(--nv-font-ui);
+  --font-display: var(--nv-font-display);
+  --font-read: var(--nv-font-read);
+  --font-mono: var(--nv-font-mono);
+
+  /*
+   * Skala tipografi architecture.md §9.2. PRD 01 §4.4 mencatat 9–11px dipakai
+   * 298× — terlalu kecil untuk HP, jadi 12px adalah lantai.
+   */
+  --text-caption: 0.75rem; /* 12 */
+  --text-small: 0.8125rem; /* 13 */
+  --text-body: 0.875rem; /* 14 */
+  --text-card: 1rem; /* 16 */
+  --text-section: 1.25rem; /* 20 */
+  --text-page: 1.625rem; /* 26 */
+  --text-stat: 2rem; /* 32 */
+  --text-stat-lg: 2.5rem; /* 40 */
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    /* biome-ignore-start lint/complexity/noImportantStyles: pengguna yang meminta
+       gerak dikurangi harus menang atas animasi mana pun, termasuk yang ditulis
+       inline oleh komponen. !important di sini memang tujuannya. */
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    /* biome-ignore-end lint/complexity/noImportantStyles: selesai */
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--nv-bg);
+    color: var(--nv-text);
+    font-family: var(--nv-font-ui);
+    font-size: var(--text-body);
+    font-weight: 500;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--nv-font-display);
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0;
+    /* Bobot 900 dihapus sepenuhnya — PRD 01 §9.2 rec #4. */
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Fokus terlihat di mana pun — aksesibilitas bukan bagian yang disederhanakan. */
+  :focus-visible {
+    outline: 2px solid var(--nv-accent-strong);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--nv-accent-soft);
+  }
+
+  img {
+    max-width: 100%;
+    display: block;
+  }
+}
+
+/* Konfeti (FR-DETAIL-12). Tidak pernah dirender saat gerak dikurangi. */
+/* Getar kode voucher yang salah (FR-DETAIL-09). Pendek dan kecil: ia menandai
+   kesalahan, bukan menghukum yang salah ketik. */
+@keyframes nvShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes nvFall {
+  to {
+    transform: translateY(110vh) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+@utility nv-card {
+  background: var(--nv-card);
+  border: 1px solid var(--nv-line);
+  border-radius: var(--nv-r-lg);
+  box-shadow: var(--nv-shadow-soft);
+}

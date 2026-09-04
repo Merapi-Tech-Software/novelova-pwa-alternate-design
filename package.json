@@ -1,0 +1,56 @@
+{
+  "name": "novelova",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check . && tsc --noEmit && node scripts/check-tokens.mjs",
+    "check:tokens": "node scripts/check-tokens.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.5",
+    "@fontsource/cormorant-garamond": "^5.2.5",
+    "@hookform/resolvers": "^5.1.1",
+    "@tanstack/react-query": "^5.85.5",
+    "dexie": "^4.0.11",
+    "lucide-react": "^0.541.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-hook-form": "^7.62.0",
+    "react-router": "^7.8.1",
+    "zod": "^4.1.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.4",
+    "@playwright/test": "^1.55.0",
+    "@tailwindcss/vite": "^4.1.12",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.1",
+    "fake-indexeddb": "^6.2.2",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.9.2",
+    "vite": "^6.3.5",
+    "vite-plugin-pwa": "^1.0.3",
+    "vitest": "^3.2.4",
+    "workbox-precaching": "^7.3.0",
+    "workbox-window": "^7.3.0"
+  }
+}
