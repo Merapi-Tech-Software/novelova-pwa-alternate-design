@@ -123,3 +123,23 @@ function trimOneDecimal(n: number): string {
   const truncated = Math.floor(n * 10) / 10
   return Number.isInteger(truncated) ? String(truncated) : truncated.toFixed(1)
 }
+
+/**
+ * Seberapa terlihat potongan koin saat bab dibuka **otomatis** · §1.25.
+ *
+ * - `'none'` — tidak ada apa pun: tanpa toast, tanpa lencana. Bacaannya benar
+ *   tidak terputus, dan itu tujuan yang dinyatakan permintaan produk 5
+ *   September: *"user terus membaca dan tidak sadar bahwa koinnya otomatis
+ *   membuka chapter yang terkunci."*
+ * - `'balance'` — masih tanpa toast dan tanpa yang menghalangi, tetapi chip
+ *   saldo di bilah atas ikut menandai perubahannya saat pembaca membuka kontrol.
+ *
+ * **Satu konstanta, satu tempat dibaca.** Ia disiapkan sekarang atas permintaan
+ * pengguna meski mode kedua belum dipakai — supaya menghidupkannya nanti tidak
+ * menuntut menulis ulang alurnya.
+ *
+ * Yang **tidak** ikut diatur konstanta ini, karena tidak boleh hilang di mode
+ * mana pun: gerbang persetujuan `7x`, baris status `Buka otomatis aktif` beserta
+ * tombol `Matikan`, catatan buku besar, dan lembar saldo kurang.
+ */
+export const READER_UNLOCK_FEEDBACK: 'none' | 'balance' = 'none'

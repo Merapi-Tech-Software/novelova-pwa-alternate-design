@@ -114,6 +114,28 @@ warna aksen baru · sampul membulat ala album.
 
 ---
 
+### 0.9 Target ketuk — 44px, tanpa mengubah ukuran yang terlihat
+
+> **Tambahan 5 September 2026.**
+
+Tiap target ketuk minimal **44×44px**. Yang diperluas **kotak sentuhnya**, bukan
+ukuran yang terlihat: tombol ukuran `sm` tetap 36px tinggi, dan perbedaannya dari
+`md` itulah yang dipakai seluruh aplikasi untuk membedakan aksi utama dari aksi
+sekunder.
+
+| Bentuk | Cara |
+|---|---|
+| Tombol `sm`, tab teks | `::after` transparan diperluas **vertikal** |
+| Tombol ikon `sm` | `::after` diperluas **dua arah**: 36×36 → 44×44 |
+| Kontrol teks sebaris | utilitas `nv-tap`: `min-height`, `min-width`, dan `::after` penuh |
+
+**Ini tidak bisa diperiksa mata** — kotak sentuh tidak terlihat sama sekali.
+Penjaganya sapuan e2e yang membaca `::after` dan menghitung kotak efektifnya;
+mengukur kotak yang terlihat saja akan menyatakan tombol `sm` gagal padahal
+jarinya mengenai. `architecture.md` §1.23.
+
+---
+
 ## 1. Prinsip Visual
 
 | Prinsip | Wujud di UI |

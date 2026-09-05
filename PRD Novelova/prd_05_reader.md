@@ -27,24 +27,29 @@ Ini adalah satu-satunya halaman reader yang aktif — seluruh tautan bab, gratis
 | **Prasyarat** | Datang dari daftar bab di halaman detail cerita, perpustakaan, atau kelola bab |
 | **State persisten** | `localStorage['novelova-reader-settings-v1']` |
 | **Sub-sistem desain** | Frame sempit 360px, Trebuchet MS untuk UI, **Georgia untuk isi bab**, mendukung tema gelap |
-| **Saldo awal** | 15.300 koin + 23 bonus |
+| **Saldo awal** | **20.000** koin + 23 bonus *(revisi 5 Sep 2026 — lihat catatan di bawah)* |
 
 ---
 
 ## 2. Flow
 
-1. Pembaca membuka bab dari halaman detail cerita.
+> **Revisi 5 September 2026 · alur baca menerus.** Versi lama menggambarkan
+> ruang baca **berhalaman**: satu bab per layar, pembaca menekan "Bab berikutnya"
+> di ujungnya, dan tiap perpindahan memuat halaman baru. Ia juga menulis
+> *"saldo tidak cukup → toast peringatan"* dan lencana hemat `5%`/`10%` sebagai
+> angka pasti. Ketiganya tidak lagi berlaku. Alasan dan batasnya di
+> `architecture.md` §1.25 (baca menerus), §1.21 (lencana hemat dari harga
+> sungguhan), dan mockup `7z` (lembar, bukan toast).
+
+1. Pembaca membuka bab dari halaman detail cerita, perpustakaan, atau tautan langsung.
 2. Pengaturan baca dipulihkan dari penyimpanan **sebelum** teks dirender (ukuran huruf, tema).
-3. Pembaca membaca bab yang terbuka; di sela bacaan muncul slot iklan dan baris reaksi.
-4. Pembaca mencapai **gerbang bab terkunci**: pratinjau di baliknya diburamkan dan diberi label "Pratinjau tersensor".
-5. **Percabangan pembukaan bab:**
-   - **Izin buka otomatis cerita ini sudah diberikan dan saldo cukup** → bab terbuka otomatis begitu gerbang terlihat, tanpa interaksi (FR-READ-09). Untuk bab berbayar **pertama** tiap cerita, gerbang selalu tampil lebih dulu.
-   - **Chapter ini** — 1.500 koin.
-   - **10 chapter** — 12.000 koin (hemat 5%).
-   - **Sampai tamat** — 36.900 koin (hemat 10%).
-   - **Tonton iklan** — gratis, memotong kuota harian.
-   - **Saldo tidak cukup** → toast peringatan, gerbang tetap tertutup, pembaca diarahkan mengisi koin.
-6. Setelah terbuka: buram hilang, lencana berubah menjadi "Chapter Terbuka", saldo diperbarui di semua tempat, toast konfirmasi tampil.
+3. Pembaca membaca; di sela bacaan muncul slot iklan. Saat mendekati ujung bab, **bab berikutnya dimuat dan disambung di bawahnya** — dipisah garis rambut polos, tanpa nomor, tanpa judul, tanpa tombol.
+4. Bab yang **terlihat di layar** menggerakkan empat hal sekaligus: judul di bilah atas, nomor bab, tombol komentar, dan alamat URL. URL berganti lewat `history.replaceState` — pembaca tidak "pergi ke" bab berikutnya, ia terus membaca.
+5. Saat rantai sampai pada bab **terkunci**, ada tiga percabangan, dan hanya satu yang menghentikan bacaan:
+   - **Izin buka otomatis cerita ini belum ada** → **gerbang disisipkan sebagai blok** di tempat isi babnya, dan **tidak ada yang dimuat melewatinya** sampai pembaca menjawab. Pratinjau di baliknya diburamkan dan diberi label "Pratinjau tersensor"; paragraf pembukanya tetap terbaca. Empat pilihan: **Chapter ini** · **10 chapter** · **Buka sampai tamat** · **Tonton iklan** — harga dan lencana hematnya **dihitung server** dari harga bab sungguhan, bukan persentase tetap.
+   - **Izin sudah ada dan saldo cukup** → bab **dibeli diam-diam** dan isinya langsung disambung. Tidak ada toast, tidak ada lencana, tidak ada yang menghalangi (FR-READ-09).
+   - **Izin sudah ada tetapi saldo kurang** → **lembar** saldo kurang dengan tiga jalan keluar, bukan toast. Ia satu-satunya interupsi yang tersisa, dan ia memang harus menginterupsi.
+6. Pembukaan yang **ditekan pembaca** tetap berbunyi: buram hilang, lencana "Chapter Terbuka" tampil, toast konfirmasi muncul. Pembukaan **otomatis** tidak meninggalkan jejak apa pun di layar — itu tujuan yang dinyatakan permintaan produknya. Saldo tetap diperbarui di semua tempat, dan buku besar tetap mencatat tiap potongan.
 7. Kapan saja pembaca dapat membuka pemutar **dengarkan chapter** untuk mendengar bagian yang sudah terbuka.
 
 ---
@@ -67,7 +72,7 @@ Ini adalah satu-satunya halaman reader yang aktif — seluruh tautan bab, gratis
 | FR-READ-12 | Slot iklan di dalam bacaan | P1 |
 | FR-READ-13 | Reaksi & tautan komentar | P2 |
 | FR-READ-14 | Navigasi kembali | P1 |
-| FR-READ-15 | **[BARU]** Navigasi bab berikutnya & sebelumnya | P0 |
+| FR-READ-15 | **[REVISI 5 Sep 2026]** ~~Navigasi bab~~ → **Baca menerus**, tanpa tombol pindah bab | P0 |
 | FR-READ-16 | **[BARU]** Simpan & pulihkan posisi baca | P0 |
 | FR-READ-17 | **[BARU]** Jalur ke top-up saat saldo kurang | P0 |
 | FR-READ-18 | **[BARU]** Layar iklan sebelum bab dibuka | P1 |
@@ -195,7 +200,16 @@ Ini adalah satu-satunya halaman reader yang aktif — seluruh tautan bab, gratis
 **Hook implementasi.** `chapter_read_locked_story_stage.html:1030:formatCompactCoin(value)`; `:1062:renderCoins()`; `#coinBalanceValue`, `#coinBonusChip`, `#lockCoinBalanceValue`, `#lockCoinBonusValue`.
 
 **Acceptance criteria.**
-- **Given** saldo 15.300, **when** halaman dimuat, **then** chip atas menampilkan `15.3rb` dan gerbang menampilkan `15.3rb koin`.
+- **Given** saldo 20.000, **when** halaman dimuat, **then** chip atas dan gerbang menampilkan angka yang sama dalam bentuk ringkas.
+
+> **Revisi 5 September 2026 · saldo contoh.** Prototipe memakai **15.300** koin,
+> dan angka itu tercetak di mockup `7a`, `7x`, dan `7i`. Ia dinaikkan ke
+> **20.000** atas permintaan produk, karena 15.300 habis di bab ke-12 — **dua bab
+> sebelum** ambang tawaran bundel di bab ke-10 (17.200 kumulatif), sehingga
+> fiturnya tidak pernah bisa dilihat dengan membaca biasa. Dengan 20.000, satu
+> sesi baca menerus melewati keduanya: tawaran bundel di bab ke-10, lalu saldo
+> habis di bab ke-12 beserta lembar isi koinnya. **Ketiga mockup itu jadi usang
+> pada angka saldonya**, dan itu diterima.
 - **Given** saldo 12.000, **when** dirender, **then** hasilnya `12rb` (bukan `12.0rb`).
 - **Given** saldo 800, **when** dirender, **then** hasilnya `800` tanpa satuan.
 - **Given** pembaca membeli bab seharga 1.500, **when** transaksi berhasil, **then** kedua tampilan saldo berubah menjadi `13.8rb` secara bersamaan.
@@ -496,32 +510,42 @@ pembaca pernah menyetujui satu pun pembelian.
 
 ---
 
-### FR-READ-15 — Navigasi bab berikutnya & sebelumnya · P0
+### FR-READ-15 — ~~Navigasi bab berikutnya & sebelumnya~~ → **Baca menerus** · P0
 
-**Status: BARU.** Belum ada di prototype.
+> **Revisi 5 September 2026 · dicabut dan diganti.** Versi lama menuntut kontrol
+> pindah bab di **dua tempat**: tombol besar "Bab berikutnya" beserta judul bab
+> tujuan di akhir bab, dan panah sebelumnya/berikutnya di bilah bawah — dengan
+> "sebelumnya" dinonaktifkan, bukan disembunyikan, di bab pertama. **Seluruhnya
+> dihapus.** Permintaan produk 5 September berbunyi *"proses pergantian chapter
+> jangan ada opsi button buka berikutnya"*: tombol lompat mengajarkan pembaca
+> bahwa ada batas bab yang perlu dilewati, dan itu persis yang alur ini
+> hilangkan. Alasan lengkapnya `architecture.md` §1.25.
 
-**Deskripsi.** Kontrol pindah bab langsung dari halaman baca, tanpa harus kembali ke daftar bab.
+**Deskripsi.** Bab mengalir dalam satu gulir vertikal. Tidak ada kontrol pindah bab.
 
-**User story.** Sebagai pembaca, saya ingin melanjutkan ke bab berikutnya begitu selesai membaca, agar alur membaca saya tidak terputus.
+**User story.** Sebagai pembaca, saya ingin terus membaca tanpa pernah berhenti
+untuk menekan apa pun, agar cerita terasa satu kesatuan dan bukan potongan.
 
 **Aturan bisnis.**
-- **Dua tempat kontrol:**
-  1. Di **akhir bab** (setelah baris reaksi): tombol besar **"Bab berikutnya"** beserta judul bab tujuan — ini jalur utama.
-  2. Di **bilah bawah tetap**: panah sebelumnya / berikutnya beserta penanda posisi (`Bab 18 / 120`).
-- Bab pertama: tombol "sebelumnya" dinonaktifkan, bukan disembunyikan — posisi tata letak tetap stabil.
-- Bab terakhir yang sudah terbit: tombol "berikutnya" diganti menjadi **"Kembali ke daftar bab"**, atau bila cerita masih berjalan, keterangan kapan bab berikutnya dijadwalkan (bersumber dari penjadwal bab, lihat [`prd_07_author_studio.md`](prd_07_author_studio.md) FR-STUDIO-11).
-- **Bab berikutnya yang terkunci tetap dapat dibuka** — reader memuatnya beserta gerbang unlock (FR-READ-06), tidak menolak navigasi.
-- Berpindah bab **mereset** keadaan halaman: posisi gulir ke atas, status TTS dihentikan, indikator kalimat dikosongkan, dan kalimat TTS dikumpulkan ulang dari bab baru.
-- Pengaturan baca (ukuran huruf, tema) **tidak** ikut direset — pengaturan bertahan lintas bab. Begitu pula izin buka otomatis cerita ini (FR-READ-09).
-- Bab dimuat lewat parameter `chapter_id` sehingga setiap bab punya URL sendiri dan dapat dibagikan.
+- **Tidak ada tombol "Bab berikutnya" maupun "Bab sebelumnya"** di mana pun — tidak di akhir bab, tidak di bilah bawah.
+- Bab berikutnya dimuat saat pembaca **mendekati** ujung bab sekarang, bukan saat menyentuhnya; menunggu di depan layar kosong adalah jeda yang sama saja dengan tombol.
+- Pemisah antar bab **garis rambut polos**: tanpa nomor, tanpa judul, tanpa garis emas. Apa pun yang ditulis di sana akan menghentikan mata.
+- Hanya bab **tempat pembaca masuk** yang punya pembuka (label bab, judul serif, garis emas). Sambungannya tidak.
+- **Nomor bab tetap ada** di bilah atas dan bilah bawah, dan keduanya mengikuti bab yang sedang terlihat — pembaca tetap punya satu tempat untuk tahu ia sedang di mana.
+- URL mengikuti bab yang terlihat lewat `history.replaceState`, **bukan navigasi**: navigasi melepas halaman dan membuang posisi gulirnya. Akibatnya tombol kembali peramban tidak menyusuri tiap bab yang dilewati — dan itu benar, pembaca tidak "pergi ke" bab berikutnya.
+- Bab tetap dimuat lewat parameter `chapter_id` sehingga setiap bab punya URL sendiri dan dapat dibagikan — ia **titik masuk**, bukan halaman terpisah.
+- **Jumlah bab yang tersambung dibatasi**; yang terlama dilepas dari depan. Cerita 120 bab yang seluruhnya disambung akan menghabiskan memori dan membuat gulirnya tersendat.
+- Ujung cerita punya keadaan penutupnya sendiri — gulir yang berhenti tanpa kabar terbaca sebagai gagal memuat, bukan sebagai habis.
+- Pengaturan baca (ukuran huruf, tema) berlaku untuk seluruh rantai, dan izin buka otomatis cerita ini tetap berlaku (FR-READ-09).
+- **Gerbang bab terkunci adalah dinding**: selama izin belum diberikan, tidak ada bab berikutnya yang dimuat. Tanpa aturan ini pembaca mendapat tumpukan gerbang, satu per bab.
 
 **Acceptance criteria.**
-- **Given** pembaca menyelesaikan bab yang terbuka, **when** menggulir ke akhir, **then** tombol "Bab berikutnya" beserta judul bab tujuan tampil.
-- **Given** pembaca berada di bab 1, **when** halaman dirender, **then** kontrol "sebelumnya" tampil dalam keadaan nonaktif.
-- **Given** pembaca berada di bab terakhir yang terbit dan cerita masih berjalan, **when** halaman dirender, **then** jadwal bab berikutnya tampil menggantikan tombol berikutnya.
-- **Given** pembaca menekan "Bab berikutnya" ke bab terkunci, **when** halaman dimuat, **then** reader terbuka dengan gerbang unlock.
-- **Given** pembaca sedang memutar TTS lalu berpindah bab, **when** bab baru dimuat, **then** pembacaan berhenti dan kalimat dikumpulkan ulang dari bab baru.
-- **Given** pembaca menyetel huruf 22px lalu pindah bab, **when** bab baru dimuat, **then** ukuran huruf tetap 22px.
+- **Given** pembaca membuka sebuah bab, **when** halaman dirender, **then** tidak ada tombol "Bab berikutnya" maupun "Bab sebelumnya" di mana pun.
+- **Given** pembaca menggulir sampai ujung bab, **when** ia terus menggulir, **then** bab berikutnya sudah tersambung di bawahnya tanpa satu pun ketukan.
+- **Given** dua bab tersambung, **when** halaman diperiksa, **then** hanya ada satu pembuka bab, dan pemisahnya garis rambut tanpa teks.
+- **Given** pembaca melewati batas bab, **when** URL diperiksa, **then** ia menunjuk bab yang sedang terlihat, dan posisi gulirnya tidak berubah.
+- **Given** rantai mencapai bab terkunci yang izinnya belum diberikan, **when** pembaca terus menggulir, **then** hanya **satu** gerbang tampil dan tidak ada bab berikutnya yang dimuat.
+- **Given** pembaca sampai di bab terakhir yang terbit, **when** gulir mencapai ujungnya, **then** keadaan penutup cerita tampil.
 
 ---
 
@@ -536,7 +560,14 @@ pembaca pernah menyetujui satu pun pembelian.
 **Aturan bisnis.**
 - **Dua tingkat presisi:**
   - **Bab terakhir** yang dibuka pada sebuah cerita — dipakai oleh tombol "Lanjut Baca" di perpustakaan (lihat [`prd_06_library.md`](prd_06_library.md) FR-LIB-07) dan section "Continue Reading" di beranda (FR-HOME-04).
-  - **Posisi gulir dalam bab**, disimpan sebagai persentase agar tetap benar meski ukuran huruf berubah.
+  - **Posisi gulir dalam bab**, disimpan sebagai persentase agar tetap benar meski ukuran huruf berubah, dan **per bab** — lihat catatan revisi di bawah.
+
+> **Revisi 5 September 2026 · posisi per bab.** Versi lama menyimpan **satu**
+> posisi gulir per cerita, yaitu posisi bab yang terakhir dibaca. Akibatnya
+> kembali ke bab yang lebih awal selalu mulai dari atas — dan bagi pembaca itu
+> tidak bisa dibedakan dari kehilangan tempat. Sekarang posisinya disimpan per
+> bab; posisi bab terakhir tetap disimpan terpisah karena ia yang dipakai
+> "Lanjut Baca". `architecture.md` §1.24.
 - Progres dikirim ke server dengan penundaan (*throttle*) **maksimal sekali per 10 detik** dan sekali lagi saat halaman ditinggalkan, agar tidak membanjiri jaringan.
 - Bab dianggap **selesai dibaca** saat pembaca mencapai ≥90% isinya — angka inilah yang mengisi persentase progres cerita (`"Bab 45 dari 120 — 38%"`).
 - Saat membuka bab yang pernah dibaca sebagian, tampilkan tawaran **"Lanjutkan dari posisi terakhir"**, bukan langsung melompat — pembaca yang ingin mengulang dari awal tidak dipaksa.

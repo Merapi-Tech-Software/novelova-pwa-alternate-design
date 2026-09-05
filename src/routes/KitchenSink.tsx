@@ -493,9 +493,9 @@ export default function KitchenSink() {
         </div>
 
         {/*
-          Pita tawaran bundel · FR-READ-19 · §1.21. Tanpa tombol ini pitanya
-          nyaris tidak pernah terlihat saat dicoba dengan tangan: saldo contoh
-          15.300 habis di bab ke-12, **dua bab sebelum ambang sepuluh**.
+          Pita tawaran bundel · FR-READ-19 · §1.21. Sejak saldo contoh naik ke
+          20.000, ambang sepuluh bab tercapai dengan membaca biasa — tombol ini
+          tinggal untuk **mencoba ulang** setelah tawarannya ditolak.
         */}
         <p className="pt-3 text-body text-nv-muted">
           Melompatkan penghitung buka-otomatis <code>s1</code> ke ambangnya, lalu buka bab berbayar

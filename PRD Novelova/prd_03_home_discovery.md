@@ -49,7 +49,15 @@ Beranda adalah layar pertama setelah masuk dan pusat penemuan cerita. Isinya sem
 
 1. Pengguna mendarat di `home_tabs.html`.
 2. Aplikasi membaca preferensi visibilitas section dari `localStorage` dan menerapkannya **sebelum** pengguna berinteraksi.
-3. Pengguna menggulir melewati blok: Banner → Genre → Popular → Iklan → New & Trending → Editor's Picks → Iklan → Top Romance → Continue Reading.
+3. Pengguna menggulir melewati blok: **Popular → New & Trending → Editor's Picks → Banner → Genre → section tematik → Iklan → Continue Reading**.
+
+> **Revisi 5 September 2026 · susunan beranda.** Versi lama menaruh Banner dan
+> Genre paling atas, lalu tiga section utama. Sejak permintaan produk 5
+> September, **tiga section prioritas naik ke paling atas** dan tab genre turun
+> ke bawah banner. Konsekuensinya ketiganya **berhenti tersaring tab** — kontrol
+> yang mengubah isi di luar layar terbaca sebagai kontrol yang rusak. Kedua slot
+> iklan juga pindah ke bawah tab genre. `architecture.md` §1.22, yang menimpa
+> sebagian §1.6.
 4. Percabangan:
    - Ketuk kartu/banner/baris cerita → `detail_story_alternatif_unified_cover_first.html`.
    - Ketuk "See all" pada Popular / New & Trending / Editor's Picks → halaman lihat-semua terkait.
@@ -175,17 +183,30 @@ Beranda adalah layar pertama setelah masuk dan pusat penemuan cerita. Isinya sem
 
 **Aturan bisnis.**
 
-| Section | Id | Tata letak | Tautan lihat-semua |
-|---|---|---|---|
-| Popular | `sec-popular` | Kartu horizontal (`.book-card`) | `see_all_popular.html` |
-| New & Trending | `sec-trending` | Kartu horizontal | `see_all_new_trending.html` |
-| Editor's Picks | `sec-editor` | Kartu horizontal | `see_all_editors_picks.html` |
-| Top Romance | `sec-toprom` | Daftar vertikal (`.list-item`) | `detail_story_alternatif_unified_cover_first.html` ("View more") |
-| Continue Reading | `sec-continue` | Daftar vertikal dengan progres | `my_library.html` |
+| Section | Id | Tata letak | Tersaring tab? | Tautan lihat-semua |
+|---|---|---|---|---|
+| Popular | `sec-popular` | **Rel mendatar, sampul 80px** | **tidak** | `see_all_popular.html` |
+| New & Trending | `sec-trending` | Rel mendatar | **tidak** | `see_all_new_trending.html` |
+| Editor's Picks | `sec-editor` | Rel mendatar | **tidak** | `see_all_editors_picks.html` |
+| Section tematik | `sec-toprom` | Rel mendatar | ya | per kategori |
+| Continue Reading | `sec-continue` | **Daftar vertikal** dengan progres | tidak | `my_library.html` |
+
+> **Revisi 5 September 2026 · bentuk section.** Versi lama menulis tiga section
+> teratas sebagai "kartu horizontal" dan dua sisanya sebagai "daftar vertikal".
+> Sekarang **seluruh section genre berbentuk rel mendatar dengan sampul seragam
+> 80px** — tiga bentuk jadi dua. Yang tetap daftar vertikal hanya Continue
+> Reading: ia membawa batang progres, "Bab 45 dari 120", dan tombol lanjut, dan
+> ketiganya butuh lebar satu baris penuh.
+>
+> **Kartu tinggal sampul dan judul.** Nama penulis, ★ rating, dan jumlah baca
+> dicabut dari kartu beranda; ketiganya muncul saat sampulnya diketuk. Kolom
+> "tersaring tab" di atas juga baru — sebelumnya tiga section teratas ikut
+> tersaring. `architecture.md` §1.22.
 
 - Urutan section di feed bersifat tetap dan **tidak** dapat diubah pengguna (hanya bisa disembunyikan).
 - Judul section memakai label bahasa Inggris; label ini juga muncul di popover pengaturan.
 - Setiap kartu di semua section dapat diketuk (FR-HOME-07).
+- **Menekan sampul membesarkannya** menjadi lapisan di tengah layar beserta judul, nama penulis, ★ rating, dan jumlah baca; judul di bawah sampul tetap tautan ke ceritanya. Berlaku **hanya di beranda**. Ketukan di mana saja pada lapisan itu menutupnya. Animasinya dimatikan bila pengguna meminta gerak dikurangi. *(Baru — permintaan produk 5 September 2026, `architecture.md` §1.22.)*
 
 **Acceptance criteria.**
 - **Given** beranda dimuat dengan seluruh section aktif, **when** pengguna menggulir, **then** kelima section tampil sesuai urutan tabel di atas.

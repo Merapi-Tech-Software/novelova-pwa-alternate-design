@@ -166,6 +166,11 @@ Nilai-nilai ini **mengikat** dan harus identik di seluruh dokumen PRD serta impl
 > **Diputuskan dibiarkan dulu** (4 September 2026); alur unlock dikerjakan lebih
 > dahulu. Akibat yang bisa dihitung ada di `../architecture.md` §1.21.
 >
+> **Revisi 5 September 2026.** Angka "±5%" dan "±10%" **dihapus dari tabel**;
+> hematnya dihitung server dari harga bab sungguhan. Pada data contoh sepuluh bab
+> satuan berjumlah 17.200 melawan bundel 12.000 — **30%**, bukan 5%. `prd_05` §2
+> ikut diselaraskan pada giliran yang sama. `architecture.md` §1.21.
+>
 > **Lencana hemat "±5%" dan "±10%" nominal.** Kode menghitung penghematan dari
 > total harga satuan sungguhan (`UnlockOption.individualCoins`); pada harga contoh
 > bundel sepuluh bab sebenarnya hemat **30%**, bukan 5%.
@@ -181,9 +186,9 @@ Nilai-nilai ini **mengikat** dan harus identik di seluruh dokumen PRD serta impl
 | Promo bonus | Paket **500 koin → +50 koin bonus** | `topup_koin.html` |
 | Unlock bab satuan | **1.500** | `chapter_read_locked_story_stage.html` |
 
-| Unlock bundle (10 bab) | **12.000** (hemat ±5%) | `chapter_read_locked_story_stage.html` |
+| Unlock bundle (10 bab) | **12.000** (hemat dihitung server) | `chapter_read_locked_story_stage.html` |
 | Unlock sampai tamat | **36.900** (hemat ±10%) | `chapter_read_locked_story_stage.html` |
-| Saldo awal prototype | **15.300** koin | `chapter_read_locked_story_stage.html:669` |
+| Saldo awal prototype | ~~15.300~~ → **20.000** koin *(revisi 5 Sep 2026, `prd_05` §1)* | `chapter_read_locked_story_stage.html:669` |
 | Kuota buka via iklan | **2 dari 3** per hari (`adQuota` / `adMax`) | `chapter_read_locked_story_stage.html:1101` |
 | Kode voucher valid | `promo` | `detail_story_alternatif_unified_cover_first.html:573` |
 | Kedaluwarsa pembayaran | E-wallet 15 mnt · QRIS 30 mnt · VA 1440 mnt | `topup_koin.html` (`data-limit`) |
@@ -461,7 +466,7 @@ Ringkasan alur yang belum menutup pada prototype dan requirement yang menutupnya
 | 1 | **Kehabisan koin → beli → lanjut baca** | Toast "saldo tidak cukup" lalu buntu; sukses top-up melempar ke beranda; empat saldo berbeda | FR-READ-17 · FR-WALLET-17 · FR-WALLET-18 |
 | 2 | **Temukan cerita → simpan → perpustakaan** | "Add to Library" tanpa handler, sehingga perpustakaan tidak punya pintu masuk | FR-DETAIL-13 · FR-LIB-11 |
 | 3 | **Baca → progres tercatat → lanjut baca** | Reader tidak menulis progres; Continue Reading dan batang progres tanpa sumber data | FR-READ-16 · FR-LIB-11 |
-| 4 | **Selesai bab → bab berikutnya** | Tidak ada navigasi bab di reader | FR-READ-15 |
+| 4 | **Selesai bab → bab berikutnya** | Prototipe berhenti di ujung bab tanpa jalan lanjut | FR-READ-15 **(revisi 5 Sep 2026: dijawab baca menerus, bukan tombol navigasi)** |
 | 5 | **Baca → beri nilai / ulasan / komentar** | Rate tanpa handler; dua tautan menggantung; misi ulasan → `#` | prd_12 seluruhnya |
 | 6 | **Cari cerita tertentu** | Ikon Cari tanpa handler; tidak ada halaman pencarian | FR-SRCH-01 … FR-SRCH-05 |
 | 7 | **Peristiwa terjadi → pengguna diberi tahu** | Empat fitur memicu notifikasi, tidak ada tempat menerimanya | FR-NOTIF-01 … FR-NOTIF-05 |

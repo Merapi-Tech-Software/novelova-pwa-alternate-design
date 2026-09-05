@@ -150,25 +150,38 @@ describe('gerbang bab terkunci · FR-READ-06 · FR-READ-07 · FR-READ-17', () =>
   })
 })
 
-describe('navigasi bab · FR-READ-15', () => {
-  it('bab pertama menonaktifkan "sebelumnya", bukan menyembunyikannya', async () => {
+describe('gulir menerus · §1.25 · R4b', () => {
+  it('tidak ada tombol bab sebelumnya/berikutnya di mana pun', async () => {
     renderReader('s1-c1')
     await screen.findByRole('heading', { level: 1, name: 'Perjanjian Malam Itu' })
-
-    // Ada, tetapi mati — tata letaknya tetap sama di bab mana pun.
     await bukaKontrol()
-    expect(screen.getByRole('button', { name: 'Bab sebelumnya' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Bab berikutnya' })).toBeEnabled()
+
+    /*
+     * **Dibalik dari test lama.** Sampai R4 keduanya wajib ada — yang pertama
+     * mati di bab pertama, yang kedua membawa judul tujuannya. Sejak §1.25
+     * bacaannya mengalir, dan tombol lompat justru mengajarkan pembaca bahwa
+     * ada batas bab yang perlu dilewati — persis yang alur ini hilangkan.
+     */
+    expect(screen.queryByRole('button', { name: 'Bab sebelumnya' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Bab berikutnya' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Bab berikutnya:/ })).not.toBeInTheDocument()
+
+    // Nomor babnya tetap ada — pembaca tetap punya satu tempat untuk tahu ia
+    // sedang di mana.
+    expect(screen.getAllByText(/^Bab \d+ \/ \d+$/).length).toBeGreaterThan(0)
   })
 
-  it('penutup bab menyebutkan judul tujuannya', async () => {
-    renderReader('s1-c1')
+  it('hanya bab pertama yang punya pembuka; sambungannya garis polos', async () => {
+    const { container } = renderReader('s1-c1')
+    await screen.findByRole('heading', { level: 1, name: 'Perjanjian Malam Itu' })
 
-    expect(
-      await screen.findByRole('button', { name: /Bab berikutnya: Kopi yang Selalu Dingin/ }),
-    ).toBeInTheDocument()
+    // Satu `<h1>` saja, walau beberapa bab bisa tersambung: pembuka bab besar
+    // adalah jeda visual, dan sambungannya tidak boleh punya jeda.
+    expect(container.querySelectorAll('h1')).toHaveLength(1)
   })
+})
 
+describe('komentar di ruang baca · brief §7', () => {
   it('komentar hanya di bilah bawah, tidak pernah di akhir bab', async () => {
     renderReader('s1-c1')
 
@@ -218,9 +231,15 @@ describe('auto-unlock per cerita · FR-READ-09 · §1.19', () => {
 
     renderReader('s1-c8')
 
-    // Tanpa satu pun klik, isinya muncul — dan gerbangnya menghilang.
+    /*
+     * Tanpa satu pun klik, isi babnya muncul. Yang **tidak** lagi diperiksa:
+     * "tidak ada gerbang di mana pun" — sejak §1.25 rantainya menyambung bab
+     * berikutnya sampai menemui bab terkunci berikutnya, dan gerbang di ujung
+     * rantai itu benar. Yang dijaga di sini: bab **tempat pembaca masuk**
+     * terbuka sendiri, dan gerbangnya paling banyak satu (dindingnya).
+     */
     expect(await screen.findByRole('button', { name: 'Suka' })).toBeInTheDocument()
-    expect(screen.queryByText(/Bagian di bawah tersensor/)).not.toBeInTheDocument()
+    expect(screen.queryAllByText(/Bagian di bawah tersensor/).length).toBeLessThanOrEqual(1)
 
     await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
   })

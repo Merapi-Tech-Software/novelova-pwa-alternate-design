@@ -577,7 +577,24 @@ const chapterContents: Array<ChapterContent & { id: string }> = chapters
 // ── dompet ──────────────────────────────────────────────────────────────────
 
 /** 15.300 koin + 23 bonus — angka yang dipakai kanvas di enam layar. */
-const wallet: Wallet = { userId: ME, balance: 15_300, bonus: 23, updatedAt: iso(minutes(4)) }
+/*
+ * **Saldo contoh 20.000** — permintaan produk 5 September, menimpa keputusan
+ * §1.21 yang menahannya di 15.300 demi kecocokan dengan mockup.
+ *
+ * Angkanya dihitung dari harga bab sungguhan, bukan dibulatkan asal:
+ *
+ * | Bab berbayar | Kumulatif | Yang terjadi |
+ * |---|---|---|
+ * | ke-10 | 17.200 | **tawaran bundel muncul** |
+ * | ke-11 | 18.700 | masih terbuka, sisa 1.300 |
+ * | ke-12 | 20.200 | **kurang 200 koin → lembar isi koin** |
+ *
+ * Jadi satu sesi baca menerus melewati **kedua** fitur yang perlu dilihat:
+ * tawaran bundelnya, lalu saldo habis beserta jalan keluarnya. Menahan saldo di
+ * 15.300 membuat yang pertama tidak pernah tercapai — habis di bab ke-12, dua
+ * bab sebelum ambangnya.
+ */
+const wallet: Wallet = { userId: ME, balance: 20_000, bonus: 23, updatedAt: iso(minutes(4)) }
 
 const PKG_SEED: Array<[coins: number, price: number, note: string]> = [
   [50, 7_000, 'Rp 140/koin'],
@@ -1544,7 +1561,7 @@ const readerPrefs: ReaderPrefs = {
 }
 
 /** Dinaikkan bila bentuk seed berubah, supaya database lama ditulis ulang. */
-const SEED_VERSION = 13
+const SEED_VERSION = 14
 
 /**
  * Mengisi database bila kosong atau versinya usang.

@@ -42,12 +42,13 @@ export async function readerPrefsOf(userId: string): Promise<ReaderPrefs> {
  * Sakelar dev: melompatkan penghitung buka-otomatis sebuah cerita ke ambangnya.
  *
  * **Bukan metode seam**, dan tidak boleh jadi metode seam — ia menulis langsung
- * ke penghitung yang seharusnya hanya bisa naik lewat pembelian. Ia ada karena
- * pita tawaran bundel nyaris tidak pernah terlihat saat dicoba dengan tangan:
- * saldo contoh 15.300 habis di bab ke-12, **dua bab sebelum ambang** (§1.21).
+ * ke penghitung yang seharusnya hanya bisa naik lewat pembelian.
  *
- * Menaikkan saldo seed bukan pilihan — angka `15,3rb` tercetak di `7a`, `7x`,
- * dan `7i`, dan menaikkannya membuat seluruh mockup berhenti cocok.
+ * **Alasannya berubah 5 September.** Dulu ia satu-satunya cara melihat pitanya:
+ * saldo contoh 15.300 habis di bab ke-12, dua bab sebelum ambang sepuluh. Saldo
+ * itu kini 20.000 dan ambangnya tercapai dengan membaca biasa, jadi tombol ini
+ * tinggal berguna untuk **mencoba ulang** — melihat pitanya lagi setelah
+ * ditolak, tanpa menghapus data situs.
  */
 export async function jumpAutoUnlockCountAsDev(storyId: string, userId: string): Promise<void> {
   const { SERVER_CONFIG } = await import('./config')

@@ -1,19 +1,14 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  Headphones,
-  MessageSquare,
-  Settings2,
-  Square,
-} from 'lucide-react'
+import { Headphones, MessageSquare, Settings2, Square } from 'lucide-react'
+import { Link } from 'react-router'
 import type { Chapter } from '@/api/contracts'
-import { Button, IconButton } from '@/components/ui/Button'
+import { IconButton } from '@/components/ui/Button'
 import { t } from '@/i18n/t'
 
 export interface ChapterNavProps {
   chapter: Chapter
+  /** Nomor bab yang sedang terlihat · §1.25. */
+  currentNumber: number
   total: number
-  onGo: (chapterId: string) => void
   /** Membuka panel pengaturan — alatnya tinggal di sini untuk bab yang dimiliki. */
   onToggleSettings: () => void
   /**
@@ -45,8 +40,8 @@ export interface ChapterNavProps {
  */
 export function ChapterNav({
   chapter,
+  currentNumber,
   total,
-  onGo,
   onToggleSettings,
   onOpenComments,
   settingsOpen,
@@ -57,31 +52,17 @@ export function ChapterNav({
       aria-label={t('reader.chapterOf')(chapter.number, total)}
       className="fixed inset-x-3 bottom-3 z-40 space-y-2 rounded-nv-lg border border-nv-line-soft bg-nv-card p-2 shadow-nv"
     >
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={chapter.prevChapterId === null}
-          onClick={() => chapter.prevChapterId && onGo(chapter.prevChapterId)}
-          iconLeft={<ChevronLeft size={16} />}
-        >
-          {t('reader.prevChapter')}
-        </Button>
+      {/*
+        **Tombol bab sebelumnya/berikutnya dicabut** · §1.25. Bacaannya mengalir
+        terus; tombol lompat di sini akan mengajarkan pembaca bahwa ada batas
+        bab yang perlu dilewati, dan justru itu yang alur ini hilangkan.
 
-        <span className="flex-1 text-center text-caption text-nv-muted tabular-nums">
-          {t('reader.chapterOf')(chapter.number, total)}
-        </span>
-
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={chapter.nextChapterId === null}
-          onClick={() => chapter.nextChapterId && onGo(chapter.nextChapterId)}
-          iconRight={<ChevronRight size={16} />}
-        >
-          {t('reader.nextChapter')}
-        </Button>
-      </div>
+        Yang tersisa nomor babnya — dan ia **mengikuti bab yang terlihat**, jadi
+        pembaca tetap punya satu tempat untuk tahu ia sedang di mana.
+      */}
+      <p className="text-center text-caption text-nv-muted tabular-nums">
+        {t('reader.chapterOf')(currentNumber, total)}
+      </p>
 
       <div className="flex items-center gap-2 border-nv-line border-t pt-2">
         <button
@@ -121,41 +102,23 @@ export function ChapterNav({
 }
 
 /**
- * Penutup bab: tombol besar beserta **judul tujuannya**, atau jalan kembali ke
- * daftar bab bila ini bab terakhir yang terbit.
+ * Penutup **cerita** · §1.25.
+ *
+ * Menggantikan `ChapterEnd` yang dulu membawa tombol `Bab 4 ›`. Dalam gulir
+ * menerus tidak ada lagi "bab berikutnya" untuk ditekan — yang tersisa hanya
+ * ujung ceritanya, dan gulir yang berhenti tanpa kabar terbaca sebagai gagal
+ * memuat, bukan sebagai habis.
  */
-export function ChapterEnd({
-  chapter,
-  storyId,
-  onGo,
-}: {
-  chapter: Chapter
-  storyId: string
-  onGo: (chapterId: string) => void
-}) {
-  if (chapter.nextChapterId === null) {
-    return (
-      <div className="mt-10 border-nv-line border-t pt-6 text-center">
-        <p className="pb-3 text-body text-nv-muted">{t('reader.lastChapterNote')}</p>
-        <Button variant="secondary" onClick={() => onGo(`story:${storyId}`)}>
-          {t('reader.backToChapters')}
-        </Button>
-      </div>
-    )
-  }
-
+export function StoryEnd({ storyId }: { storyId: string }) {
   return (
-    <div className="mt-10 border-nv-line border-t pt-6">
-      <Button
-        size="lg"
-        block
-        onClick={() => chapter.nextChapterId && onGo(chapter.nextChapterId)}
-        iconRight={<ChevronRight size={18} />}
+    <div className="mt-12 border-nv-line border-t pt-6 text-center">
+      <p className="pb-3 font-display text-card text-nv-text-2">{t('reader.lastChapterNote')}</p>
+      <Link
+        to={`/cerita/${storyId}`}
+        className="inline-flex h-11 items-center rounded-nv-pill border border-nv-line-soft px-5 text-body font-semibold"
       >
-        {chapter.nextTitle
-          ? t('reader.nextChapterNamed')(chapter.nextTitle)
-          : t('reader.nextChapter')}
-      </Button>
+        {t('reader.backToChapters')}
+      </Link>
     </div>
   )
 }

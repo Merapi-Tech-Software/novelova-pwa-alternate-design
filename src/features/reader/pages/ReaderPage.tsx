@@ -15,12 +15,13 @@ import { useStory } from '@/hooks/useStory'
 import { useVouchers } from '@/hooks/useVouchers'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
-import { cx } from '@/lib/cx'
+import { onVisible } from '@/lib/a11y'
 import { formatDate } from '@/lib/format'
 import { AdUnlockScreen } from '../components/AdUnlockScreen'
 import { BundleBand } from '../components/BundleBand'
+import { ChapterBlock, type ChapterMeta } from '../components/ChapterBlock'
 import { ChapterGate } from '../components/ChapterGate'
-import { ChapterEnd, ChapterNav } from '../components/ChapterNav'
+import { ChapterNav, StoryEnd } from '../components/ChapterNav'
 import { InsufficientCoins } from '../components/InsufficientCoins'
 import { ReaderBar } from '../components/ReaderBar'
 import { ReaderSettingsPanel } from '../components/ReaderSettingsPanel'
@@ -34,8 +35,6 @@ import { useReadingProgress } from '../hooks/useReadingProgress'
 import { useTts } from '../hooks/useTts'
 import { useAdQuota, useUnlockChapter, useUnlockOptions } from '../hooks/useUnlock'
 
-/** Ambang keterlihatan gerbang sebelum auto-unlock menyala (FR-READ-09). */
-const AUTO_UNLOCK_RATIO = 0.35
 /** Di bawah ini bacaan dianggap belum benar-benar dimulai. */
 const RESUME_MIN = 0.05
 /** Di atas ini babnya sudah selesai — tidak ada yang perlu dilanjutkan. */
@@ -52,6 +51,26 @@ function sentencesOf(paragraphs: string[]): string[] {
  * (bila terkunci), teks, iklan, reaksi, penutup bab, navigasi. Yang terkunci
  * tidak pernah merender naskahnya sama sekali.
  */
+/*
+ * **Rantainya tidak dibatasi, dan itu keputusan sadar.**
+ *
+ * Percobaan pertama memangkas bab terlama dari depan begitu lewat enam. Itu
+ * **merusak bacaannya**: konten di atas layar hilang, peramban tidak mengganti
+ * tingginya, dan pembaca tertarik mundur sebanyak bab yang baru dibuang.
+ * Gejalanya bukan lompatan yang terlihat melainkan bacaan yang tidak maju —
+ * terukur, 200 kali gulir hanya membawa dua bab.
+ *
+ * Kompensasi gulir pun tidak menyelamatkannya: rantai bertambah di bawah dan
+ * berkurang di atas dalam **satu** langkah, jadi selisih tinggi halamannya
+ * nyaris nol sementara pergeserannya tidak.
+ *
+ * ponytail: rantainya tumbuh tanpa batas. Satu bab ~10 paragraf, jadi cerita
+ * 120 bab yang dibaca habis dalam satu sesi berarti ~1.200 paragraf di DOM —
+ * berat tapi tidak mematikan, dan itu menuntut pembaca membeli 120 bab lebih
+ * dulu. Kalau memori benar-benar jadi masalah, jalannya **virtualisasi** yang
+ * menahan tinggi elemen yang dilepas — bukan memangkas begitu saja.
+ */
+
 export default function ReaderPage() {
   const { storyId, chapterId } = useParams()
   const navigate = useNavigate()
@@ -64,8 +83,6 @@ export default function ReaderPage() {
   const [liked, setLiked] = useState(false)
   const [resumeAt, setResumeAt] = useState<number | null>(null)
   const [attempt, setAttempt] = useState(() => crypto.randomUUID())
-  const autoTried = useRef<string | null>(null)
-  const gateRef = useRef<HTMLDivElement>(null)
 
   /*
    * **Type A: chrome tersembunyi sejak awal** (`7u`), dan satu ketukan pada teks
@@ -91,8 +108,18 @@ export default function ReaderPage() {
   const quota = useAdQuota()
   const voucher = useVouchers()
 
-  const locked = chapter.data !== undefined && !chapter.data.owned
-  const options = useUnlockOptions(chapterId, locked)
+  /*
+   * **Bab terkunci di dalam rantai**, bukan bab tempat pembaca masuk · §1.25.
+   *
+   * Sebelum ini `locked` dibaca dari bab entri, dan itu benar selama satu
+   * halaman = satu bab. Dalam gulir menerus pembaca masuk lewat bab gratis lalu
+   * menemui gerbang belasan layar di bawahnya — dan gerbang itu tidak pernah
+   * mendapat harga-harganya, karena kuerinya masih menunggu bab entri terkunci.
+   * Terukur: tombol `Chapter ini` tidak pernah muncul.
+   */
+  const [terkunciId, setTerkunciId] = useState<string | null>(null)
+  const locked = terkunciId !== null
+  const options = useUnlockOptions(terkunciId ?? chapterId, locked)
   const unlock = useUnlockChapter(storyId, chapterId)
   // Izin buka-otomatis **cerita ini** — dari seam, bukan dari `stores/` (§1.19).
   const bolehOtomatis = useAutoUnlockAllowed(storyId)
@@ -107,6 +134,33 @@ export default function ReaderPage() {
   const [izinDicentang, setIzinDicentang] = useState(true)
   /** Koin yang terpotong pada pembukaan bab ini — `null` bila bukan barusan. */
   const [dibukaBarusan, setDibukaBarusan] = useState<number | null>(null)
+
+  /*
+   * **Rantai bab yang sedang tersambung** · §1.25. Bab tempat pembaca masuk ada
+   * di depan; sisanya ditambahkan saat gulirnya mendekati ujung.
+   *
+   * Dibatasi `MAX_RANTAI`: cerita 120 bab yang seluruhnya disambung menghabiskan
+   * memori dan membuat gulirnya tersendat.
+   * ponytail: yang terlama dilepas dari depan. Virtualisasi penuh baru perlu
+   * kalau batas sederhana ini terbukti tidak cukup.
+   */
+  const [rantai, setRantai] = useState<string[]>(() => (chapterId ? [chapterId] : []))
+  /** Bab yang sedang mengisi layar — penggerak judul, komentar, progres, URL. */
+  const [terlihat, setTerlihat] = useState<string>(chapterId ?? '')
+  const meta = useRef<Record<string, ChapterMeta>>({})
+  /*
+   * **Callback ref, bukan `useRef`.** Halaman ini mengembalikan skeleton lebih
+   * dulu selama babnya dimuat, jadi efek dengan `useRef` berjalan saat
+   * elemennya belum ada — dan efek berdeps `[]` tidak pernah berjalan lagi
+   * setelahnya. Akibatnya pengamatnya tidak pernah terpasang dan rantainya
+   * tidak pernah tumbuh; terukur: satu bab, nol garis pemisah.
+   */
+  const [ekor, setEkor] = useState<HTMLDivElement | null>(null)
+  const [ujungCerita, setUjungCerita] = useState(false)
+  /** Bab yang sudah pernah dicoba dibuka otomatis — pengaman ketiga R4. */
+  const autoDicoba = useRef<Set<string>>(new Set())
+  /** Cermin `terkunciId` untuk dibaca di dalam callback tanpa jadi dependensi. */
+  const terkunciIdRef = useRef<string | null>(null)
 
   const body = chapter.data?.owned ? (chapter.data.content[0]?.body ?? []) : []
   const tts = useTts(sentencesOf(body))
@@ -131,19 +185,39 @@ export default function ReaderPage() {
   // Pindah bab mereset gulir dan menyetel ulang pengaman auto-unlock — tetapi
   // **tidak** menyentuh pengaturan baca (FR-READ-15).
   // biome-ignore lint/correctness/useExhaustiveDependencies: berpindah bab yang jadi pemicunya
+  /*
+   * **Rantai direset hanya saat pembaca benar-benar berpindah**, bukan saat URL
+   * berganti mengikuti gulir. Keduanya mengubah `chapterId`, dan membedakannya
+   * yang membuat alur ini bekerja: reset saat gulir akan membuang seluruh bab
+   * yang sudah tersambung tepat ketika pembaca melewatinya.
+   */
+  const masuk = useRef(chapterId)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `terlihat` sengaja tidak jadi pemicu — lihat komentar di atas
   useEffect(() => {
+    if (!chapterId || chapterId === terlihat) return
+
+    masuk.current = chapterId
+    setRantai([chapterId])
+    setTerkunciId(null)
+    setTerlihat(chapterId)
+    meta.current = {}
+    autoDicoba.current = new Set()
     window.scrollTo(0, 0)
-    autoTried.current = null
     setResumeAt(null)
     setDibukaBarusan(null)
   }, [chapterId])
 
   const buy = useCallback(
-    (source: 'coin' | 'bundle' | 'full', opsi?: { auto?: boolean; enableAutoUnlock?: boolean }) => {
+    (
+      source: 'coin' | 'bundle' | 'full',
+      opsi?: { auto?: boolean; enableAutoUnlock?: boolean; chapterId?: string },
+    ) => {
       unlock.mutate(
         {
           source,
           idempotencyKey: attempt,
+          // Bab mana pun di dalam rantai, bukan selalu bab tempat pembaca masuk.
+          ...(opsi?.chapterId ? { chapterId: opsi.chapterId } : {}),
           // Dua bendera, dan keduanya dikirim **bersama pembeliannya**: beli
           // bab dan nyalakan izinnya adalah satu tindakan pembaca di gerbang,
           // dan memecahnya membuka keadaan "koin terpotong, izin gagal
@@ -155,13 +229,18 @@ export default function ReaderPage() {
           onSuccess: (hasil) => {
             setAttempt(crypto.randomUUID())
             // Dipakai lencana `CHAPTER TERBUKA` di `7y`; direset saat pindah bab.
-            setDibukaBarusan(hasil.coinsSpent)
-            // Toast pembukaan otomatis **berbunyi beda**: pembaca tidak menekan
-            // apa pun, jadi kalimat yang sama akan terbaca seolah ia yang
-            // melakukannya.
-            toast.show(
-              opsi?.auto ? t('reader.unlockedAuto')(hasil.coinsSpent) : t('reader.unlocked'),
-            )
+            // Lencana `7y` hanya untuk pembukaan yang ditekan pembaca; yang
+            // otomatis tidak meninggalkan jejak apa pun di layar.
+            setDibukaBarusan(opsi?.auto ? null : hasil.coinsSpent)
+            /*
+             * **Pembukaan otomatis tidak berbunyi apa pun** · §1.25. Toast
+             * `−1.5rb koin` justru yang membuat pembaca sadar, dan "tidak
+             * sadar" adalah tujuan yang dinyatakan.
+             *
+             * Pembukaan yang **ditekan pembaca** tetap berbunyi: ia menekan
+             * sesuatu dan berhak tahu apa yang terjadi.
+             */
+            if (!opsi?.auto) toast.show(t('reader.unlocked'))
           },
           onError: (failure) => {
             if (isApiError(failure) && failure.code === 'INSUFFICIENT_COINS') {
@@ -186,39 +265,129 @@ export default function ReaderPage() {
    * Izinnya dibaca dari **seam**, bukan dari `stores/`: sejak §1.19 ia per
    * cerita dan tersimpan di server, karena ia memberi wewenang memotong koin.
    */
-  const tryAuto = useCallback(() => {
-    if (!bolehOtomatis || !locked || !chapterId) return
-    if (autoTried.current === chapterId || unlock.isPending) return
+  /**
+   * Membuka bab terkunci **di tengah gulir**, tanpa jeda · §1.25.
+   *
+   * Empat pengaman, dan semuanya perlu: izin cerita ini menyala · babnya memang
+   * terkunci · belum pernah dicoba untuk bab itu · tidak ada permintaan yang
+   * sedang berjalan. Selalu **harga satuan** — membeli bundel atau paket tamat
+   * tanpa diminta adalah hal terakhir yang boleh dilakukan otomatis.
+   *
+   * Izinnya dibaca dari **seam**, bukan dari `stores/`: sejak §1.19 ia per
+   * cerita dan tersimpan di server, karena ia memberi wewenang memotong koin.
+   */
+  const bukaDiam = useCallback(
+    (id: string) => {
+      if (!bolehOtomatis || unlock.isPending) return
+      if (autoDicoba.current.has(id)) return
+      if (meta.current[id]?.owned !== false) return
 
-    autoTried.current = chapterId
-    buy('coin', { auto: true })
-  }, [bolehOtomatis, locked, chapterId, unlock.isPending, buy])
+      autoDicoba.current.add(id)
+      unlock.mutate(
+        { chapterId: id, source: 'coin', idempotencyKey: attempt, auto: true },
+        {
+          onSuccess: () => setAttempt(crypto.randomUUID()),
+          onError: (failure) => {
+            if (isApiError(failure) && failure.code === 'INSUFFICIENT_COINS') {
+              // **Satu-satunya interupsi yang tersisa**, dan ia memang harus
+              // menginterupsi: koin habis bukan hal yang boleh terjadi diam-diam.
+              setShortBy(Number(failure.detail ?? 0))
+              return
+            }
+            toast.show(isApiError(failure) ? failure.message : t('failure.genericTitle'))
+          },
+        },
+      )
+    },
+    [attempt, bolehOtomatis, toast, unlock],
+  )
+
+  /*
+   * **Menyambung bab berikutnya.** Pemicunya sentinel di bawah bab terakhir,
+   * jadi pemuatannya mulai saat pembaca *mendekati* ujungnya — bukan saat ia
+   * sampai, yang berarti menunggu di depan layar kosong.
+   */
+  /** Menambahkan bab berikutnya ke rantai — satu tempat, dua pemicu. */
+  const sambung = useCallback(() => {
+    setRantai((sekarang) => {
+      const akhir = sekarang[sekarang.length - 1]
+      const terakhir = akhir ? meta.current[akhir] : undefined
+
+      /*
+       * **Gerbang adalah dinding.** Selama bab terakhir di rantai masih
+       * terkunci, tidak ada yang boleh dimuat melewatinya — kalau tidak,
+       * pembaca mendapat tumpukan gerbang, satu per bab, dan pertanyaan yang
+       * seharusnya diajukan sekali jadi diajukan enam kali. Terukur sebelum
+       * pengaman ini: enam gerbang bertumpuk dalam satu halaman.
+       */
+      if (terakhir?.owned === false) return sekarang
+
+      const next = terakhir?.nextChapterId ?? null
+      if (!next || sekarang.includes(next)) return sekarang
+      return [...sekarang, next]
+    })
+  }, [])
+
+  /*
+   * **Dua pemicu, dan keduanya perlu.**
+   *
+   * `IntersectionObserver` hanya menyala saat elemennya **melintas** batas
+   * layar. Begitu sentinel menetap di dalam layar — dan itu keadaan normalnya di
+   * dasar halaman — ia berhenti menyala, dan rantainya berhenti tumbuh.
+   * Terukur: bacaan mandek di bab kedua, 250 kali gulir tidak memajukannya.
+   *
+   * Jadi pemicu kedua: tiap kali bab melaporkan dirinya (termasuk saat ia
+   * **baru saja terbeli** dan `owned` berubah jadi benar), rantainya dicoba
+   * disambung lagi bila sentinelnya memang sedang terlihat.
+   */
+  const cobaSambung = useCallback(() => {
+    const kotak = ekor?.getBoundingClientRect()
+    if (kotak && kotak.top < window.innerHeight) sambung()
+  }, [ekor, sambung])
 
   useEffect(() => {
-    // Evaluasi langsung begitu izinnya diketahui, tanpa menunggu gulir.
-    if (bolehOtomatis) tryAuto()
-  }, [bolehOtomatis, tryAuto])
+    if (!ekor) return
+    return onVisible(ekor, sambung)
+  }, [ekor, sambung])
+
+  /** Bab yang barusan dimuat melapor dirinya; di sinilah rantai tumbuh. */
+  const catatMeta = useCallback(
+    (m: ChapterMeta) => {
+      meta.current[m.id] = m
+      if (m.owned === false) {
+        setTerkunciId(m.id)
+        bukaDiam(m.id)
+      } else if (m.id === terkunciIdRef.current) {
+        // Babnya barusan terbuka — gerbangnya hilang bersamanya.
+        setTerkunciId(null)
+      }
+      // Ujung cerita diketahui dari bab terakhir yang dilaporkan, bukan dari
+      // panjang rantai: rantai bisa dipangkas dari depan saat batasnya lewat.
+      if (m.nextChapterId === null) setUjungCerita(true)
+
+      // Bab ini mungkin baru saja terbeli — coba sambung lagi, lihat alasannya
+      // di `cobaSambung`.
+      cobaSambung()
+    },
+    [bukaDiam, cobaSambung],
+  )
+
+  /*
+   * **URL mengikuti bab yang terlihat, tanpa navigasi.** `replaceState`, bukan
+   * `navigate()`: yang kedua melepas halaman dan membuang posisi gulirnya —
+   * persis yang alur ini berusaha hilangkan. Akibatnya tombol kembali peramban
+   * tidak menyusuri tiap bab yang dilewati, dan itu benar: pembaca tidak "pergi
+   * ke" bab berikutnya, ia terus membaca.
+   */
+  useEffect(() => {
+    terkunciIdRef.current = terkunciId
+  }, [terkunciId])
 
   useEffect(() => {
-    const node = gateRef.current
-    if (!node || !locked) return
-
-    // Fallback bila peramban tidak punya IntersectionObserver: gerbang yang
-    // sudah terlihat langsung dievaluasi sekali.
-    if (typeof IntersectionObserver === 'undefined') {
-      tryAuto()
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0] && entries[0].intersectionRatio >= AUTO_UNLOCK_RATIO) tryAuto()
-      },
-      { threshold: AUTO_UNLOCK_RATIO },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [locked, tryAuto])
+    if (!storyId || !terlihat) return
+    const jalur = `/cerita/${storyId}/bab/${terlihat}`
+    if (window.location.pathname !== jalur) window.history.replaceState(null, '', jalur)
+  }, [storyId, terlihat])
 
   useEffect(() => {
     if (!storyId || !chapterId || !chapter.data?.owned) return
@@ -294,15 +463,18 @@ export default function ReaderPage() {
   if (!chapter.data) return null
 
   const data = chapter.data
+  // Bab yang sedang mengisi layar — satu sumber untuk judul bilah, nomor bab,
+  // tombol komentar, dan URL (§1.25).
+  const babTerlihat = meta.current[terlihat]
   const total = story.data?.stats.chapterCount ?? data.number
   const sentences = sentencesOf(body)
-  const middle = Math.floor(body.length / 2)
 
   return (
     <div>
       {(chromeOpen || locked) && (
         <ReaderBar
           chapter={data}
+          currentNumber={babTerlihat?.number ?? data.number}
           storyId={storyId ?? ''}
           total={total}
           settingsOpen={settingsOpen}
@@ -339,42 +511,17 @@ export default function ReaderPage() {
           setChromeOpen((on) => !on)
         }}
       >
-        {/* Pembuka bab `7u`: label kecil, judul serif, garis emas. */}
-        <p className="nv-section-label text-center">{t('reader.chapterLabel')(data.number)}</p>
-        <h1 className="pt-2 text-center font-display text-page leading-tight font-semibold">
-          {data.title}
-        </h1>
-        <span aria-hidden className="mx-auto mt-4 mb-7 block h-px w-10 bg-nv-gold-line" />
-
         {/*
-          Pita tawaran bundel · FR-READ-19. Di pembuka bab, **tidak menghalangi
-          apa pun** — alur ini menjanjikan membaca tanpa terputus, dan lembar
-          yang menghentikan pembaca untuk menawarinya belanja adalah kebalikan
-          dari yang dibelinya.
+          Tawaran melanjutkan dari posisi terakhir · FR-READ-16 · §1.24.
+          Ia **tawaran, bukan lompatan otomatis**: melompat sendiri saat halaman
+          dibuka membuat pembaca kehilangan konteks yang justru ia cari.
         */}
-        {bundel.data && (
-          <BundleBand
-            offer={bundel.data}
-            pending={unlock.isPending}
-            onTake={() => {
-              // **Pembelian eksplisit** — auto-unlock tidak pernah membeli
-              // bundel sendiri (FR-READ-09).
-              buy('bundle')
-              if (storyId) tolakBundel.mutate(storyId)
-            }}
-            onDismiss={() => storyId && tolakBundel.mutate(storyId)}
-          />
-        )}
-
-        {/* Ditawarkan, bukan dilompati sendiri: pembaca yang membuka bab lagi
-            belum tentu ingin melanjutkan dari tempat ia berhenti (FR-READ-16). */}
         {resumeAt !== null && (
-          <div className="mb-5 rounded-nv-lg border border-nv-line bg-nv-paper-2 p-4">
-            <p className="text-body font-semibold">{t('reader.resumeTitle')}</p>
-            <p className="pt-1 text-body text-nv-muted">
+          <div className="mb-7 flex flex-wrap items-center justify-between gap-3 border-nv-line border-y py-3">
+            <p className="min-w-0 text-caption text-nv-muted tabular-nums">
               {t('reader.resumeBody')(Math.round(resumeAt * 100))}
             </p>
-            <div className="flex gap-2 pt-3">
+            <span className="flex shrink-0 gap-2">
               <Button
                 size="sm"
                 onClick={() => {
@@ -388,69 +535,85 @@ export default function ReaderPage() {
               <Button size="sm" variant="ghost" onClick={() => setResumeAt(null)}>
                 {t('reader.resumeStay')}
               </Button>
-            </div>
+            </span>
           </div>
         )}
-
-        <div
-          className="space-y-4 font-read text-nv-text"
-          style={{ fontSize: 'var(--reader-font-size)', lineHeight: 1.8 }}
-        >
-          {body.map((paragraph, index) => (
-            <div key={paragraph.slice(0, 40)}>
-              <p
-                className={cx(
-                  tts.current >= 0 &&
-                    paragraph.includes(sentences[tts.current] ?? '\u0000') &&
-                    'rounded-nv-sm bg-nv-accent-soft',
-                )}
-              >
-                {paragraph}
-              </p>
-
-              {/* Tiga slot: setelah paragraf pertama, di tengah, dan di akhir
-                  bab (FR-READ-12) — di sela bacaan, bukan menutupi teksnya. */}
-              {(index === 0 || index === middle) && (
-                <AdSlot variant="slim" className="mt-4" title={t('home.adSlimTitle')} />
-              )}
-            </div>
-          ))}
-        </div>
 
         {/*
-          **Bagian gratisnya dibaca persis seperti Type A**, lalu berhenti di
-          blok gerbang (`7x`). Paragraf pembuka datang dari `preview`; sisanya
-          yang diburamkan di dalam gerbang.
+          **Rantai bab** · §1.25. Bab mengalir ke bawah, dipisah garis rambut
+          polos, tanpa satu pun tombol di antaranya. Bab terkunci di tengah
+          rantai punya tiga nasib, dan semuanya diputuskan tanpa menghentikan
+          bacaan — lihat `bukaDiam` di atas.
         */}
-        {locked && data.preview.length > 0 && (
-          <div
-            className="space-y-4 font-read text-nv-text"
-            style={{ fontSize: 'var(--reader-font-size)', lineHeight: 1.8 }}
-          >
-            <p>{data.preview[0]}</p>
-          </div>
+        {rantai.map((id, i) => (
+          <ChapterBlock
+            key={id}
+            storyId={storyId ?? ''}
+            chapterId={id}
+            first={i === 0}
+            spokenSentence={id === terlihat ? (sentences[tts.current] ?? null) : null}
+            onMeta={catatMeta}
+            onEnter={setTerlihat}
+            gate={(bab) => (
+              <ChapterGate
+                chapter={bab}
+                censored={bab.preview.slice(1)}
+                options={options.data ?? []}
+                loading={options.isPending}
+                balance={balance}
+                bonus={wallet.data?.bonus ?? 0}
+                adLeft={adLeft}
+                pending={unlock.isPending}
+                autoUnlock={izinDicentang}
+                onAutoUnlockChange={setIzinDicentang}
+                // Satu panggilan membawa keduanya: babnya dibeli **dan**
+                // izinnya dinyalakan. Di gerbang itu memang satu tindakan.
+                onPick={(source) =>
+                  buy(source, { enableAutoUnlock: izinDicentang, chapterId: bab.id })
+                }
+                onWatchAd={() => setWatchingAd(true)}
+              />
+            )}
+          />
+        ))}
+
+        {/*
+          Sentinel penyambung. Ia yang memicu pemuatan bab berikutnya, dan ia
+          duduk **di atas** ujung layar supaya pemuatannya mulai saat pembaca
+          mendekati ujung — bukan saat ia sampai dan menunggu di depan kosong.
+        */}
+        {/*
+          Pita tawaran bundel · FR-READ-19 · §1.21.
+          
+          **Di ujung rantai, bukan di pembuka bacaan.** Ia "didapat" setelah
+          sepuluh bab terbuka otomatis — dan pada saat itu pembaca sudah sepuluh
+          bab di bawah titik masuknya. Terukur saat ia masih di atas: pembaca
+          menembus bab 8 sampai 18 tanpa pernah melihatnya sekali pun.
+
+          Tetap **pita, bukan lembar**: alur ini menjanjikan membaca tanpa
+          terputus, dan layar penuh yang menghentikan pembaca untuk menawarinya
+          belanja adalah kebalikan dari yang dibelinya.
+        */}
+        {bundel.data && (
+          <BundleBand
+            offer={bundel.data}
+            pending={unlock.isPending}
+            onTake={() => {
+              // **Pembelian eksplisit** — auto-unlock tidak pernah membeli
+              // bundel sendiri (FR-READ-09).
+              buy('bundle', { chapterId: terkunciId ?? terlihat })
+              if (storyId) tolakBundel.mutate(storyId)
+            }}
+            onDismiss={() => storyId && tolakBundel.mutate(storyId)}
+          />
         )}
 
-        {locked && (
-          <div ref={gateRef}>
-            <ChapterGate
-              chapter={data}
-              censored={data.preview.slice(1)}
-              options={options.data ?? []}
-              loading={options.isPending}
-              balance={balance}
-              bonus={wallet.data?.bonus ?? 0}
-              adLeft={adLeft}
-              pending={unlock.isPending}
-              autoUnlock={izinDicentang}
-              onAutoUnlockChange={setIzinDicentang}
-              // Satu panggilan membawa keduanya: babnya dibeli **dan** izinnya
-              // dinyalakan. Di gerbang itu memang satu tindakan pembaca.
-              onPick={(source) => buy(source, { enableAutoUnlock: izinDicentang })}
-              onWatchAd={() => setWatchingAd(true)}
-            />
-          </div>
-        )}
+        <div ref={setEkor} aria-hidden className="h-px" />
+
+        {/* Ujung cerita — hanya bila bab terakhir di rantai memang tidak punya
+            sambungan. Gulir yang berhenti tanpa kabar terbaca sebagai gagal
+            memuat, bukan sebagai habis. */}
+        {ujungCerita && <StoryEnd storyId={storyId ?? ''} />}
 
         {/*
           `7y`: begitu babnya terbuka, buramnya hilang dan **lencana berganti** —
@@ -520,8 +683,6 @@ export default function ReaderPage() {
                 kehilangan tempatnya.
               */}
             </div>
-
-            <ChapterEnd chapter={data} storyId={storyId ?? ''} onGo={go} />
           </>
         )}
 
@@ -538,9 +699,9 @@ export default function ReaderPage() {
       {chromeOpen ? (
         <>
           <ChapterNav
+            currentNumber={babTerlihat?.number ?? data.number}
             chapter={data}
             total={total}
-            onGo={go}
             settingsOpen={settingsOpen}
             onToggleSettings={() => setSettingsOpen((on) => !on)}
             onOpenComments={() => setCommentsOpen(true)}
@@ -579,7 +740,10 @@ export default function ReaderPage() {
       >
         <ChapterComments
           storyId={storyId ?? ''}
-          chapterId={chapterId ?? ''}
+          // **Bab yang terlihat**, bukan bab entri · §1.25. Setelah membaca lima
+          // bab, tombol yang membuka komentar bab pertama membuka percakapan
+          // tentang sesuatu yang sudah jauh di atas layar.
+          chapterId={terlihat}
           composerAt="bottom"
           sort={commentSort}
           onSort={setCommentSort}
@@ -593,10 +757,12 @@ export default function ReaderPage() {
         onClose={() => setShortBy(null)}
         shortBy={shortBy ?? 0}
         balance={balance}
-        price={data.priceCoins}
-        chapterNumber={data.number}
+        // Bab yang **terkunci**, bukan bab entri: konteks kembali dari halaman
+        // isi koin harus mendarat di bab yang gagal dibuka.
+        price={meta.current[terkunciId ?? '']?.priceCoins ?? data.priceCoins}
+        chapterNumber={meta.current[terkunciId ?? '']?.number ?? data.number}
         storyId={storyId ?? ''}
-        chapterId={chapterId ?? ''}
+        chapterId={terkunciId ?? chapterId ?? ''}
         adLeft={adLeft}
         voucherCount={voucher.data?.length ?? 0}
         onWatchAd={() => {

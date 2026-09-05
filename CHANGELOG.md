@@ -5,6 +5,135 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-05 · Langkah 67 — saldo contoh 20.000, dan tiga cacat rantai baca
+
+> "saya tidak suka ini, mengapa koinya anda lebihkan saja hingga bisa buka lebih
+> dari 10 chapter kemudian baru opsi penawaran muncul, dan ketika koin habis baru
+> muncul untuk opsi melakukan topup"
+
+`npm run check` bersih · **583 test unit** · **75 e2e** (naik dari 74).
+
+### Saldo contoh 15.300 → 20.000
+
+Angkanya dihitung dari harga bab sungguhan, bukan dibulatkan asal: sepuluh bab
+berbayar berjumlah **17.200** (tawaran bundel muncul), bab ke-11 masih terbuka,
+bab ke-12 kurang. Satu sesi baca menerus kini melewati **kedua** fitur uangnya.
+
+**Ini membatalkan keputusan §1.21** yang menahan saldo di 15.300 demi kecocokan
+dengan mockup. Akibat yang diterima: angka `15,3rb` yang tercetak di `7a`, `7x`,
+dan `7i` berhenti cocok — ketiga mockup itu jadi usang pada satu angka. `prd_05`
+dan `prd_00` ikut direvisi pada giliran yang sama.
+
+Sakelar dev tidak dihapus; alasannya berubah. Dulu ia satu-satunya cara melihat
+pitanya, sekarang ia untuk **mencoba ulang** setelah tawarannya ditolak.
+
+### Terukur, dengan satu ketukan saja
+
+Masuk di bab 8, setuju sekali di gerbang, lalu **hanya menggulir**: pita tawaran
+bundel muncul di **bab 17** (*"Sudah 10 bab terbuka otomatis · 12.000 koin —
+satuannya 17.200 koin"*), dan lembar isi koin di **bab 18** (*"Kurang 1.200 koin
+· Bab 18 butuh 1.800 koin"*).
+
+### Tiga cacat yang ditemukan sepanjang jalan
+
+Ketiganya lolos typecheck, lolos 583 test unit, dan lolos e2e yang ada — semuanya
+hanya terlihat dengan benar-benar menggulir. Rinciannya `architecture.md` §1.26.
+
+1. **Sentinel penyambung berhenti menyala** setelah menetap di layar. Bacaan
+   mandek di bab kedua; 250 kali gulir tidak memajukannya.
+2. **Memangkas bab dari depan menarik pembaca mundur**, dan kompensasi gulir
+   tidak menyelamatkannya. Pemangkasannya dibuang.
+3. **Pita bundel dirender di pembuka bacaan** — tempat pembaca sudah lama
+   tinggalkan saat pitanya "didapat".
+
+### Satu koreksi atas pengukuran saya sendiri
+
+Saya sempat melaporkan pitanya ada di −6.828px. Pemilih yang saya pakai
+(`article aside`) juga mengenai slot iklan, jadi yang terukur bukan pitanya.
+Kesimpulannya kebetulan benar; pengukurannya tidak.
+
+---
+
+## 2026-09-05 · Langkah 66 — PRD v2 diselaraskan dengan kode
+
+> "tolong update prd juga di folder PRD Novelova di project novelova-v2"
+
+**Enam berkas PRD disunting, sembilan catatan revisi bertanggal.** Nol baris kode
+berubah; `npm run check` bersih dan 583 test tetap lulus.
+
+Ini penyuntingan yang **diminta eksplisit**, jadi aturan `CLAUDE.md` §5 berlaku
+penuh: tiap suntingan membawa catatan revisi bertanggal yang menyebut versi
+lamanya, dan berkas lain yang menyinggung hal sama diselaraskan pada giliran yang
+sama.
+
+| Berkas | Yang direvisi |
+|---|---|
+| `prd_05` | Alur baca **menerus** menggantikan alur berhalaman · **FR-READ-15 dicabut dan diganti** · posisi baca per bab · lembar saldo kurang menggantikan toast |
+| `prd_03` | Susunan beranda (tiga section prioritas naik, berhenti tersaring tab) · seluruh section genre jadi rel 80px · kartu tinggal sampul + judul · zoom sampul |
+| `prd_00` | Lencana hemat "±5%" dicabut dari tabel harga · rujukan FR-READ-15 diberi keterangan |
+| `prd_01` | **§0.9 baru** — target ketuk 44px lewat kotak sentuh, bukan tombol yang dibesarkan |
+| `prd_10` | Tiga statistik profil diganti dan **diturunkan**, bukan penghitung · panel koin · nama depan · `Keluar` teks redup |
+| `prd_07` | **Catatan selisih yang belum ditutup**: rentang harga bab 1–50 vs 1.500–2.000 di dua PRD lain |
+
+### Satu yang tidak diperbaiki, dan disebut terang
+
+Rentang harga bab `1–50` di `prd_07` **tidak mungkin benar bersamaan** dengan
+1.500–2.000 di `prd_00` dan `prd_05`, maupun dengan paket koin terbesar yang
+hanya 2.000. Ia sengaja dibiarkan sejak R4 dirancang. Yang berubah hari ini
+hanyalah bahwa selisihnya kini **tertulis di PRD-nya sendiri**, bukan hanya di
+`architecture.md` §1.21 — supaya siapa pun yang menyentuh angka itu tahu ada tiga
+tempat yang harus berubah bersamaan.
+
+---
+
+## 2026-09-05 · Langkah 65 — R4b selesai: ruang baca menerus
+
+> "kerjakan sekarang dulu yang perubahan chapter unlock"
+
+`npm run check` bersih · **583 test unit** · **74 e2e** (naik dari 72).
+
+### Terukur di peramban, bukan diasumsikan
+
+Masuk lewat bab 1, lalu **menggulir saja**: URL berjalan sendiri sampai bab 8,
+lima garis pemisah muncul, dan **tepat satu gerbang**. Setuju sekali di gerbang
+itu, lanjut menggulir tanpa satu pun ketukan lagi: URL berjalan dari **bab 8 ke
+bab 15** — tujuh bab terbeli diam-diam.
+
+### Yang dibuang
+
+Tombol `Bab sebelumnya`/`Bab berikutnya`, penutup bab `Bab 4 ›`, toast
+`Chapter dibuka otomatis`, dan lencana `CHAPTER TERBUKA` untuk pembukaan
+otomatis. Pembukaan yang **ditekan pembaca** tetap berbunyi — ia menekan sesuatu
+dan berhak tahu apa yang terjadi.
+
+### Yang tidak dibuang, dan tidak boleh
+
+Gerbang `7x` di bab berbayar pertama tiap cerita, baris status `Buka otomatis
+aktif` + `Matikan`, catatan buku besar, dan lembar `7z` saat saldo habis.
+
+`READER_UNLOCK_FEEDBACK` disiapkan dengan dua nilai — `'none'` (bawaan) dan
+`'balance'` — satu konstanta di `lib/coin.ts`.
+
+### Tiga cacat yang hanya terlihat dengan menggulir
+
+1. **Pengamat tidak pernah terpasang** — efek berdeps `[]` membaca `ref.current`
+   saat halaman masih menampilkan skeleton. Rantainya tidak pernah tumbuh.
+   Diperbaiki dengan callback ref.
+2. **Enam gerbang bertumpuk** — rantai terus tumbuh melewati bab terkunci.
+   Gerbang sekarang jadi dinding.
+3. **Gerbang di tengah rantai tidak punya harga** — `useUnlockOptions` masih
+   mengikuti bab entri, jadi tombol `Chapter ini` tidak pernah muncul.
+
+Tidak satu pun muncul di typecheck maupun test yang ada.
+
+### Tiga test lama dibalik
+
+Dua di `ReaderPage.test.tsx` dan satu di `baca-bab-gratis.spec.ts` menjaga
+keberadaan tombol prev/next. Sekarang mereka menjaga **ketiadaannya** — test
+yang dihapus tidak menahan apa pun.
+
+---
+
 ## 2026-09-05 · Langkah 64 — rencana ruang baca menerus (R4b)
 
 > "mengapa konsep auto unlock nya otomatis terbuka setiap next chapter? yang saya

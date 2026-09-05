@@ -817,6 +817,18 @@ Modul terbesar aplikasi: seluruh perkakas penulis, dari membuat cerita sampai me
 
 **Aturan bisnis.**
 - Harga dalam **koin**, rentang **1–50**, nilai awal **3**.
+
+  > **Catatan 5 September 2026 · selisih yang belum ditutup.** Rentang 1–50 di
+  > sini **tidak mungkin benar bersamaan** dengan harga bab di `prd_00` §6 dan
+  > `prd_05` §2, yang menyebut 1.500–2.000 koin per bab, maupun dengan paket koin
+  > terbesar yang hanya 2.000. Dugaan terkuat: angka prototipe itu rupiah, bukan
+  > koin.
+  >
+  > **Sengaja dibiarkan** — diputuskan saat R4 dirancang, supaya alur bukanya
+  > dikerjakan lebih dulu. Akibat yang bisa dihitung, termasuk saldo contoh yang
+  > habis dua bab sebelum ambang tawaran bundel, ada di `architecture.md` §1.21.
+  > Yang menyentuh angka ini nanti harus mengubah **ketiga** tempat pada giliran
+  > yang sama.
 - Tombol − dan + mengubah harga satu langkah dan **selalu dijepit** ke rentang (`Math.max(1, …)` dan `Math.min(50, …)`), sehingga tidak pernah keluar batas.
 - Menekan − atau + langsung mengaktifkan tombol simpan.
 - **Saran harga:** 3–5 koin untuk sekitar 847 kata.

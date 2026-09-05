@@ -636,7 +636,15 @@ Saldo contoh **15.300**. Kumulatif melewatinya di bab ke-12 — pembaca contoh k
 
 Jalan keluarnya mengikuti kebiasaan yang sudah ada di proyek ini, bukan mengubah produk: **satu sakelar dev di `/dev/kitchen-sink`** yang melompatkan penghitung bab ke ambangnya. Itu tempat yang sama dengan tiga sakelar sesi, tiga hasil pembayaran, kegagalan autosave, dan keputusan admin antrean tinjauan — semuanya ada karena layar yang jarang muncul harus tetap bisa diperiksa.
 
-**Saldo seed sengaja tidak dinaikkan.** Angka `15,3rb` tercetak di `7a`, `7x`, dan `7i`; menaikkannya demi kenyamanan menguji berarti seluruh mockup berhenti cocok dengan aplikasinya.
+> **Dibatalkan 5 September 2026 atas permintaan pengguna.** Saldo contoh
+> dinaikkan ke **20.000**, dan alinea di bawah tidak lagi berlaku. Angkanya
+> dihitung dari harga bab sungguhan: sepuluh bab berjumlah 17.200 (tawaran
+> muncul), bab ke-11 masih terbuka, bab ke-12 kurang 200 koin (lembar isi koin).
+> Satu sesi baca menerus kini melewati **kedua** fitur itu. Akibat yang diterima:
+> angka `15,3rb` yang tercetak di `7a`, `7x`, dan `7i` berhenti cocok dengan
+> aplikasinya — ketiga mockup itu jadi usang pada satu angka.
+>
+> ~~**Saldo seed sengaja tidak dinaikkan.**~~ Angka `15,3rb` tercetak di `7a`, `7x`, dan `7i`; menaikkannya demi kenyamanan menguji berarti seluruh mockup berhenti cocok dengan aplikasinya.
 
 #### Keadaan kode sekarang — dan dua hal yang tidak seperti dikira
 
@@ -1074,6 +1082,63 @@ berselisih.
 akan menghabiskan memori dan membuat gulirnya tersendat. `ponytail:` dimuat
 maksimal N bab sekaligus, yang paling atas dilepas saat jauh di luar layar —
 virtualisasi penuh baru perlu kalau N terbukti tidak cukup.
+
+
+#### Tiga hal yang ketahuan saat §1.25 dikerjakan
+
+Ketiganya cacat sungguhan, dan ketiganya hanya terlihat dengan **menggulir di
+peramban** — tidak satu pun muncul di typecheck maupun test yang ada.
+
+**1. Pengamat tidak pernah terpasang.** Halaman ini mengembalikan skeleton lebih
+dulu selama babnya dimuat, jadi efek berdeps `[]` yang membaca `ref.current`
+berjalan saat elemennya belum ada — dan tidak pernah berjalan lagi sesudahnya.
+Akibatnya rantainya tidak pernah tumbuh: terukur satu bab, nol garis pemisah.
+Diperbaiki dengan **callback ref**, bukan `useRef`.
+
+**2. Gerbang bertumpuk.** Tanpa pengaman, rantai terus tumbuh melewati bab
+terkunci dan tiap bab menyumbang gerbangnya sendiri — terukur **enam gerbang**
+dalam satu halaman. **Gerbang adalah dinding:** tidak ada yang dimuat
+melewatinya sampai pembaca menjawab. Begitu izinnya diberikan, rantainya lanjut
+sendiri.
+
+**3. Gerbang di tengah rantai tidak punya harga.** `useUnlockOptions` masih
+mengikuti bab **entri**; pembaca masuk lewat bab gratis lalu menemui gerbang
+belasan layar di bawahnya, dan kuerinya tidak pernah menyala. Terukur: tombol
+`Chapter ini` tidak pernah muncul. Sekarang ia mengikuti bab terkunci di dalam
+rantai — dan begitu pula lembar saldo kurang, tombol komentar, dan nomor bab di
+kedua bilah.
+
+### 1.26 Tiga cacat rantai baca — semuanya hanya terlihat dengan menggulir
+
+Ditemukan saat memeriksa apakah tawaran bundel bisa dilihat dengan membaca biasa.
+Ketiganya lolos typecheck, lolos 583 test unit, dan lolos e2e yang ada.
+
+**1. `IntersectionObserver` hanya menyala saat elemennya melintas.** Sentinel
+penyambung menetap di dalam layar begitu pembaca sampai di dasar halaman — dan
+sejak itu ia berhenti menyala, jadi rantainya berhenti tumbuh. Terukur: bacaan
+mandek di bab kedua, 250 kali gulir tidak memajukannya. Pemicu kedua ditambahkan:
+tiap kali sebuah bab melaporkan dirinya — termasuk saat ia **baru terbeli** —
+rantainya dicoba disambung lagi bila sentinelnya memang sedang terlihat.
+
+**2. Memangkas bab dari depan menarik pembaca mundur.** Konten di atas layar
+hilang, peramban tidak mengganti tingginya, dan halaman melompat naik sebanyak
+bab yang dibuang. Kompensasi gulir **tidak menyelamatkannya**: rantai bertambah
+di bawah dan berkurang di atas dalam satu langkah, jadi selisih tinggi halamannya
+nyaris nol sementara pergeserannya tidak. Pemangkasannya dibuang seluruhnya —
+ia optimasi memori yang membayar dengan kebenaran. `ponytail:` jalannya kalau
+memori benar-benar jadi masalah adalah **virtualisasi** yang menahan tinggi
+elemen yang dilepas, bukan memangkas begitu saja.
+
+**3. Pita bundel dirender di pembuka bacaan, tempat pembaca tidak akan ada.**
+Ia "didapat" setelah sepuluh bab terbuka otomatis — dan pada saat itu pembaca
+sudah sepuluh bab di bawah titik masuknya. Terukur: menembus bab 8 sampai 18
+tanpa melihatnya sekali pun. Sekarang ia dirender di **ujung rantai**.
+
+> **Catatan cara mengukur.** Percobaan pertama memakai pemilih `article aside`
+> dan menyatakan pitanya ada di −6.828px. Itu **salah**: `AdSlot` juga sebuah
+> `<aside>`, jadi yang terukur slot iklan. Kesimpulannya kebetulan benar,
+> pengukurannya tidak — dan pemilih yang mengenai dua hal berbeda adalah cara
+> tercepat membuktikan hal yang salah.
 
 
 ---

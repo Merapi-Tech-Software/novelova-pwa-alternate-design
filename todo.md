@@ -928,7 +928,7 @@ lebih dulu berarti menulisnya dua kali.
 > mungkin benar bersamaan. Diputuskan dikerjakan belakangan; akibat yang bisa
 > dihitung ada di `architecture.md` §1.21.
 
-### R4b — Ruang baca menerus · 3–4 hari · `[PRODUK]` · §1.25
+### R4b — Ruang baca menerus · 3–4 hari · `[PRODUK]` · §1.25 · **selesai**
 
 **Permintaan produk 5 September**, diklarifikasi lewat diskusi setelah R4
 selesai. Ia **menimpa bentuk navigasi bab** yang dibangun di R3b dan R4: bab
@@ -941,48 +941,48 @@ dicabut ada di §1.25.
 
 #### R4b-a — Rangka gulir menerus
 
-- [ ] Ruang baca memuat **beberapa bab dalam satu halaman**, disambung ke bawah · `P0` · `[PRODUK]`
-- [ ] Pemisah antar bab **garis rambut polos**, tanpa nomor dan tanpa judul · `P0` · `[PRODUK]`
+- [x] Ruang baca memuat **beberapa bab dalam satu halaman**, disambung ke bawah · `P0` · `[PRODUK]`
+- [x] Pemisah antar bab **garis rambut polos**, tanpa nomor dan tanpa judul · `P0` · `[PRODUK]`
   ↳ Pembuka bab besar (`BAB 6` + judul serif + garis emas) dari R3b **dicabut** untuk bab kedua dan seterusnya. Bab yang dibuka lewat tautan langsung tetap punya pembukanya — ia awal bacaan, bukan sambungan.
-- [ ] Bab berikutnya dimuat saat pembaca mendekati ujung bab sekarang, bukan saat menyentuhnya · `P0`
-- [ ] **Batas bab yang dimuat sekaligus**, dan yang terlama dilepas · `P1`
+- [x] Bab berikutnya dimuat saat pembaca mendekati ujung bab sekarang, bukan saat menyentuhnya · `P0`
+- [x] **Batas bab yang dimuat sekaligus**, dan yang terlama dilepas · `P1`
   ↳ `ponytail:` cerita 120 bab yang seluruhnya disambung menghabiskan memori dan membuat gulirnya tersendat. Virtualisasi penuh baru perlu kalau batas sederhana terbukti tidak cukup.
-- [ ] Ujung cerita tetap punya keadaan penutupnya sendiri — gulir yang berhenti tanpa kabar terbaca sebagai gagal memuat · `P0`
+- [x] Ujung cerita tetap punya keadaan penutupnya sendiri — gulir yang berhenti tanpa kabar terbaca sebagai gagal memuat · `P0`
 
 #### R4b-b — Bab terkunci di tengah gulir
 
-- [ ] **Izin ada + saldo cukup → dibeli diam-diam**, isinya langsung disambung tanpa jeda visual · `P0` · `[PRODUK]`
-- [ ] **Izin belum ada → gerbang `7x` disisipkan sebagai blok** di tempat isi babnya, bukan halaman baru · `P0`
+- [x] **Izin ada + saldo cukup → dibeli diam-diam**, isinya langsung disambung tanpa jeda visual · `P0` · `[PRODUK]`
+- [x] **Izin belum ada → gerbang `7x` disisipkan sebagai blok** di tempat isi babnya, bukan halaman baru · `P0`
   ↳ Ini momen persetujuannya, dan ia tetap wajib: tanpa gerbang, "tidak sadar" berubah jadi memotong koin tanpa izin.
-- [ ] **Izin ada + saldo kurang → lembar `7z`**, dan ini satu-satunya yang menginterupsi · `P0`
-- [ ] Toast `Chapter dibuka otomatis` dan lencana `CHAPTER TERBUKA` **dicabut** · `P0` · `[PRODUK]`
-- [ ] `READER_UNLOCK_FEEDBACK` disiapkan dengan dua nilai — `'none'` (bawaan) dan `'balance'` · `P1` · `[PRODUK]`
+- [x] **Izin ada + saldo kurang → lembar `7z`**, dan ini satu-satunya yang menginterupsi · `P0`
+- [x] Toast `Chapter dibuka otomatis` dan lencana `CHAPTER TERBUKA` **dicabut** · `P0` · `[PRODUK]`
+- [x] `READER_UNLOCK_FEEDBACK` disiapkan dengan dua nilai — `'none'` (bawaan) dan `'balance'` · `P1` · `[PRODUK]`
   ↳ Diminta pengguna: mode kedua belum dipakai, tetapi jalurnya disiapkan sekarang supaya menghidupkannya nanti tidak menuntut menulis ulang alurnya. Satu konstanta, satu tempat dibaca.
-- [ ] Baris status `Buka otomatis aktif` + `Matikan` **tetap ada** · `P0`
-- [ ] Buku besar tetap mencatat tiap potongan, dan chip saldo tetap satu angka dari `useWallet` · `P0`
+- [x] Baris status `Buka otomatis aktif` + `Matikan` **tetap ada** · `P0`
+- [x] Buku besar tetap mencatat tiap potongan, dan chip saldo tetap satu angka dari `useWallet` · `P0`
 
 #### R4b-c — Yang mengikuti bab yang terlihat
 
-- [ ] **Satu sumber "bab yang sedang terlihat"**, bukan empat pengamat · `P0`
+- [x] **Satu sumber "bab yang sedang terlihat"**, bukan empat pengamat · `P0`
   ↳ Ia menggerakkan judul bilah atas, tombol komentar, progres baca, dan URL sekaligus. Empat `IntersectionObserver` untuk satu pertanyaan adalah empat tempat yang bisa berselisih.
-- [ ] URL berganti lewat **`history.replaceState`**, bukan `navigate()` · `P0`
+- [x] URL berganti lewat **`history.replaceState`**, bukan `navigate()` · `P0`
   ↳ `navigate()` melepas halaman dan membuang posisi gulirnya — persis yang alur ini berusaha hilangkan. Akibatnya tombol kembali peramban tidak menyusuri tiap bab yang dilewati, dan itu benar: pembaca tidak "pergi ke" bab 6.
-- [ ] Tombol bab sebelumnya/berikutnya dan penutup bab `Bab 4 ›` **dibuang** · `P0` · `[PRODUK]`
-- [ ] Bilah bawah tinggal komentar, pengaturan, dan dengarkan · `P0`
-- [ ] `Komentar bab` membuka komentar **bab yang terlihat**, dan jumlahnya ikut berganti · `P0`
-- [ ] TTS membaca bab yang terlihat · `P1`
-- [ ] Progres baca disimpan per bab yang terlihat, memakai `scrollByChapter` yang sudah ada (§1.24) · `P0`
+- [x] Tombol bab sebelumnya/berikutnya dan penutup bab `Bab 4 ›` **dibuang** · `P0` · `[PRODUK]`
+- [x] Bilah bawah tinggal komentar, pengaturan, dan dengarkan · `P0`
+- [x] `Komentar bab` membuka komentar **bab yang terlihat**, dan jumlahnya ikut berganti · `P0`
+- [x] TTS membaca bab yang terlihat · `P1`
+- [x] Progres baca disimpan per bab yang terlihat, memakai `scrollByChapter` yang sudah ada (§1.24) · `P0`
 
 #### R4b-d — Test
 
-- [ ] **Test:** dua bab tersambung dalam satu halaman, dipisah garis, tanpa tombol di antaranya
-- [ ] **Test:** melewati batas bab mengganti URL **tanpa** melepas halaman — posisi gulirnya tidak berubah
-- [ ] **Test:** izin ada + saldo cukup → bab terkunci tersambung tanpa gerbang dan tanpa toast
-- [ ] **Test:** izin belum ada → gerbang muncul sebagai blok di tengah gulir, bukan halaman baru
-- [ ] **Test:** saldo kurang → lembar `7z`, dan gulirnya berhenti di sana
-- [ ] **Test:** tombol komentar mengikuti bab yang terlihat
-- [ ] **Test:** `READER_UNLOCK_FEEDBACK = 'balance'` memunculkan perubahan saldo; `'none'` tidak memunculkan apa pun
-- [ ] **Test e2e:** membaca menerus melewati tiga bab di **dua lebar**, dan tidak ada satu pun tombol lanjut yang ditekan
+- [x] **Test:** dua bab tersambung dalam satu halaman, dipisah garis, tanpa tombol di antaranya
+- [x] **Test:** melewati batas bab mengganti URL **tanpa** melepas halaman — posisi gulirnya tidak berubah
+- [x] **Test:** izin ada + saldo cukup → bab terkunci tersambung tanpa gerbang dan tanpa toast
+- [x] **Test:** izin belum ada → gerbang muncul sebagai blok di tengah gulir, bukan halaman baru
+- [x] **Test:** saldo kurang → lembar `7z`, dan gulirnya berhenti di sana
+- [x] **Test:** tombol komentar mengikuti bab yang terlihat
+- [x] **Test:** `READER_UNLOCK_FEEDBACK = 'balance'` memunculkan perubahan saldo; `'none'` tidak memunculkan apa pun
+- [x] **Test e2e:** membaca menerus melewati tiga bab di **dua lebar**, dan tidak ada satu pun tombol lanjut yang ditekan
 
 ### R5 — Pustaka, pencarian, lihat-semua, profil · 2–3 hari · mockup `7c` `7e` `7d` `7i` `7s` · **selesai**
 

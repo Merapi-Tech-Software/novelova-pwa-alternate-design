@@ -42,8 +42,22 @@ test('beranda → detail cerita → baca bab gratis', async ({ page }) => {
   // yang memang belum ada.
   await page.getByRole('article').click({ position: { x: 60, y: 300 } })
 
-  // Navigasi bab ada di dua tempat, dan "sebelumnya" mati di bab pertama.
-  await expect(page.getByRole('button', { name: 'Bab sebelumnya' })).toBeDisabled()
-  await page.getByRole('button', { name: 'Bab berikutnya' }).first().click()
-  await expect(page).toHaveURL(/\/bab\/s1-c2$/)
+  /*
+   * **Dibalik dari test lama** · §1.25. Sampai R4 bilah ini membawa tombol bab
+   * sebelumnya/berikutnya, dan test ini menekan yang kedua untuk pindah bab.
+   * Sejak R4b bacaannya mengalir: tidak ada tombol lompat, dan bab berikutnya
+   * datang sendiri saat digulir.
+   */
+  await expect(page.getByRole('button', { name: 'Bab sebelumnya' })).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Bab berikutnya' })).toBeHidden()
+
+  // Nomor babnya tetap ada — satu tempat untuk tahu sedang di mana.
+  await expect(page.getByText(/^Bab \d+ \/ \d+$/)).toBeVisible()
+
+  // Dan menggulir terus membawa pembaca ke bab berikutnya tanpa satu pun ketukan.
+  for (let i = 0; i < 12; i++) {
+    await page.mouse.wheel(0, 2500)
+    await page.waitForTimeout(180)
+  }
+  await expect(page).toHaveURL(/\/bab\/s1-c[2-9]/)
 })

@@ -86,15 +86,36 @@ Pusat akun pengguna. `profile.html` berperan sebagai **hub**: identitas, rekap a
 **User story.** Sebagai pengguna, saya ingin melihat identitas saya dan langsung menuju perpustakaan atau daftar pengikut dari satu tempat.
 
 **Aturan bisnis.**
-- Isi kartu: avatar berinisial · nama lengkap · `@handle · bergabung <tahun>` · lencana tingkat (prototype: `Pembaca · Tier 3`).
+- Isi kartu: avatar berinisial · **nama depan** · `Pembaca sejak <tahun>` · tombol `Sunting` bergaris rambut.
+  > **Revisi 5 September 2026.** Versi lama menuntut nama lengkap, `@handle`, dan
+  > lencana tingkat. Nama lengkap terpotong jadi "Anna Mahar…" di lebar 390px —
+  > dan nama yang dipotong di halaman profil sendiri terbaca sebagai cacat, bukan
+  > sebagai keringkasan. Handle dan lencana tingkat pindah ke `/profil/ubah`.
+- **Panel koin** di bawah kartu identitas: label `KOIN KAMU`, saldo serif, jumlah voucher aktif, dan tombol `Isi Koin` terisi. Ia satu-satunya blok putih di halaman ini, dan itu disengaja — ia satu-satunya yang membawa uang. *(Baru — mockup `7i`.)*
+- **`Keluar` berupa teks redup**, bukan tombol merah: ia bukan tindakan destruktif, dan tindakan yang bisa dibatalkan dengan masuk lagi tidak pernah memakai isi merah (`prd_01` §0).
 - Avatar punya tombol edit tersendiri yang menuju `edit_profile.html`; ikon pengaturan di bilah atas juga menuju ke sana.
-- **Tiga statistik semuanya berupa tautan:**
+- **Tiga statistik, dan ketiganya diturunkan — bukan penghitung tersimpan:**
 
-  | Statistik | Nilai | Tujuan |
-  |---|---|---|
-  | Perpustakaan | 23 | `my_library.html` |
-  | Pengikut | 1.2K | `other_user_profile.html` |
-  | Mengikuti | 345 | `other_user_profile.html` |
+  | Statistik | Diturunkan dari |
+  |---|---|
+  | Cerita dibaca | `progress` — cerita yang minimal satu babnya selesai |
+  | Jam baca | `readMinutes` bab yang selesai, dibulatkan ke jam |
+  | Ulasan | jumlah baris `reviews` milik pengguna |
+
+> **Revisi 5 September 2026 · statistik profil.** Versi lama menyebut tiga
+> statistik **Perpustakaan · Pengikut · Mengikuti**, semuanya berupa tautan,
+> dengan angka contoh dari prototipe. Yang dibangun: **Cerita dibaca · Jam baca ·
+> Ulasan**, ketiganya angka rekam jejak pembaca dan bukan tautan.
+>
+> Alasannya dua. Pertama, ketiganya **diturunkan** lewat satu metode seam
+> (`getReaderStats`), bukan disimpan sebagai penghitung — penghitung akan
+> berselisih dengan sumbernya pada penghapusan pertama, dan yang berselisih di
+> halaman profil adalah klaim tentang pengguna sendiri. Kedua, pengikut dan
+> mengikuti punya halamannya sendiri (`/profil/koneksi`), dan mengulangnya di
+> strip ini berarti dua tempat yang harus dijaga sepakat.
+>
+> Perpustakaan tetap dijangkau lewat bilah navigasi bawah; `Karya saya` ada di
+> daftar `AKUN` di bawahnya. `architecture.md` — halaman ini dibangun di R5.
 
 - Pengikut dan Mengikuti mengarah ke halaman profil **satu orang**, bukan daftar pengguna (lihat §7).
 

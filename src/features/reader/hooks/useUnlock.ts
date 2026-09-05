@@ -37,10 +37,18 @@ export function useUnlockChapter(storyId: string | undefined, chapterId: string 
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: Omit<UnlockInput, 'chapterId'>) =>
-      api.unlockChapter({ ...input, chapterId: chapterId as string }),
+    /*
+     * `chapterId` boleh **ditimpa per panggilan** sejak §1.25: dalam gulir
+     * menerus, yang dibuka bukan selalu bab tempat pembaca masuk — ia bisa bab
+     * mana pun di dalam rantai yang sedang tersambung. Bawaannya tetap bab
+     * halaman ini, jadi pemanggil lama tidak berubah.
+     */
+    mutationFn: (input: Omit<UnlockInput, 'chapterId'> & { chapterId?: string }) =>
+      api.unlockChapter({ ...input, chapterId: input.chapterId ?? (chapterId as string) }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['chapter', storyId, chapterId] })
+      // Seluruh bab cerita ini, bukan satu: rantai gulir menerus bisa memuat
+      // beberapa bab sekaligus, dan yang barusan dibeli belum tentu bab ini.
+      void queryClient.invalidateQueries({ queryKey: ['chapter', storyId] })
       void queryClient.invalidateQueries({ queryKey: ['story', storyId] })
       void queryClient.invalidateQueries({ queryKey: ['wallet'] })
       void queryClient.invalidateQueries({ queryKey: ['ad-quota'] })

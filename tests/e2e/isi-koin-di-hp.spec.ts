@@ -400,3 +400,129 @@ for (const path of ['/', '/pustaka', '/cari', '/jelajah/populer', '/cerita/s1', 
       .toEqual([])
   })
 }
+
+/**
+ * Gulir menerus · `architecture.md` §1.25 · R4b.
+ *
+ * **Tidak satu pun tombol lanjut ditekan di seluruh test ini.** Itu bukan gaya
+ * penulisan — itu yang diuji: kalau alurnya masih menuntut ketukan untuk pindah
+ * bab, test ini berhenti di bab pertama.
+ *
+ * Dijalankan di dua lebar mengikuti pola `karya-dua-lebar.spec.ts`.
+ */
+async function alurGulirMenerus(page: import('@playwright/test').Page) {
+  await page.goto('/cerita/s1/bab/s1-c1')
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(() => document.fonts.ready)
+
+  const potret = () =>
+    page.evaluate(() => ({
+      h1: document.querySelectorAll('h1').length,
+      garis: document.querySelectorAll('article span.my-10').length,
+      gerbang: document.querySelectorAll('[aria-label="Locked continuation gate"]').length,
+      bab: window.location.pathname.split('/').pop() ?? '',
+    }))
+
+  const gulir = async (kali: number) => {
+    for (let i = 0; i < kali; i++) {
+      await page.mouse.wheel(0, 2500)
+      await page.waitForTimeout(170)
+    }
+  }
+
+  const awal = await potret()
+  await gulir(40)
+  const sebelum = await potret()
+
+  // 1. Bab tersambung: garis pemisah bertambah, tetapi **pembukanya tetap satu**.
+  expect(sebelum.garis, 'bab tidak tersambung').toBeGreaterThan(0)
+  expect(sebelum.h1, 'sambungan tidak boleh punya pembuka bab').toBe(1)
+  expect(sebelum.bab, 'URL tidak mengikuti bab yang terlihat').not.toBe(awal.bab)
+
+  // 2. **Tepat satu gerbang.** Gerbang adalah dinding: tidak ada yang dimuat
+  //    melewatinya sampai pembaca menjawab. Terukur enam sebelum pengamannya.
+  expect(sebelum.gerbang, 'gerbang bertumpuk').toBe(1)
+
+  // 3. Tidak ada tombol lompat bab di mana pun.
+  await expect(page.getByRole('button', { name: 'Bab berikutnya' })).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Bab sebelumnya' })).toBeHidden()
+
+  // 4. Menyetujui **sekali**, lalu menggulir saja — babnya terbeli sendiri.
+  await page
+    .getByRole('button', { name: /Chapter ini/ })
+    .first()
+    .click({ timeout: 8_000 })
+  await page.waitForTimeout(600)
+  await gulir(45)
+  const sesudah = await potret()
+
+  expect(
+    Number(sesudah.bab.replace(/\D/g, '')),
+    'bacaan tidak lanjut sendiri setelah izin diberikan',
+  ).toBeGreaterThan(Number(sebelum.bab.replace(/\D/g, '')))
+  expect(sesudah.h1, 'pembuka bab muncul di sambungan').toBe(1)
+}
+
+for (const width of [390, 1280]) {
+  test(`gulir menerus tanpa satu pun ketukan lanjut, di lebar ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await alurGulirMenerus(page)
+  })
+}
+
+/**
+ * Rantai lengkap ekonomi baca · §1.21 + §1.25.
+ *
+ * **Satu sesi baca menerus harus melewati kedua fitur uangnya**: tawaran bundel
+ * setelah sepuluh bab terbuka otomatis, lalu saldo habis beserta jalan keluarnya.
+ *
+ * Ini yang dulu mustahil: saldo contoh 15.300 habis **dua bab sebelum** ambang
+ * sepuluh, jadi pitanya hanya bisa dilihat lewat sakelar dev. Saldo dinaikkan ke
+ * 20.000 supaya keduanya tercapai dengan membaca biasa — dan test ini yang
+ * menjaga angka itu tetap cukup kalau harga bab suatu saat berubah.
+ */
+test('baca menerus melewati tawaran bundel lalu saldo habis', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/cerita/s1/bab/s1-c8')
+  await page.waitForLoadState('networkidle')
+
+  // Satu-satunya ketukan di seluruh test ini.
+  await page
+    .getByRole('button', { name: /Chapter ini/ })
+    .first()
+    .click({ timeout: 10_000 })
+  await page.waitForTimeout(600)
+
+  const lihat = () =>
+    page.evaluate(() => {
+      const pita = [...document.querySelectorAll('aside')].find((el) =>
+        (el.textContent ?? '').includes('terbuka otomatis'),
+      )
+      const kotak = pita?.getBoundingClientRect()
+      return {
+        pitaTerlihat: kotak ? kotak.top < window.innerHeight && kotak.bottom > 0 : false,
+        lembar: document.querySelector('[role="dialog"]') !== null,
+      }
+    })
+
+  let pitaPernahTerlihat = false
+  let keadaan = await lihat()
+
+  for (let i = 0; i < 220 && !keadaan.lembar; i++) {
+    await page.mouse.wheel(0, 2000)
+    await page.waitForTimeout(80)
+    keadaan = await lihat()
+    if (keadaan.pitaTerlihat) pitaPernahTerlihat = true
+  }
+
+  // 1. Pita **benar-benar masuk layar** — bukan sekadar ada di DOM. Ia pernah
+  //    dirender di pembuka bacaan, dan di sana pembaca melewatinya tanpa pernah
+  //    melihatnya: terukur bab 8 sampai 18, nol kali terlihat.
+  expect(pitaPernahTerlihat, 'pita tawaran bundel tidak pernah masuk layar').toBe(true)
+
+  // 2. Lalu saldo habis, dan lembarnya menyebut kekurangannya.
+  expect(keadaan.lembar, 'saldo tidak pernah habis dalam 220 kali gulir').toBe(true)
+  await expect(page.getByRole('dialog').getByText(/^Kurang /)).toBeVisible()
+  await expect(page.getByRole('dialog').getByRole('link', { name: /Isi koin/ })).toBeVisible()
+})

@@ -8,6 +8,14 @@ import { useBackNavigation } from '@/lib/nav'
 
 export interface ReaderBarProps {
   chapter: Chapter
+  /**
+   * Nomor bab yang **sedang terlihat**, bukan bab tempat pembaca masuk · §1.25.
+   *
+   * Dalam gulir menerus keduanya berbeda setelah layar pertama, dan bilah yang
+   * masih menyebut "Bab 1" saat pembaca sudah di bab 4 adalah satu-satunya
+   * tempat ia bisa tahu posisinya — jadi ia harus benar.
+   */
+  currentNumber: number
   storyId: string
   total: number
   settingsOpen: boolean
@@ -41,6 +49,7 @@ export interface ReaderBarProps {
  */
 export function ReaderBar({
   chapter,
+  currentNumber,
   storyId,
   total,
   settingsOpen,
@@ -60,7 +69,7 @@ export function ReaderBar({
       <div className="min-w-0 flex-1">
         <p className="truncate font-display text-body font-semibold">{chapter.storyTitle}</p>
         <p className="truncate text-caption text-nv-muted tabular-nums">
-          {t('reader.chapterPos')(chapter.number, total, chapter.readMinutes)}
+          {t('reader.chapterPos')(currentNumber, total, chapter.readMinutes)}
         </p>
       </div>
 
