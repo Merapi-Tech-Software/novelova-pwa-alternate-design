@@ -55,6 +55,9 @@ for (const path of [
   '/jelajah/populer',
   '/cerita/s1',
   '/cerita/s1/bab/s1-c5',
+  // Bab **terkunci** — gerbang Type B `7x` beserta strip pilihan dan pratinjau
+  // buramnya semuanya baru di R4, dan tidak satu pun ada di bab gratis di atas.
+  '/cerita/s1/bab/s1-c8',
   '/karya',
   '/karya/daftar-penulis',
   '/karya/ms1/bab',
@@ -71,6 +74,8 @@ for (const path of [
   '/penulis/penarikan',
   '/penulis/penarikan/riwayat',
   '/cerita/s1/ulasan',
+  // Halaman baru / ditata ulang di R5–R6.
+  '/profil',
   '/cerita/s1/bab/s1-c5/komentar',
 ]) {
   test(`layar HP: ${path} tidak menggeser halaman ke samping`, async ({ page }) => {
@@ -285,3 +290,113 @@ test('layar HP: susunan beranda dan zoom sampul bekerja di lima lebar + desktop'
     await expect(page).toHaveURL(/\/$/)
   }
 })
+
+/**
+ * Alur ekonomi buka bab · R4 · mockup `7x` `7y` `7z` `7aa`.
+ *
+ * Dijalankan di **dua lebar** mengikuti pola `karya-dua-lebar.spec.ts`: satu
+ * fungsi alur dipanggil dua kali, bukan dua test yang kebetulan mirip. Yang
+ * dijanjikan §1.19 dan §1.21 adalah perilaku yang sama di HP dan layar lebar,
+ * dan janji itu hanya tidak bisa lapuk kalau alurnya sendiri dijalankan di sana.
+ */
+async function alurBukaBab(page: import('@playwright/test').Page) {
+  await page.goto('/cerita/s1/bab/s1-c8')
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(() => document.fonts.ready)
+
+  // 1. Gerbangnya ada, bernama, dan bilah atasnya terlihat **tanpa diketuk**.
+  const gerbang = page.getByLabel('Locked continuation gate')
+  await expect(gerbang).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Kembali' })).toBeVisible()
+
+  // 2. Saldo diulang di dalam gerbang — keputusannya diambil di sini.
+  await expect(gerbang.getByText('Saldo kamu')).toBeVisible()
+
+  // 3. Izin buka-otomatis tercentang bawaan.
+  const izin = page.getByRole('switch', { name: 'Buka otomatis untuk cerita ini' })
+  await expect(izin).toBeVisible()
+  await expect(izin).toBeChecked()
+
+  // 4. Tombolnya **ditekan**, bukan sekadar dilihat: elemen yang tertutup tetap
+  //    lolos `toBeVisible()`, yang gagal adalah kliknya.
+  const beli = page.getByRole('button', { name: /Chapter ini/ })
+  await expect(beli).toBeInViewport()
+  await beli.click({ timeout: 5_000 })
+
+  // 5. Babnya terbuka: gerbangnya hilang dan lencana `7y` menggantikannya.
+  await expect(gerbang).toBeHidden()
+  await expect(page.getByText('Chapter terbuka')).toBeVisible()
+
+  // 6. Baris status izin muncul, dan tombol matikannya bisa ditekan.
+  const matikan = page.getByRole('button', { name: 'Matikan' })
+  await expect(matikan).toBeVisible()
+  await matikan.click({ timeout: 5_000 })
+  await expect(matikan).toBeHidden()
+}
+
+for (const width of [390, 1280]) {
+  test(`buka bab: gerbang → beli → izin, di lebar ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await alurBukaBab(page)
+  })
+}
+
+/**
+ * Target ketuk ≥44px · R7 · `CLAUDE.md` §2 butir 8.
+ *
+ * **Yang diukur kotak sentuhnya, bukan kotak yang terlihat.** Tombol `sm` dan
+ * tab teks sengaja tetap 36–38px supaya hierarki visualnya utuh; yang diperluas
+ * `::after` yang tidak terlihat. Mengukur `getBoundingClientRect()` saja akan
+ * menyatakan keduanya gagal padahal jarinya mengenai.
+ *
+ * Ini pemeriksaan yang tidak bisa dilakukan mata: kotak sentuh tidak terlihat
+ * sama sekali, dan satu-satunya cara mengetahui ia hilang adalah mengukurnya.
+ */
+const HITUNG_TARGET = `(() => {
+  const kecil = []
+  const kandidat = 'button, a[href], [role="button"], [role="switch"], [role="tab"]'
+  for (const el of document.querySelectorAll(kandidat)) {
+    const r = el.getBoundingClientRect()
+    if (r.width === 0 || r.height === 0) continue
+
+    const after = getComputedStyle(el, '::after')
+    let h = r.height
+    let w = r.width
+    if (after.content && after.content !== 'none' && after.position === 'absolute') {
+      const t = Number.parseFloat(after.top) || 0
+      const b = Number.parseFloat(after.bottom) || 0
+      const l = Number.parseFloat(after.left) || 0
+      const rr = Number.parseFloat(after.right) || 0
+      if (t < 0 || b < 0) h = r.height - t - b
+      if (l < 0 || rr < 0) w = r.width - l - rr
+    }
+
+    if (h < 43.5 || w < 43.5) {
+      kecil.push((el.textContent || el.getAttribute('aria-label') || '?').trim().slice(0, 24) +
+        ' (' + Math.round(w) + '×' + Math.round(h) + ')')
+    }
+  }
+  return kecil
+})()`
+
+for (const path of ['/', '/pustaka', '/cari', '/jelajah/populer', '/cerita/s1', '/profil']) {
+  test(`target ketuk ≥44px di ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 })
+    await page.goto(path)
+    await page.waitForLoadState('networkidle')
+    await page.evaluate(() => document.fonts.ready)
+
+    /*
+     * Diukur berulang sampai tenang, sama seperti sapuan luberan di atas:
+     * `networkidle` dan `fonts.ready` sama-sama bisa tercapai saat React Query
+     * masih menukar kerangka dengan isinya, dan tombol yang sedang dirender
+     * sebagian sesaat lebih pendek daripada seharusnya (`CLAUDE.md` §8).
+     */
+    await expect
+      .poll(async () => (await page.evaluate(HITUNG_TARGET)) as string[], {
+        message: `${path} punya target di bawah 44px`,
+        timeout: 5_000,
+      })
+      .toEqual([])
+  })
+}

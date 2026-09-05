@@ -26,7 +26,20 @@ export function TopupFab() {
   // cerita membawa bilah lengket "Lanjutkan" di posisi yang sama, dan dua
   // elemen melayang di sudut yang sama saling menindih — `7b` juga tidak
   // menggambar FAB di sana. Pintasan yang menutupi aksi utama bukan pintasan.
-  if (pathname.startsWith('/koin') || pathname.startsWith('/cerita')) return null
+  if (
+    pathname.startsWith('/koin') ||
+    pathname.startsWith('/cerita') ||
+    // Profil punya tombol `Isi Koin` sendiri di panel koinnya (`7i`), dan
+    // pintasan yang mengulang tombol yang sudah ada di layar bukan pintasan.
+    pathname.startsWith('/profil') ||
+    // Area penulis: `7j` menaruh `Buat story baru` selebar halaman sebagai aksi
+    // utamanya, dan pintasan koin melayang di atasnya justru menutupi baris
+    // karya terakhir.
+    pathname.startsWith('/karya') ||
+    pathname.startsWith('/penulis')
+  ) {
+    return null
+  }
 
   return (
     <Link

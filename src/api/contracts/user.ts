@@ -74,6 +74,36 @@ export const ReaderPrefsSchema = z.object({
    * karena pengguna berganti ponsel.
    */
   hiddenStoryIds: z.array(IdSchema).default([]),
+  /**
+   * Cerita yang **izin buka-otomatisnya** sudah diberikan pembaca di gerbang
+   * bab (FR-READ-09, `architecture.md` §1.19 & §1.21).
+   *
+   * Di server, bukan di `stores/`: ia memberi wewenang **memotong koin**, dan
+   * aturan struktur #5 berbunyi "kalau harus ikut saat pengguna berganti
+   * perangkat, ia bukan urusan `stores/`". Izin yang tertinggal di ponsel lama
+   * berarti pembaca dimintai persetujuan lagi di perangkat baru — atau lebih
+   * buruk, koinnya terpotong di satu perangkat tanpa jejak di perangkat lain.
+   */
+  autoUnlockStoryIds: z.array(IdSchema).default([]),
+  /**
+   * Berapa bab yang sudah **dibuka aplikasi sendiri** per cerita — bukan yang
+   * dibuka pembaca lewat gerbang. Ambang tawaran bundling dihitung dari sini.
+   *
+   * `Record`, bukan satu angka: tiap cerita menghitung dari nol, dan pembaca
+   * yang sudah lewat sepuluh bab di satu cerita tidak boleh langsung ditawari
+   * bundel pada cerita yang baru dibukanya.
+   */
+  autoUnlockCounts: z.record(IdSchema, z.number().int().nonnegative()).default({}),
+  /**
+   * Cerita yang tawaran bundelnya sudah pernah ditampilkan atau ditolak.
+   *
+   * Ada **walaupun penghitungnya sudah cukup**: menyalakan pita saat
+   * `count === ambang` memang menyala tepat sekali — sampai pembaca menutup
+   * aplikasi. Kembali besok dengan penghitung masih 10 menampilkannya lagi, dan
+   * "sekali per cerita" yang bergantung pada pembaca terus membaca bukan sekali
+   * per cerita.
+   */
+  bundleOfferSeenStoryIds: z.array(IdSchema).default([]),
   /** `null` = belum pernah. Melewati onboarding juga mengisinya. */
   onboardedAt: IsoDateTimeSchema.nullable(),
 })
@@ -154,3 +184,21 @@ export const DeviceSessionSchema = z.object({
   current: z.boolean(),
 })
 export type DeviceSession = z.infer<typeof DeviceSessionSchema>
+
+/**
+ * Tiga angka di kepala profil · mockup `7i`.
+ *
+ * **Semuanya diturunkan, tidak satu pun disimpan.** Cerita dibaca dihitung dari
+ * `progress`, jam baca dari `readMinutes` bab yang benar-benar selesai, ulasan
+ * dari baris `reviews`. Menyimpannya sebagai penghitung berarti tiga angka yang
+ * bisa berselisih dengan sumbernya, dan yang berselisih di halaman profil adalah
+ * klaim tentang pengguna sendiri.
+ */
+export const ReaderStatsSchema = z.object({
+  /** Cerita yang minimal satu babnya selesai dibaca. */
+  storiesRead: z.number().int().nonnegative(),
+  /** Dibulatkan ke jam, dari `readMinutes` bab yang selesai. */
+  hoursRead: z.number().int().nonnegative(),
+  reviewCount: z.number().int().nonnegative(),
+})
+export type ReaderStats = z.infer<typeof ReaderStatsSchema>

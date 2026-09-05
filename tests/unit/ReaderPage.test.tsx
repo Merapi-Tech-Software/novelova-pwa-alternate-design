@@ -1,14 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { api } from '@/api/client'
 import { db } from '@/api/mock/db'
+import { emptyReaderPrefs } from '@/api/mock/defaults'
 import { CURRENT_USER_ID } from '@/api/mock/seed'
 import { ToastProvider } from '@/components/ui/Toast'
 import ReaderPage from '@/features/reader/pages/ReaderPage'
-import { useReaderSettings } from '@/stores/readerSettings'
 
 function renderReader(chapterId: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -102,22 +102,31 @@ describe('gerbang bab terkunci · FR-READ-06 · FR-READ-07 · FR-READ-17', () =>
   it('menawarkan tiga pilihan berbayar dengan angka dari server', async () => {
     renderReader('s1-c8')
 
-    expect(await screen.findByText('Lanjutkan membaca bab ini')).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: /Buka bab ini/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Buka 10 bab sekaligus/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Baca sampai tamat/ })).toBeInTheDocument()
+    expect(await screen.findByText(/Bagian di bawah tersensor/)).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Chapter ini/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /10 chapter/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Buka sampai tamat/ })).toBeInTheDocument()
   })
 
   it('naskah bab terkunci tidak pernah dirender, bahkan tersembunyi', async () => {
     renderReader('s1-c8')
-    await screen.findByText('Lanjutkan membaca bab ini')
+    await screen.findByText(/Bagian di bawah tersensor/)
 
     const full = await api.getChapter('s1', 's1-c8')
     expect(full.content).toEqual([])
 
-    // Pratinjaunya ada di layar tetapi tidak dibacakan pembaca layar.
-    const preview = full.preview[0] ?? ''
-    expect(screen.getByText(preview).closest('[aria-hidden="true"]')).not.toBeNull()
+    /*
+     * **Paragraf pembukanya terbaca**, sisanya tersensor (`7x`, R4c). Kalau
+     * seluruhnya diburamkan, pembaca tidak pernah tahu ia sedang membaca cerita
+     * yang mana — dan halaman yang isinya blok abu-abu seluruhnya terbaca
+     * sebagai kerusakan, bukan sebagai batas berbayar.
+     */
+    const gratis = full.preview[0] ?? ''
+    expect(screen.getByText(gratis).closest('[aria-hidden="true"]')).toBeNull()
+
+    // Yang tersensor ada di layar tetapi tidak dibacakan pembaca layar.
+    const tersensor = full.preview[1] ?? ''
+    expect(screen.getByText(tersensor).closest('[aria-hidden="true"]')).not.toBeNull()
   })
 
   it('saldo kurang membuka lembar berisi kekurangannya, bukan toast', async () => {
@@ -129,12 +138,12 @@ describe('gerbang bab terkunci · FR-READ-06 · FR-READ-07 · FR-READ-17', () =>
     })
     renderReader('s1-c8')
 
-    await userEvent.click(await screen.findByRole('button', { name: /Buka bab ini/ }))
+    await userEvent.click(await screen.findByRole('button', { name: /Chapter ini/ }))
 
-    expect(await screen.findByText('Saldo koinmu belum cukup')).toBeInTheDocument()
+    expect(await screen.findByText(/^Kurang /)).toBeInTheDocument()
     expect(screen.getByText('Kurang 2.000 koin')).toBeInTheDocument()
     // Jalan keluarnya membawa konteks kembali ke bab yang sama.
-    expect(screen.getByRole('link', { name: 'Isi koin' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Isi koin/ })).toHaveAttribute(
       'href',
       expect.stringContaining('chapter_id=s1-c8'),
     )
@@ -184,15 +193,15 @@ describe('navigasi bab · FR-READ-15', () => {
   })
 })
 
-describe('auto-unlock · FR-READ-09', () => {
-  it('mati secara bawaan: bab terkunci tetap menampilkan gerbangnya', async () => {
-    useReaderSettings.setState({ autoUnlock: false })
+describe('auto-unlock per cerita · FR-READ-09 · §1.19', () => {
+  it('tanpa izin cerita ini, bab terkunci tetap menampilkan gerbangnya', async () => {
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
     renderReader('s1-c8')
 
-    expect(await screen.findByText('Lanjutkan membaca bab ini')).toBeInTheDocument()
+    expect(await screen.findByText(/Bagian di bawah tersensor/)).toBeInTheDocument()
   })
 
-  it('menyala dan saldo cukup: babnya terbuka sendiri tanpa ketukan', async () => {
+  it('izin cerita ini menyala dan saldo cukup: babnya terbuka sendiri tanpa ketukan', async () => {
     await db.wallets.put({
       userId: CURRENT_USER_ID,
       balance: 50_000,
@@ -200,14 +209,198 @@ describe('auto-unlock · FR-READ-09', () => {
       updatedAt: new Date().toISOString(),
     })
     await db.ownerships.where('userId').equals(CURRENT_USER_ID).delete()
-    useReaderSettings.setState({ autoUnlock: true })
+    // Izinnya **per cerita, di server** — bukan sakelar global di `stores/`,
+    // yang dicabut di R4b karena melanggar aturan struktur #5.
+    await db.readerPrefs.put({
+      ...emptyReaderPrefs(CURRENT_USER_ID),
+      autoUnlockStoryIds: ['s1'],
+    })
 
     renderReader('s1-c8')
 
     // Tanpa satu pun klik, isinya muncul — dan gerbangnya menghilang.
     expect(await screen.findByRole('button', { name: 'Suka' })).toBeInTheDocument()
-    expect(screen.queryByText('Lanjutkan membaca bab ini')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Bagian di bawah tersensor/)).not.toBeInTheDocument()
 
-    useReaderSettings.setState({ autoUnlock: false })
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+  })
+
+  it('izin cerita LAIN tidak membuka bab cerita ini', async () => {
+    await db.wallets.put({
+      userId: CURRENT_USER_ID,
+      balance: 50_000,
+      bonus: 0,
+      updatedAt: new Date().toISOString(),
+    })
+    await db.ownerships.where('userId').equals(CURRENT_USER_ID).delete()
+    await db.readerPrefs.put({
+      ...emptyReaderPrefs(CURRENT_USER_ID),
+      autoUnlockStoryIds: ['s3'],
+    })
+
+    renderReader('s1-c8')
+
+    // Inti §1.19: izinnya milik satu cerita, bukan sakelar yang berlaku umum.
+    expect(await screen.findByText(/Bagian di bawah tersensor/)).toBeInTheDocument()
+
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+  })
+})
+
+it('membuka lewat iklan juga menyimpan izinnya — sakelarnya tidak dibuang diam-diam', async () => {
+  await db.ownerships.where('userId').equals(CURRENT_USER_ID).delete()
+  await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+
+  const spy = vi.spyOn(api, 'unlockChapter')
+  renderReader('s1-c8')
+  await screen.findByText(/Bagian di bawah tersensor/)
+
+  await userEvent.click(await screen.findByRole('button', { name: /Tonton iklan/ }))
+
+  /*
+   * Terukur sebelum perbaikan ini: jalur koin menyimpan `["s1"]`, jalur iklan
+   * menyimpan `[]`. Pembaca sudah menyetujui di gerbang dan menonton sampai
+   * habis, lalu bab berikutnya bergerbang lagi seolah ia tidak pernah setuju.
+   */
+  await vi.waitFor(
+    () => {
+      const panggilan = spy.mock.calls.find((c) => c[0]?.source === 'ad')
+      expect(panggilan?.[0]).toMatchObject({ source: 'ad', enableAutoUnlock: true })
+    },
+    { timeout: 10_000 },
+  )
+
+  spy.mockRestore()
+  await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+}, 15_000) // Layar iklannya berhitung mundur **lima detik sungguhan** — itu memang
+// yang dialami pembaca, dan memalsukannya dengan timer semu berarti menguji
+// timer, bukan alurnya.
+
+describe('saldo kurang · mockup `7z` · R4e', () => {
+  it('lembar membawa TIGA jalan keluar, bukan satu tombol buntu', async () => {
+    await db.wallets.put({
+      userId: CURRENT_USER_ID,
+      balance: 300,
+      bonus: 0,
+      updatedAt: new Date().toISOString(),
+    })
+    await db.ownerships.where('userId').equals(CURRENT_USER_ID).delete()
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+
+    renderReader('s1-c8')
+    await userEvent.click(await screen.findByRole('button', { name: /Chapter ini/ }))
+
+    /*
+     * Permintaan produk 4 September menyebut dua jalan; voucher tetap ada karena
+     * ia satu-satunya yang tidak menuntut uang **maupun** menonton iklan, dan
+     * lembar buntu yang menawarkan lebih sedikit melanggar §1.4.
+     */
+    // Dicari **di dalam lembarnya**: gerbang di belakangnya juga punya tombol
+    // "Tonton iklan", dan mencarinya di seluruh dokumen mengenai keduanya.
+    const lembar = await screen.findByRole('dialog')
+    expect(within(lembar).getByRole('link', { name: /Isi koin/ })).toBeInTheDocument()
+    expect(within(lembar).getByRole('button', { name: /Pakai voucher/ })).toBeInTheDocument()
+    expect(within(lembar).getByRole('button', { name: /Tonton iklan/ })).toBeInTheDocument()
+
+    // Dan menyatakan terang bahwa membatalkan tidak menghilangkan apa pun.
+    expect(within(lembar).getByText(/gerbangnya masih terbuka/)).toBeInTheDocument()
+  })
+
+  it('saldo TIDAK diperiksa klien — servernya yang menolak, lembarnya dibuka dari kekurangannya', async () => {
+    await db.wallets.put({
+      userId: CURRENT_USER_ID,
+      balance: 300,
+      bonus: 0,
+      updatedAt: new Date().toISOString(),
+    })
+    await db.ownerships.where('userId').equals(CURRENT_USER_ID).delete()
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+
+    const spy = vi.spyOn(api, 'unlockChapter')
+    renderReader('s1-c8')
+    await userEvent.click(await screen.findByRole('button', { name: /Chapter ini/ }))
+
+    /*
+     * Tombolnya **tetap memanggil server** walau saldonya jelas kurang. Harga
+     * ada di `Chapter.priceCoins` dan berbeda per bab; klien yang memeriksa
+     * sendiri harus menebak harganya, dan tebakan di layar uang adalah cacat
+     * yang ditagih pengguna belakangan (§1.21).
+     */
+    await vi.waitFor(() => expect(spy).toHaveBeenCalled())
+    expect(await screen.findByText(/^Kurang /)).toBeInTheDocument()
+
+    spy.mockRestore()
+  })
+})
+
+describe('gerbang Type B · mockup `7x` · R4c', () => {
+  it('bilah atas tetap terlihat tanpa diketuk — Type A menyembunyikannya, Type B tidak', async () => {
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+    renderReader('s1-c8')
+    await screen.findByText(/Bagian di bawah tersensor/)
+
+    // Tanpa ini bab terkunci tidak punya tombol kembali sampai pembaca menebak
+    // bahwa layarnya bisa diketuk.
+    expect(screen.getByRole('button', { name: 'Kembali' })).toBeInTheDocument()
+  })
+
+  it('pratinjaunya aria-hidden, tetapi labelnya tetap terbaca', async () => {
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+    const { container } = renderReader('s1-c8')
+    await screen.findByText(/Bagian di bawah tersensor/)
+
+    // Labelnya menjelaskan kenapa ada blok abu-abu di tengah halaman.
+    expect(screen.getByText('Pratinjau tersensor')).toBeInTheDocument()
+    // Isinya tidak dibacakan pembaca layar: potongan kalimat yang tidak lengkap
+    // bukan informasi.
+    expect(container.querySelector('[aria-hidden="true"] .blur-\\[4px\\]')).not.toBeNull()
+  })
+
+  it('gerbangnya bernama, dan saldonya diulang di dalamnya', async () => {
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+    renderReader('s1-c8')
+    await screen.findByText(/Bagian di bawah tersensor/)
+
+    const gerbang = screen.getByLabelText('Locked continuation gate')
+    // Saldo diulang supaya keputusan membeli tidak menuntut melihat ke ujung layar.
+    expect(gerbang.textContent).toMatch(/Saldo kamu/i)
+  })
+
+  it('izin buka-otomatis ada di gerbang dan tercentang bawaan', async () => {
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+    renderReader('s1-c8')
+    await screen.findByText(/Bagian di bawah tersensor/)
+
+    const izin = screen.getByRole('switch', { name: 'Buka otomatis untuk cerita ini' })
+    expect(izin).toBeChecked()
+  })
+
+  it('menekan `Chapter ini` mengirim satu panggilan berisi izinnya sekaligus', async () => {
+    await db.wallets.put({
+      userId: CURRENT_USER_ID,
+      balance: 50_000,
+      bonus: 0,
+      updatedAt: new Date().toISOString(),
+    })
+    await db.ownerships.where('userId').equals(CURRENT_USER_ID).delete()
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
+
+    const spy = vi.spyOn(api, 'unlockChapter')
+    renderReader('s1-c8')
+    await screen.findByText(/Bagian di bawah tersensor/)
+
+    // Pilihannya datang dari server, jadi ditunggu — bukan dibaca seketika.
+    await userEvent.click(await screen.findByRole('button', { name: /Chapter ini/ }))
+
+    /*
+     * **Satu panggilan, bukan dua.** Di gerbang itu memang satu tindakan
+     * pembaca, dan memecahnya membuka keadaan "koin terpotong, izin gagal
+     * tersimpan" (§1.21).
+     */
+    await vi.waitFor(() => expect(spy).toHaveBeenCalledTimes(1))
+    expect(spy.mock.calls[0]?.[0]).toMatchObject({ source: 'coin', enableAutoUnlock: true })
+
+    spy.mockRestore()
+    await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
   })
 })

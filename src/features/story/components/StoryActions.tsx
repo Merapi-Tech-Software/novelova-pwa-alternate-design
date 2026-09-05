@@ -71,7 +71,7 @@ export function StoryActions({ story, onToggleSave, onToggleFollow }: StoryActio
             tautan — bukan tombol yang membuka lembar yang belum ada. */}
         <Link
           to={`/cerita/${story.id}/ulasan`}
-          className="inline-flex h-9 items-center gap-1.5 rounded-nv-pill px-3.5 text-caption font-semibold text-nv-muted"
+          className="nv-tap gap-1.5 rounded-nv-pill px-3.5 text-caption font-semibold text-nv-muted"
         >
           <Star size={14} aria-hidden />
           {t('story.review')}

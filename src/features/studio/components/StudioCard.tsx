@@ -1,12 +1,15 @@
 import { Link } from 'react-router'
 import type { StudioStory } from '@/api/contracts'
 import { Button } from '@/components/ui/Button'
-import { Badge, type BadgeTone } from '@/components/ui/Chip'
 import { t } from '@/i18n/t'
 import { formatCompactCoin } from '@/lib/coin'
+import { cx } from '@/lib/cx'
 import { formatDateTime } from '@/lib/format'
 
-const STATUS: Record<StudioStory['studioStatus'], { label: string; tone: BadgeTone }> = {
+/** Nada status; dipetakan ke warna teks lewat `STATUS_TEXT`, bukan ke lencana. */
+type Nada = 'neutral' | 'info' | 'danger' | 'warning' | 'success' | 'accent'
+
+const STATUS: Record<StudioStory['studioStatus'], { label: string; tone: Nada }> = {
   draft: { label: t('studio.stDraft'), tone: 'neutral' },
   in_review: { label: t('studio.stInReview'), tone: 'info' },
   rejected: { label: t('studio.stRejected'), tone: 'danger' },
@@ -34,24 +37,43 @@ export interface StudioCardProps {
  * cerita terbit yang kehilangan tautan analitiknya — padahal hanya cerita terbit
  * yang punya angka untuk dianalisa.
  */
+/**
+ * Kata status diwarnai **nadanya**, bukan diberi latar.
+ *
+ * `danger` tetap tinta merah untuk teks — brief §5 melarang *isi* merah pada
+ * tombol destruktif, bukan melarang warna sebagai penanda status. Yang dilarang
+ * adalah blok merah yang menarik mata lebih dulu daripada judul ceritanya.
+ */
+const STATUS_TEXT: Record<Nada, string> = {
+  neutral: 'text-nv-muted',
+  info: 'text-nv-text-2',
+  accent: 'text-nv-gold',
+  warning: 'text-nv-gold',
+  success: 'text-nv-success',
+  danger: 'text-nv-danger',
+}
+
 export function StudioCard({ item, onSchedule, onPrint, onDelete }: StudioCardProps) {
   const { story, studioStatus } = item
   const status = STATUS[studioStatus]
 
+  /*
+   * **Tiga metrik, bukan enam** (`7j`). Enam angka berjajar di satu baris pecah
+   * jadi tiga baris di 390px dan berhenti terbaca sebagai ringkasan. Yang tiga
+   * ini yang dipakai penulis untuk memutuskan: berapa yang membaca, seberapa
+   * disukai, sudah berapa bab. Sisanya ada lengkap di halaman analitik.
+   */
   const metrics = [
     { label: t('studio.mViews'), value: formatCompactCoin(story.stats.reads) },
-    { label: t('studio.mReaders'), value: formatCompactCoin(story.stats.readers) },
     {
       label: t('studio.mRating'),
-      value: story.stats.rating > 0 ? story.stats.rating.toFixed(1) : '—',
+      value: story.stats.rating > 0 ? `★ ${story.stats.rating.toFixed(1)}` : '★ —',
     },
-    { label: t('studio.mComments'), value: formatCompactCoin(story.stats.commentCount) },
-    { label: t('studio.mCoins'), value: formatCompactCoin(story.stats.coinsEarned) },
     { label: t('studio.mChapters'), value: String(story.stats.chapterCount) },
   ]
 
   return (
-    <article className="rounded-nv-lg border border-nv-line bg-nv-card p-3.5">
+    <article className="py-4">
       <div className="flex items-start gap-3">
         {story.coverUrl ? (
           <img
@@ -66,28 +88,42 @@ export function StudioCard({ item, onSchedule, onPrint, onDelete }: StudioCardPr
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="min-w-0 truncate font-semibold text-body text-nv-text">{story.title}</h3>
-            <Badge tone={status.tone} className="shrink-0">
+            <h3 className="min-w-0 font-display text-card font-bold text-nv-text">{story.title}</h3>
+            {/* **Kata status, bukan lencana berlatar** (`7j`): satu kata berwarna
+                statusnya sudah cukup, dan pil berlatar di tiap baris membuat
+                daftar delapan cerita terlihat seperti delapan peringatan. */}
+            <span className={cx('shrink-0 text-caption font-semibold', STATUS_TEXT[status.tone])}>
               {status.label}
-            </Badge>
+            </span>
           </div>
-          <p className="truncate pt-0.5 text-caption text-nv-muted">{story.genres.join(' · ')}</p>
-          <p className="pt-0.5 text-caption text-nv-muted tabular-nums">{story.updatedAt}</p>
-          {item.scheduledAt && (
-            <p className="pt-0.5 text-caption text-nv-accent">
-              {t('studio.scheduledFor')(formatDateTime(new Date(item.scheduledAt)))}
-            </p>
-          )}
+          <p className="truncate pt-0.5 text-caption text-nv-muted">
+            {[...story.genres, story.updatedAt].join(' · ')}
+          </p>
+          <p className="pt-1 text-caption text-nv-muted tabular-nums">
+            {metrics
+              .map((m) =>
+                m.value.startsWith('★') ? m.value : `${m.value} ${m.label.toLowerCase()}`,
+              )
+              .join(' · ')}
+          </p>
         </div>
       </div>
 
       {/* Alasan penolakan tampil di kartunya sendiri — penulis tidak boleh harus
           mencarinya (FR-STUDIO-38). */}
       {studioStatus === 'rejected' && item.rejectReason && (
-        <div className="mt-3 rounded-nv-md bg-nv-danger-bg p-3">
-          <p className="font-semibold text-caption text-nv-danger">{t('studio.rejectedLabel')}</p>
-          <p className="pt-0.5 text-caption text-nv-text">{item.rejectReason}</p>
+        <div className="mt-3 border-nv-danger border-l-2 pl-3">
+          <p className="nv-section-label text-nv-danger">{t('studio.rejectedLabel')}</p>
+          <p className="pt-1 font-display text-card text-nv-text-2">{item.rejectReason}</p>
         </div>
+      )}
+
+      {/* Jadwal terbit sebagai kutipan di balik garis emas (`7j`) — ia kabar,
+          bukan peringatan, jadi ia tidak berlatar. */}
+      {item.scheduledAt && (
+        <p className="mt-3 border-nv-gold-line border-l-2 pl-3 font-display text-card text-nv-text-2">
+          {t('studio.scheduledFor')(formatDateTime(new Date(item.scheduledAt)))}
+        </p>
       )}
 
       {/* Satu bab terbit adalah momen paling tepat mengingatkan ritme rilis —
@@ -112,19 +148,10 @@ export function StudioCard({ item, onSchedule, onPrint, onDelete }: StudioCardPr
         </div>
       )}
 
-      <dl className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
-        {metrics.map((m) => (
-          <div key={m.label} className="rounded-nv-md bg-nv-surface px-2 py-1.5 text-center">
-            <dt className="text-caption text-nv-muted">{m.label}</dt>
-            <dd className="pt-0.5 font-semibold text-caption text-nv-text tabular-nums">
-              {m.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-
       <div className="mt-3 flex flex-wrap gap-2">
-        <ActionLink to={`/karya/${story.id}/ubah`}>{t('studio.actEdit')}</ActionLink>
+        <ActionLink to={`/karya/${story.id}/ubah`} primary>
+          {t('studio.actEdit')}
+        </ActionLink>
         <ActionLink to={`/karya/${story.id}/bab`}>{t('studio.actChapters')}</ActionLink>
         <ActionLink to={`/cerita/${story.id}`}>{t('studio.actPreview')}</ActionLink>
 
@@ -144,20 +171,41 @@ export function StudioCard({ item, onSchedule, onPrint, onDelete }: StudioCardPr
           </Button>
         )}
 
-        <Button variant="danger" size="sm" className="ml-auto" onClick={() => onDelete(item)}>
+        {/* `Hapus` **didorong ke kanan sebagai teks redup** (`7j`). Ia tetap
+            destruktif dan tetap minta konfirmasi — yang berubah cuma bahwa ia
+            berhenti bersaing perhatian dengan empat aksi yang dipakai tiap hari. */}
+        <button
+          type="button"
+          onClick={() => onDelete(item)}
+          className="relative ml-auto h-9 px-1 font-semibold text-caption text-nv-muted after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']"
+        >
           {t('studio.actDelete')}
-        </Button>
+        </button>
       </div>
     </article>
   )
 }
 
 /** Tautan yang tampil seperti tombol kecil sekunder — tujuan, bukan aksi. */
-function ActionLink({ to, children }: { to: string; children: string }) {
+function ActionLink({
+  to,
+  primary,
+  children,
+}: {
+  to: string
+  primary?: boolean
+  children: string
+}) {
   return (
     <Link
       to={to}
-      className="inline-flex h-9 items-center rounded-nv-pill border border-nv-line px-3 font-semibold text-caption text-nv-text transition hover:bg-nv-surface"
+      className={cx(
+        // Kotak sentuh 44px lewat `::after`, sama seperti tombol `sm` (R7).
+        "relative inline-flex h-9 items-center rounded-nv-pill px-3.5 font-semibold text-caption transition after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
+        primary
+          ? 'bg-nv-accent text-nv-card'
+          : 'border border-nv-line-soft text-nv-text hover:bg-nv-surface',
+      )}
     >
       {children}
     </Link>

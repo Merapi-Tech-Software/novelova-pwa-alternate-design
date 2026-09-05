@@ -1,4 +1,4 @@
-import { Compass } from 'lucide-react'
+import { Compass, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type {
@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
 import { formatCompactCoin } from '@/lib/coin'
+import { cx } from '@/lib/cx'
 import { formatDateTime } from '@/lib/format'
 import { PrintSheet } from '../components/PrintSheet'
 import { ScheduleSheet } from '../components/ScheduleSheet'
@@ -160,70 +161,94 @@ export default function StudioPage() {
     )
   }
 
-  const stats = [
+  const stats: Array<{ label: string; value: number; to: string | null; gold?: boolean }> = [
     { label: t('studio.statStories'), value: summary.data?.stories ?? 0, to: null },
     { label: t('studio.statViews'), value: summary.data?.views ?? 0, to: null },
     { label: t('studio.statSubs'), value: summary.data?.subs ?? 0, to: null },
     // Metrik Coins **adalah tautan** ke analitik penulis (FR-EARN-10): ujung
     // rantai kerja penulis tidak boleh cuma dijangkau lewat halaman bantuan.
-    { label: t('studio.statCoins'), value: summary.data?.coins ?? 0, to: '/penulis/analitik' },
+    {
+      label: t('studio.statCoins'),
+      value: summary.data?.coins ?? 0,
+      to: '/penulis/analitik',
+      gold: true,
+    },
   ]
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-10">
-      <header className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4">
-        <div className="min-w-0">
-          <h1 className="font-display text-title font-bold text-nv-text">{t('studio.title')}</h1>
-          <p className="pt-1 text-body text-nv-muted">{t('studio.subtitle')}</p>
-        </div>
-        <Link
-          to="/karya/baru"
-          className="inline-flex h-11 shrink-0 items-center rounded-nv-pill bg-nv-accent px-4 font-semibold text-body text-nv-card"
-        >
-          + {t('studio.newStory')}
-        </Link>
+      <header className="px-4 pt-4">
+        <h1 className="font-display text-title font-bold text-nv-text">{t('studio.title')}</h1>
+        <p className="pt-1 text-body text-nv-muted">{t('studio.subtitle')}</p>
       </header>
 
-      <dl className="grid grid-cols-2 gap-2 px-4 pt-4 sm:grid-cols-4">
+      {/*
+        Strip empat sel di atas **satu panel putih**, bukan empat kotak abu
+        terpisah (`7j`). Angkanya serif, labelnya 9,5px huruf besar — pola yang
+        sama dengan strip detail cerita dan profil, jadi pembaca mengenalinya
+        sebagai "angka tentang sesuatu", bukan sebagai empat kartu.
+      */}
+      <dl className="mx-4 mt-4 grid grid-cols-4 gap-x-2 rounded-nv-lg bg-nv-card p-4">
         {stats.map((stat) => {
           const body = (
             <>
-              <dt className="text-caption text-nv-muted">{stat.label}</dt>
-              <dd className="pt-0.5 font-display font-bold text-section text-nv-text tabular-nums">
+              <dd
+                className={cx(
+                  'font-display font-bold text-section tabular-nums',
+                  // **Koin emas**, sisanya tinta. Emas dijatah untuk uang
+                  // (brief §6); memakainya untuk keempatnya menghapus artinya.
+                  stat.gold ? 'text-nv-gold' : 'text-nv-text',
+                )}
+              >
                 {formatCompactCoin(stat.value)}
               </dd>
+              <dt className="nv-section-label pt-1">{stat.label}</dt>
             </>
           )
           return stat.to ? (
-            <Link
-              key={stat.label}
-              to={stat.to}
-              className="rounded-nv-lg bg-nv-surface px-3 py-2.5 text-center transition hover:bg-nv-accent-soft"
-            >
+            <Link key={stat.label} to={stat.to} className="block">
               {body}
             </Link>
           ) : (
-            <div key={stat.label} className="rounded-nv-lg bg-nv-surface px-3 py-2.5 text-center">
-              {body}
-            </div>
+            <div key={stat.label}>{body}</div>
           )
         })}
       </dl>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pt-3">
-        <Link to="/karya/cetak" className="text-body text-nv-accent underline">
-          {t('studio.printHistory')}
-        </Link>
-        <Link to="/penulis/analitik" className="text-body text-nv-accent underline">
-          {t('studio.earnings')}
-        </Link>
-        <Link to="/karya/jadwal" className="text-body text-nv-accent underline">
-          {t('studio.schedule')}
-        </Link>
-        <Link to="/karya/tinjauan" className="text-body text-nv-accent underline">
-          {t('studio.reviewQueue')}
+      {/* Aksi utama **selebar halaman**, di bawah angkanya (`7j`): studio dibuka
+          untuk menulis, dan tombolnya tidak boleh jadi pil kecil di pojok. */}
+      <div className="px-4 pt-4">
+        <Link
+          to="/karya/baru"
+          className="flex h-13 w-full items-center justify-center gap-2 rounded-nv-pill bg-nv-accent font-bold text-card text-nv-card"
+        >
+          <Plus size={18} aria-hidden />
+          {t('studio.newStory')}
         </Link>
       </div>
+
+      {/* Tautan cepat jadi **pil garis rambut**, bukan teks bergaris bawah:
+          empat tautan bergaris bawah berjajar terbaca sebagai satu kalimat
+          yang rusak. */}
+      <nav className="flex flex-wrap gap-2 px-4 pt-3">
+        {[
+          // Label **pendek** (`7j`): "Riwayat Cetak PDF & Hardcopy" memakan
+          // satu baris penuh sendirian di 390px, dan empat pil yang
+          // masing-masing sebaris berhenti terbaca sebagai satu deret.
+          ['/penulis/analitik', t('studio.navEarnings')],
+          ['/karya/jadwal', t('studio.navSchedule')],
+          ['/karya/tinjauan', t('studio.navReview')],
+          ['/karya/cetak', t('studio.navPrint')],
+        ].map(([to, label]) => (
+          <Link
+            key={to}
+            to={to as string}
+            className="flex h-11 items-center rounded-nv-pill border border-nv-line-soft px-4 text-body font-semibold"
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
 
       <div className="px-4 pt-4">
         {noStories ? (
@@ -275,17 +300,22 @@ export default function StudioPage() {
               >
                 {(data) => (
                   <>
-                    <div className="grid grid-cols-1 gap-2.5">
+                    {/* **Daftar berpembatas, bukan tumpukan kartu** (`7j`, brief §4).
+                        Kartu putih per cerita membuat delapan karya terlihat
+                        sebagai delapan objek terpisah; yang dicari penulis
+                        adalah satu daftar yang bisa dipindai. */}
+                    <ul className="divide-y divide-nv-line">
                       {data.items.map((item) => (
-                        <StudioCard
-                          key={item.story.id}
-                          item={item}
-                          onSchedule={setScheduling}
-                          onPrint={setPrinting}
-                          onDelete={(story) => void onDelete(story)}
-                        />
+                        <li key={item.story.id}>
+                          <StudioCard
+                            item={item}
+                            onSchedule={setScheduling}
+                            onPrint={setPrinting}
+                            onDelete={(story) => void onDelete(story)}
+                          />
+                        </li>
                       ))}
-                    </div>
+                    </ul>
 
                     {data.hasMore && (
                       <Button

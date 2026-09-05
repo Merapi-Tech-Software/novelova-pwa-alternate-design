@@ -1,4 +1,4 @@
-import { Heart } from 'lucide-react'
+import { Heart, LockOpen } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { api } from '@/api/client'
@@ -12,17 +12,24 @@ import { Sheet } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import { useChapter } from '@/hooks/useChapter'
 import { useStory } from '@/hooks/useStory'
+import { useVouchers } from '@/hooks/useVouchers'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
 import { cx } from '@/lib/cx'
 import { formatDate } from '@/lib/format'
-import { useReaderSettings } from '@/stores/readerSettings'
 import { AdUnlockScreen } from '../components/AdUnlockScreen'
+import { BundleBand } from '../components/BundleBand'
 import { ChapterGate } from '../components/ChapterGate'
 import { ChapterEnd, ChapterNav } from '../components/ChapterNav'
 import { InsufficientCoins } from '../components/InsufficientCoins'
 import { ReaderBar } from '../components/ReaderBar'
 import { ReaderSettingsPanel } from '../components/ReaderSettingsPanel'
+import {
+  useAutoUnlockAllowed,
+  useBundleOffer,
+  useDismissBundleOffer,
+  useSetAutoUnlock,
+} from '../hooks/useAutoUnlock'
 import { useReadingProgress } from '../hooks/useReadingProgress'
 import { useTts } from '../hooks/useTts'
 import { useAdQuota, useUnlockChapter, useUnlockOptions } from '../hooks/useUnlock'
@@ -82,11 +89,24 @@ export default function ReaderPage() {
   const story = useStory(storyId)
   const wallet = useWallet()
   const quota = useAdQuota()
-  const settings = useReaderSettings()
+  const voucher = useVouchers()
 
   const locked = chapter.data !== undefined && !chapter.data.owned
   const options = useUnlockOptions(chapterId, locked)
   const unlock = useUnlockChapter(storyId, chapterId)
+  // Izin buka-otomatis **cerita ini** — dari seam, bukan dari `stores/` (§1.19).
+  const bolehOtomatis = useAutoUnlockAllowed(storyId)
+  const setAuto = useSetAutoUnlock()
+  const bundel = useBundleOffer(storyId, chapterId)
+  const tolakBundel = useDismissBundleOffer()
+  /*
+   * **Tercentang bawaan** (FR-READ-09). Ia keadaan layar, bukan keadaan server:
+   * yang tersimpan baru terjadi saat pembaca menekan salah satu pilihan bayar,
+   * dan sampai saat itu ia cuma niat.
+   */
+  const [izinDicentang, setIzinDicentang] = useState(true)
+  /** Koin yang terpotong pada pembukaan bab ini — `null` bila bukan barusan. */
+  const [dibukaBarusan, setDibukaBarusan] = useState<number | null>(null)
 
   const body = chapter.data?.owned ? (chapter.data.content[0]?.body ?? []) : []
   const tts = useTts(sentencesOf(body))
@@ -115,16 +135,33 @@ export default function ReaderPage() {
     window.scrollTo(0, 0)
     autoTried.current = null
     setResumeAt(null)
+    setDibukaBarusan(null)
   }, [chapterId])
 
   const buy = useCallback(
-    (source: 'coin' | 'bundle' | 'full') => {
+    (source: 'coin' | 'bundle' | 'full', opsi?: { auto?: boolean; enableAutoUnlock?: boolean }) => {
       unlock.mutate(
-        { source, idempotencyKey: attempt },
         {
-          onSuccess: () => {
+          source,
+          idempotencyKey: attempt,
+          // Dua bendera, dan keduanya dikirim **bersama pembeliannya**: beli
+          // bab dan nyalakan izinnya adalah satu tindakan pembaca di gerbang,
+          // dan memecahnya membuka keadaan "koin terpotong, izin gagal
+          // tersimpan" (§1.21).
+          ...(opsi?.auto ? { auto: true } : {}),
+          ...(opsi?.enableAutoUnlock ? { enableAutoUnlock: true } : {}),
+        },
+        {
+          onSuccess: (hasil) => {
             setAttempt(crypto.randomUUID())
-            toast.show(t('reader.unlocked'))
+            // Dipakai lencana `CHAPTER TERBUKA` di `7y`; direset saat pindah bab.
+            setDibukaBarusan(hasil.coinsSpent)
+            // Toast pembukaan otomatis **berbunyi beda**: pembaca tidak menekan
+            // apa pun, jadi kalimat yang sama akan terbaca seolah ia yang
+            // melakukannya.
+            toast.show(
+              opsi?.auto ? t('reader.unlockedAuto')(hasil.coinsSpent) : t('reader.unlocked'),
+            )
           },
           onError: (failure) => {
             if (isApiError(failure) && failure.code === 'INSUFFICIENT_COINS') {
@@ -141,23 +178,26 @@ export default function ReaderPage() {
 
   /**
    * Auto-unlock · FR-READ-09. Empat pengaman, dan semuanya perlu:
-   * sakelarnya menyala · babnya memang terkunci · belum pernah dicoba untuk bab
-   * ini · tidak ada permintaan yang sedang berjalan. Selalu **harga satuan** —
-   * membeli bundel tanpa diminta adalah hal terakhir yang boleh dilakukan
-   * otomatis.
+   * **izin cerita ini menyala** · babnya memang terkunci · belum pernah dicoba
+   * untuk bab ini · tidak ada permintaan yang sedang berjalan. Selalu **harga
+   * satuan** — membeli bundel atau paket tamat tanpa diminta adalah hal terakhir
+   * yang boleh dilakukan otomatis.
+   *
+   * Izinnya dibaca dari **seam**, bukan dari `stores/`: sejak §1.19 ia per
+   * cerita dan tersimpan di server, karena ia memberi wewenang memotong koin.
    */
   const tryAuto = useCallback(() => {
-    if (!settings.autoUnlock || !locked || !chapterId) return
+    if (!bolehOtomatis || !locked || !chapterId) return
     if (autoTried.current === chapterId || unlock.isPending) return
 
     autoTried.current = chapterId
-    buy('coin')
-  }, [settings.autoUnlock, locked, chapterId, unlock.isPending, buy])
+    buy('coin', { auto: true })
+  }, [bolehOtomatis, locked, chapterId, unlock.isPending, buy])
 
   useEffect(() => {
-    // Evaluasi langsung saat sakelarnya dinyalakan, tanpa menunggu gulir.
-    if (settings.autoUnlock) tryAuto()
-  }, [settings.autoUnlock, tryAuto])
+    // Evaluasi langsung begitu izinnya diketahui, tanpa menunggu gulir.
+    if (bolehOtomatis) tryAuto()
+  }, [bolehOtomatis, tryAuto])
 
   useEffect(() => {
     const node = gateRef.current
@@ -184,10 +224,24 @@ export default function ReaderPage() {
     if (!storyId || !chapterId || !chapter.data?.owned) return
 
     void api.getProgress(storyId).then((progress) => {
-      if (!progress || progress.lastChapterId !== chapterId) return
-      if (progress.scrollPct > RESUME_MIN && progress.scrollPct < RESUME_MAX) {
-        setResumeAt(progress.scrollPct)
-      }
+      if (!progress) return
+
+      /*
+       * Posisi **bab ini**, bukan posisi bab terakhir yang dibaca (R7). Sebelum
+       * ini, kembali ke bab yang lebih awal selalu mulai dari atas — dan bagi
+       * pembaca itu tidak bisa dibedakan dari kehilangan tempat.
+       *
+       * `scrollPct` tetap jadi cadangan untuk bab terakhir: progres yang
+       * tersimpan sebelum kolom per-bab ada tidak punya entri di sana.
+       */
+      const posisi =
+        // `?.` bukan kehati-hatian berlebihan: baris progres yang ditulis
+        // sebelum kolom ini ada tidak punya objeknya sama sekali, dan
+        // mengindeks `undefined` melempar — di halaman yang sedang dibaca.
+        progress.scrollByChapter?.[chapterId] ??
+        (progress.lastChapterId === chapterId ? progress.scrollPct : 0)
+
+      if (posisi > RESUME_MIN && posisi < RESUME_MAX) setResumeAt(posisi)
     })
   }, [storyId, chapterId, chapter.data?.owned])
 
@@ -292,6 +346,26 @@ export default function ReaderPage() {
         </h1>
         <span aria-hidden className="mx-auto mt-4 mb-7 block h-px w-10 bg-nv-gold-line" />
 
+        {/*
+          Pita tawaran bundel · FR-READ-19. Di pembuka bab, **tidak menghalangi
+          apa pun** — alur ini menjanjikan membaca tanpa terputus, dan lembar
+          yang menghentikan pembaca untuk menawarinya belanja adalah kebalikan
+          dari yang dibelinya.
+        */}
+        {bundel.data && (
+          <BundleBand
+            offer={bundel.data}
+            pending={unlock.isPending}
+            onTake={() => {
+              // **Pembelian eksplisit** — auto-unlock tidak pernah membeli
+              // bundel sendiri (FR-READ-09).
+              buy('bundle')
+              if (storyId) tolakBundel.mutate(storyId)
+            }}
+            onDismiss={() => storyId && tolakBundel.mutate(storyId)}
+          />
+        )}
+
         {/* Ditawarkan, bukan dilompati sendiri: pembaca yang membuka bab lagi
             belum tentu ingin melanjutkan dari tempat ia berhenti (FR-READ-16). */}
         {resumeAt !== null && (
@@ -343,23 +417,86 @@ export default function ReaderPage() {
           ))}
         </div>
 
+        {/*
+          **Bagian gratisnya dibaca persis seperti Type A**, lalu berhenti di
+          blok gerbang (`7x`). Paragraf pembuka datang dari `preview`; sisanya
+          yang diburamkan di dalam gerbang.
+        */}
+        {locked && data.preview.length > 0 && (
+          <div
+            className="space-y-4 font-read text-nv-text"
+            style={{ fontSize: 'var(--reader-font-size)', lineHeight: 1.8 }}
+          >
+            <p>{data.preview[0]}</p>
+          </div>
+        )}
+
         {locked && (
           <div ref={gateRef}>
             <ChapterGate
               chapter={data}
+              censored={data.preview.slice(1)}
               options={options.data ?? []}
               loading={options.isPending}
               balance={balance}
+              bonus={wallet.data?.bonus ?? 0}
               adLeft={adLeft}
               pending={unlock.isPending}
-              onPick={buy}
+              autoUnlock={izinDicentang}
+              onAutoUnlockChange={setIzinDicentang}
+              // Satu panggilan membawa keduanya: babnya dibeli **dan** izinnya
+              // dinyalakan. Di gerbang itu memang satu tindakan pembaca.
+              onPick={(source) => buy(source, { enableAutoUnlock: izinDicentang })}
               onWatchAd={() => setWatchingAd(true)}
             />
           </div>
         )}
 
+        {/*
+          `7y`: begitu babnya terbuka, buramnya hilang dan **lencana berganti** —
+          gembok terbuka, `CHAPTER TERBUKA`, dan berapa koin yang barusan
+          terpotong. Ia berdiri di tempat gerbangnya tadi, jadi pembaca melihat
+          hasil dari keputusan yang baru saja ia ambil, bukan halaman yang
+          tiba-tiba berbeda.
+        */}
+        {data.owned && dibukaBarusan !== null && (
+          <p className="mt-6 flex items-center justify-between gap-3 border-nv-line border-y py-2.5">
+            <span className="flex items-center gap-1.5 font-bold text-[0.59375rem] text-nv-gold uppercase tracking-[0.16em]">
+              <LockOpen size={13} aria-hidden className="text-nv-gold-line" />
+              {t('reader.chapterOpened')}
+            </span>
+            <span className="text-caption text-nv-muted tabular-nums">
+              {t('reader.spent')(dibukaBarusan)}
+            </span>
+          </p>
+        )}
+
         {data.owned && (
           <>
+            {/*
+              Baris status izin · `7y`. **Izin yang memotong koin tanpa tombol
+              mati bukan izin** — dan tempatnya di sini, di jalur baca, bukan
+              terkubur di panel pengaturan.
+            */}
+            {bolehOtomatis && (
+              <p className="mt-8 flex items-center justify-between gap-3 border-nv-line border-t pt-3">
+                <span className="nv-section-label">{t('reader.autoUnlockOn')}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!storyId) return
+                    setAuto.mutate(
+                      { storyId, on: false },
+                      { onSuccess: () => toast.show(t('reader.autoUnlockStopped')) },
+                    )
+                  }}
+                  className="shrink-0 font-semibold text-caption text-nv-gold underline underline-offset-4"
+                >
+                  {t('reader.autoUnlockOff')}
+                </button>
+              </p>
+            )}
+
             <AdSlot variant="native" className="mt-8" title={t('home.adNativeTitle')} />
 
             <div className="mt-6 flex items-center gap-2 border-nv-line border-t pt-4">
@@ -456,12 +593,21 @@ export default function ReaderPage() {
         onClose={() => setShortBy(null)}
         shortBy={shortBy ?? 0}
         balance={balance}
+        price={data.priceCoins}
+        chapterNumber={data.number}
         storyId={storyId ?? ''}
         chapterId={chapterId ?? ''}
         adLeft={adLeft}
+        voucherCount={voucher.data?.length ?? 0}
         onWatchAd={() => {
           setShortBy(null)
           setWatchingAd(true)
+        }}
+        // Voucher dijangkau dari sini **dan** dari detail cerita — ini pertama
+        // kalinya ia muncul di ruang baca (R4e).
+        onUseVoucher={() => {
+          setShortBy(null)
+          navigate(`/cerita/${storyId}`)
         }}
       />
 
@@ -480,10 +626,32 @@ export default function ReaderPage() {
 
       {watchingAd && (
         <AdUnlockScreen
+          chapterNumber={data.number}
+          price={data.priceCoins}
+          adLeft={adLeft}
+          adMax={quota.data?.max ?? 3}
+          onPayInstead={() => {
+            setWatchingAd(false)
+            buy('coin')
+          }}
           onFinish={() => {
             setWatchingAd(false)
             unlock.mutate(
-              { source: 'ad', idempotencyKey: attempt },
+              {
+                source: 'ad',
+                idempotencyKey: attempt,
+                /*
+                 * **Izinnya ikut, sama seperti jalur koin.** Tanpa ini sakelar
+                 * yang tercentang di gerbang dibuang diam-diam begitu pembaca
+                 * memilih membuka lewat iklan: ia sudah menyetujui, menonton
+                 * sampai habis, lalu bab berikutnya bergerbang lagi seolah ia
+                 * tidak pernah menyetujui apa pun.
+                 *
+                 * Terukur sebelum perbaikan: jalur koin menyimpan `["s1"]`,
+                 * jalur iklan menyimpan `[]`.
+                 */
+                ...(izinDicentang ? { enableAutoUnlock: true } : {}),
+              },
               {
                 onSuccess: () => {
                   setAttempt(crypto.randomUUID())

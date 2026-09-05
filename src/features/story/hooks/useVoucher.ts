@@ -1,14 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
-
-/** Voucher yang dimiliki pengguna — ditampilkan **di atas** kolom kode (FR-RWD-06). */
-export function useVouchers() {
-  return useQuery({
-    queryKey: ['vouchers'],
-    queryFn: () => api.listVouchers(),
-    staleTime: 60_000,
-  })
-}
 
 /**
  * Menukar kode lalu memakainya · FR-RWD-06.

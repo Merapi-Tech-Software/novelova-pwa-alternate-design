@@ -42,7 +42,15 @@ export interface SeeAllProps {
  */
 export function SeeAllAction({ children, className }: SeeAllProps) {
   return (
-    <span className={cx('shrink-0 font-bold text-caption text-nv-gold', className)}>
+    /*
+      `nv-tap` di sini, bukan di `<Link>` pembungkusnya: yang diukur pengguna —
+      dan pengukur target ketuk — adalah kotak elemen yang bisa ditekan, dan
+      tautan yang membungkus teks sependek "See all" mengambil ukuran teksnya.
+      Terukur 38×22 sebelum ini.
+    */
+    <span
+      className={cx('nv-tap justify-end shrink-0 font-bold text-caption text-nv-gold', className)}
+    >
       {children}
     </span>
   )

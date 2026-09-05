@@ -4,6 +4,7 @@ import { CHAPTER_DONE_PCT } from '@/lib/limits'
 import type { NovelovaApi } from '../../client'
 import type {
   AdQuota,
+  BundleOffer,
   ChapterSummary,
   ProgressInput,
   ReactTarget,
@@ -13,7 +14,9 @@ import type {
   UnlockResult,
 } from '../../contracts'
 import { ApiError, INTERNAL_CODES } from '../../errors'
+import { SERVER_CONFIG } from '../config'
 import { db } from '../db'
+import { readerPrefsOf } from '../defaults'
 import { currentUserId } from './session'
 
 /**
@@ -75,8 +78,88 @@ async function quotaOf(userId: string): Promise<AdQuota> {
 
 export const unlockHandlers: Pick<
   NovelovaApi,
-  'unlockChapter' | 'getAdQuota' | 'getUnlockOptions' | 'saveProgress' | 'getProgress' | 'react'
+  | 'unlockChapter'
+  | 'getAdQuota'
+  | 'getUnlockOptions'
+  | 'saveProgress'
+  | 'getProgress'
+  | 'react'
+  | 'setAutoUnlock'
+  | 'getBundleOffer'
+  | 'dismissBundleOffer'
 > = {
+  /**
+   * Izin buka-otomatis **per cerita** · FR-READ-09 · §1.19.
+   *
+   * Mutator sempit, mengikuti pola `hideStory(storyId)` yang sudah ada — bukan
+   * `updatePrefs` serba bisa. Satu metode yang bisa menulis kolom apa pun di
+   * preferensi berarti tiap layar boleh menyentuh jalur uang.
+   */
+  async setAutoUnlock(storyId: string, on: boolean): Promise<void> {
+    const userId = currentUserId()
+    const prefs = await readerPrefsOf(userId)
+    const sudah = prefs.autoUnlockStoryIds.includes(storyId)
+    if (sudah === on) return
+
+    await db.readerPrefs.put({
+      ...prefs,
+      autoUnlockStoryIds: on
+        ? [...prefs.autoUnlockStoryIds, storyId]
+        : prefs.autoUnlockStoryIds.filter((id) => id !== storyId),
+    })
+  },
+
+  /**
+   * Tawaran bundling · FR-READ-19 · §1.21.
+   *
+   * **Servernya yang memutuskan kapan ia muncul.** Ambangnya kebijakan
+   * (`SERVER_CONFIG.bundleOfferAfter`), dan angka hematnya harus dari harga bab
+   * sungguhan — `individualCoins` yang sama dengan gerbang bab, bukan
+   * persentase tetap yang akan berbohong pada tiap cerita berharga beda.
+   *
+   * `null` berarti "belum waktunya", dan ada empat jalan ke sana: sudah pernah
+   * ditampilkan, penghitungnya belum sampai ambang, babnya tidak ada, atau
+   * tidak ada lagi bab terkunci untuk dibundel. Layar tidak perlu tahu yang
+   * mana — ia cuma perlu tahu tidak ada yang ditawarkan.
+   */
+  async getBundleOffer(storyId: string, chapterId: string): Promise<BundleOffer | null> {
+    const userId = currentUserId()
+    const prefs = await readerPrefsOf(userId)
+
+    if (prefs.bundleOfferSeenStoryIds.includes(storyId)) return null
+
+    const count = prefs.autoUnlockCounts[storyId] ?? 0
+    if (count < SERVER_CONFIG.bundleOfferAfter) return null
+
+    const chapter = await db.chapters.get(chapterId)
+    if (!chapter) return null
+
+    // `scopeOf` yang **sudah ada**, bukan aritmetika harga baru: bundel di
+    // pita ini dan bundel di gerbang bab harus berupa satu penawaran yang sama.
+    const { chapters, coins } = await scopeOf(userId, chapter, 'bundle')
+    if (chapters.length === 0) return null
+
+    return {
+      storyId,
+      coins,
+      chapterCount: chapters.length,
+      individualCoins: chapters.reduce((sum, c) => sum + c.priceCoins, 0),
+      autoUnlockedCount: count,
+    }
+  },
+
+  /** Ditolak berarti tidak muncul lagi di cerita ini · FR-READ-19. */
+  async dismissBundleOffer(storyId: string): Promise<void> {
+    const userId = currentUserId()
+    const prefs = await readerPrefsOf(userId)
+    if (prefs.bundleOfferSeenStoryIds.includes(storyId)) return
+
+    await db.readerPrefs.put({
+      ...prefs,
+      bundleOfferSeenStoryIds: [...prefs.bundleOfferSeenStoryIds, storyId],
+    })
+  },
+
   /**
    * Progres baca · FR-READ-16.
    *
@@ -102,6 +185,14 @@ export const unlockHandlers: Pick<
       storyId: input.storyId,
       lastChapterId: input.chapterId,
       scrollPct: input.scrollPct,
+      // Ditulis **dua tempat**, dan keduanya perlu: `scrollPct` menjawab "di mana
+      // saya berhenti terakhir kali" untuk tombol Lanjut Baca, kolom ini
+      // menjawab "di mana saya berhenti di bab ini" saat pembaca kembali ke bab
+      // yang lebih awal (R7).
+      scrollByChapter: {
+        ...(existing?.scrollByChapter ?? {}),
+        [input.chapterId]: input.scrollPct,
+      },
       finishedChapterIds: [...finished],
       updatedAt: new Date().toISOString(),
     })
@@ -263,6 +354,33 @@ export const unlockHandlers: Pick<
       resultJson: JSON.stringify(result),
       createdAt: now,
     })
+
+    /*
+     * Izin dan penghitung ditulis **setelah** pembukaannya berhasil, dan
+     * keduanya hanya di jalur ini — jalur kunci idempotency yang terpakai ulang
+     * sudah keluar di baris pertama fungsi ini.
+     *
+     * Itu penting untuk penghitungnya: pemakaian ulang kunci **tidak memotong
+     * koin**, dan menaikkan penghitung di sana mendekatkan pembaca ke tawaran
+     * belanja tanpa ia membayar apa pun.
+     */
+    if (input.enableAutoUnlock === true || input.auto === true) {
+      const prefs = await readerPrefsOf(userId)
+      const izin =
+        input.enableAutoUnlock === true && !prefs.autoUnlockStoryIds.includes(chapter.storyId)
+          ? [...prefs.autoUnlockStoryIds, chapter.storyId]
+          : prefs.autoUnlockStoryIds
+
+      const counts =
+        input.auto === true
+          ? {
+              ...prefs.autoUnlockCounts,
+              [chapter.storyId]: (prefs.autoUnlockCounts[chapter.storyId] ?? 0) + 1,
+            }
+          : prefs.autoUnlockCounts
+
+      await db.readerPrefs.put({ ...prefs, autoUnlockStoryIds: izin, autoUnlockCounts: counts })
+    }
 
     return result
   },

@@ -249,3 +249,29 @@
   text-transform: uppercase;
   color: var(--nv-muted);
 }
+
+/**
+ * Kotak sentuh 44px untuk **kontrol teks sebaris** — tautan "Selengkapnya",
+ * "Lihat semua ulasan", dan sejenisnya.
+ *
+ * Tombol dan tab punya penanganannya sendiri di `Button.tsx` dan `Tabs.tsx`;
+ * yang tersisa adalah teks yang memang harus tetap terlihat sebagai teks. Yang
+ * diperluas kotak sentuhnya, bukan ukurannya: menaikkan padding akan memisahkan
+ * "Selengkapnya" dari paragraf yang ia lanjutkan.
+ *
+ * `min-height` dipakai bersama `::after` karena keduanya menjawab arah berbeda:
+ * teks satu baris kurang tingginya, teks pendek kurang lebarnya.
+ */
+@utility nv-tap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+  }
+}

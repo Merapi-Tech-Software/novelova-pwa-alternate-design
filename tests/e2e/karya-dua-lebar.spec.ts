@@ -19,9 +19,11 @@ async function alurStudio(page: Page) {
   await page.goto('/karya')
 
   // Ringkasan empat metrik, dan metrik Koin adalah tautan (FR-EARN-10).
-  // Nama persisnya menyertakan angkanya; regex longgar juga mengenai tautan
-  // "Isi Koin" di bilah navigasi.
-  await expect(page.getByRole('link', { name: /^Koin \d/ })).toHaveAttribute(
+  // Nama persisnya **angka lalu label** sejak `7j` (nilai serif di atas, label
+  // 9,5px di bawahnya). Angkanya ikut dijangkar: `/koin$/i` saja juga mengenai
+  // tautan "Isi Koin" di bilah navigasi, dan itu gagal sebagai strict mode
+  // violation yang terlihat seperti cacat produk.
+  await expect(page.getByRole('link', { name: /^[\d.,rbjt]+ Koin$/i })).toHaveAttribute(
     'href',
     '/penulis/analitik',
   )
@@ -367,7 +369,9 @@ async function alurAnalitikDanCetak(page: Page) {
   await page.getByRole('button', { name: 'Lihat riwayat dulu' }).click({ timeout: 5_000 })
 
   await page.getByRole('tab', { name: 'Hardcopy' }).click({ timeout: 5_000 })
-  const printing = page.locator('div.nv-card', { hasText: '#HDC-20260822-001' }).first()
+  // Baris pesanan bukan `.nv-card` lagi sejak R6 — kartu diganti baris
+  // berpembatas (`7o`–`7r`, brief §4).
+  const printing = page.locator('article', { hasText: '#HDC-20260822-001' }).first()
   await expect(printing.getByText('Dicetak').first()).toBeVisible({ timeout: 15_000 })
 
   // Tombol batal tetap ada setelah produksi; yang menolak servernya, dan
@@ -449,7 +453,7 @@ async function alurPenghasilan(page: Page) {
   await page.goto('/penulis/analitik')
   // Pintu masuknya dua arah: dari studio ke sini, dan dari sini kembali.
   await page.getByRole('link', { name: 'Kelola cerita' }).click({ timeout: 5_000 })
-  await expect(page.getByRole('link', { name: 'Penghasilan & Pencairan' })).toBeVisible({
+  await expect(page.getByRole('link', { name: 'Penghasilan', exact: true })).toBeVisible({
     timeout: 15_000,
   })
 }

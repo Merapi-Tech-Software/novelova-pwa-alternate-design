@@ -21,8 +21,22 @@ const VARIANT: Record<ButtonVariant, string> = {
   danger: 'border border-nv-danger bg-transparent text-nv-danger hover:bg-nv-danger-bg',
 }
 
+/**
+ * **Kotak sentuh 44px tanpa mengubah ukuran yang terlihat** · R7.
+ *
+ * Ukuran `sm` tingginya 36px, dan itu di bawah ambang ketuk yang dituntut
+ * `CLAUDE.md` §2. Menaikkannya ke 44px akan menghapus perbedaan `sm` dan `md` —
+ * dan perbedaan itu yang dipakai baris aksi komentar, bilah melayang ruang baca,
+ * dan hampir tiap lembar untuk membedakan aksi utama dari aksi sekunder.
+ *
+ * Jadi yang diperluas **kotak sentuhnya**, lewat `::after` yang tidak terlihat:
+ * 36 + 4 + 4 = 44. Jarak antar tombol di seluruh aplikasi minimal `gap-2` (8px),
+ * jadi perluasan 4px tiap sisi bersentuhan tetapi tidak pernah bertindih.
+ */
+const TAP_44 = "relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']"
+
 const SIZE: Record<ButtonSize, string> = {
-  sm: 'h-9 px-3.5 text-caption gap-1.5',
+  sm: `h-9 px-3.5 text-caption gap-1.5 ${TAP_44}`,
   md: 'h-11 px-4.5 text-body gap-2',
   lg: 'h-13 px-6 text-card gap-2.5',
 }
@@ -81,8 +95,9 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   size?: ButtonSize
 }
 
+/** Sama alasannya dengan `SIZE`, tetapi diperluas **dua arah**: 36×36 → 44×44. */
 const ICON_SIZE: Record<ButtonSize, string> = {
-  sm: 'size-9',
+  sm: "size-9 relative after:absolute after:-inset-1 after:content-['']",
   md: 'size-11',
   lg: 'size-13',
 }

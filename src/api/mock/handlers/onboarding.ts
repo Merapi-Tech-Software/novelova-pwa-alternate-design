@@ -7,10 +7,12 @@ import type {
   LocaleSettings,
   Paged,
   ReaderPrefs,
+  ReaderStats,
   ReadingProgress,
   Story,
 } from '../../contracts'
 import { db } from '../db'
+import { readerPrefsOf } from '../defaults'
 import { currentUserId } from './session'
 
 /**
@@ -21,11 +23,6 @@ import { currentUserId } from './session'
  * dibenarkan sama sekali. Yang menyaring adalah tab genre beranda, dan itu
  * pilihan sadar pengguna pada saat itu juga.
  */
-
-async function prefsOf(userId: string): Promise<ReaderPrefs> {
-  const stored = await db.readerPrefs.get(userId)
-  return stored ?? { userId, genres: [], hiddenStoryIds: [], onboardedAt: null }
-}
 
 /**
  * Bahasa & wilayah dari onboarding langkah 2 disimpan ke tempat yang sama
@@ -55,7 +52,35 @@ export const onboardingHandlers: Pick<
   | 'listLibrary'
   | 'listProgress'
   | 'hideStory'
+  | 'getReaderStats'
 > = {
+  /**
+   * Tiga angka kepala profil · `7i` · FR-PROF-01.
+   *
+   * Diturunkan dari tiga tabel yang sudah ada, bukan dari penghitung tersimpan:
+   * `progress` menyimpan bab mana saja yang selesai, `chapters` menyimpan berapa
+   * menit tiap bab, `reviews` menyimpan ulasannya. Penghitung tersimpan akan
+   * berselisih dengan sumbernya pada penghapusan pertama.
+   */
+  async getReaderStats(): Promise<ReaderStats> {
+    const userId = currentUserId()
+    const progress = await db.progress.where('userId').equals(userId).toArray()
+
+    const selesai = new Set(progress.flatMap((p) => p.finishedChapterIds))
+    let menit = 0
+    for (const id of selesai) {
+      menit += (await db.chapters.get(id))?.readMinutes ?? 0
+    }
+
+    return {
+      // Cerita yang **benar-benar dibaca**, bukan yang sekadar dibuka: satu bab
+      // selesai adalah ambang terendah yang masih jujur disebut "dibaca".
+      storiesRead: progress.filter((p) => p.finishedChapterIds.length > 0).length,
+      hoursRead: Math.round(menit / 60),
+      reviewCount: await db.reviews.where('userId').equals(userId).count(),
+    }
+  },
+
   /**
    * Isi perpustakaan · FR-DETAIL-13. Ditulis lebih awal karena tombol "+ Simpan"
    * di halaman lihat-semua perlu tahu cerita mana yang **sudah** tersimpan —
@@ -98,7 +123,7 @@ export const onboardingHandlers: Pick<
    * dan tempatnya nanti di pengaturan.
    */
   async hideStory(storyId: string): Promise<void> {
-    const prefs = await prefsOf(currentUserId())
+    const prefs = await readerPrefsOf(currentUserId())
     if (prefs.hiddenStoryIds.includes(storyId)) return
     await db.readerPrefs.put({
       ...prefs,
@@ -154,7 +179,7 @@ export const onboardingHandlers: Pick<
   },
 
   async getReaderPrefs(): Promise<ReaderPrefs> {
-    return prefsOf(currentUserId())
+    return readerPrefsOf(currentUserId())
   },
 
   /**
@@ -162,7 +187,7 @@ export const onboardingHandlers: Pick<
    * onboarding selesai (FR-AUTH-11). Yang dilewati hanya mengirim daftar kosong.
    */
   async finishOnboarding(genres: string[]): Promise<ReaderPrefs> {
-    const current = await prefsOf(currentUserId())
+    const current = await readerPrefsOf(currentUserId())
     const prefs: ReaderPrefs = {
       ...current,
       userId: currentUserId(),

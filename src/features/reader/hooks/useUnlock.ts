@@ -45,6 +45,16 @@ export function useUnlockChapter(storyId: string | undefined, chapterId: string 
       void queryClient.invalidateQueries({ queryKey: ['wallet'] })
       void queryClient.invalidateQueries({ queryKey: ['ad-quota'] })
       void queryClient.invalidateQueries({ queryKey: ['unlock', 'options', chapterId] })
+      /*
+       * **Preferensi ikut dibatalkan.** `unlockChapter` bisa membawa
+       * `enableAutoUnlock` dan `auto`, dan keduanya menulis ke `readerPrefs` di
+       * server. Tanpa baris ini izinnya tersimpan tetapi layar tidak pernah
+       * tahu — baris status "buka otomatis aktif" tidak muncul, dan pembaca
+       * dimintai persetujuan yang sama lagi di bab berikutnya.
+       */
+      void queryClient.invalidateQueries({ queryKey: ['reader', 'prefs'] })
+      // Penghitungnya baru saja naik, jadi tawaran bundelnya bisa berubah.
+      void queryClient.invalidateQueries({ queryKey: ['bundle-offer'] })
     },
   })
 }

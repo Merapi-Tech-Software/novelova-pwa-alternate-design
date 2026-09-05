@@ -53,8 +53,8 @@ describe('ringkasan & pintu masuk penghasilan · FR-STUDIO-01 · FR-EARN-10', ()
     expect(labels).toEqual(['Story', 'Dibaca', 'Pengikut', 'Koin'])
 
     expect(screen.getByRole('link', { name: /Koin/ })).toHaveAttribute('href', '/penulis/analitik')
-    expect(screen.getByRole('link', { name: 'Penghasilan & Pencairan' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Riwayat Cetak/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Penghasilan/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Riwayat cetak/ })).toBeInTheDocument()
   })
 })
 

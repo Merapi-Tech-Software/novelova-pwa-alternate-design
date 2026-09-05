@@ -12,6 +12,7 @@ import { Input, Select, TextArea } from '@/components/ui/Field'
 import { Switch } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { formatDateTime } from '@/lib/format'
 import { STORY_SYNOPSIS_MAX, STORY_SYNOPSIS_MIN, STORY_TITLE_MAX } from '@/lib/limits'
 import { CoverField } from '../components/CoverField'
@@ -294,9 +295,33 @@ function FormBody({ mode, storyId, initial, chapterCount, readers, buyers }: For
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pt-4 pb-10">
+      {/*
+        **Garis progres empat segmen** (`7k`). Formulir ini lima section panjang,
+        dan tanpa penanda kemajuan penulis tidak punya cara tahu ia di mana —
+        satu-satunya isyarat yang tersisa adalah panjang bilah gulir.
+
+        Segmennya menandai **section yang sudah dilewati**, dihitung dari kolom
+        yang sudah terisi, bukan dari langkah yang diklik: formulir ini satu
+        halaman panjang, bukan wizard, jadi "langkah" di sini berarti sejauh
+        mana isinya lengkap.
+      */}
+      <div aria-hidden className="-mt-1 mb-4 flex gap-1.5">
+        {[
+          form.title.trim() !== '',
+          form.synopsis.trim() !== '',
+          form.tags.length > 0,
+          form.penName.trim() !== '',
+        ].map((sudah, i) => (
+          <span
+            key={String(i)}
+            className={cx('h-0.5 flex-1 rounded-nv-pill', sudah ? 'bg-nv-gold-line' : 'bg-nv-line')}
+          />
+        ))}
+      </div>
+
       {/* Tanpa `<h1>` sendiri — `TopBarLayout` sudah merendernya. */}
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <p className="min-w-0 text-body text-nv-muted">
+        <p className="min-w-0 font-display text-card text-nv-text-2">
           {mode === 'baru' ? t('storyForm.subtitleNew') : t('storyForm.subtitleEdit')}
         </p>
         {/* Dua tombol simpan, atas dan bawah — formulir ini panjang, dan
@@ -668,7 +693,10 @@ function FormBody({ mode, storyId, initial, chapterCount, readers, buyers }: For
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="pt-6">
-      <h2 className="font-display text-section font-bold text-nv-text">{title}</h2>
+      {/* Kepala section 9,5px + garis (`7k`), bukan judul serif besar: di
+          formulir, kepala section memisahkan kelompok kolom — ia label, bukan
+          judul yang dibaca. */}
+      <h2 className="nv-section-label border-nv-line border-b pb-1.5">{title}</h2>
       <div className="grid grid-cols-1 gap-4 pt-3">{children}</div>
     </section>
   )

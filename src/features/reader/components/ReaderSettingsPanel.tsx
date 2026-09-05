@@ -48,12 +48,12 @@ export function ReaderSettingsPanel({ open, onClose }: { open: boolean; onClose:
           label={t('reader.darkTheme')}
           description={t('reader.darkThemeHint')}
         />
-        <Switch
-          checked={settings.autoUnlock}
-          onChange={settings.toggleAutoUnlock}
-          label={t('reader.autoUnlock')}
-          description={t('reader.autoUnlockHint')}
-        />
+        {/*
+          Sakelar buka-otomatis **tidak ada di sini lagi** (R4b, §1.19).
+          Izinnya per cerita dan diminta di gerbang babnya, tempat pembaca
+          benar-benar memutuskan — dua sakelar untuk satu hal saling
+          membingungkan, dan yang global melanggar aturan struktur #5.
+        */}
       </div>
     </fieldset>
   )

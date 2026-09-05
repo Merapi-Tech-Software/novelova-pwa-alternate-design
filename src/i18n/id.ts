@@ -8,6 +8,7 @@
  * Teks panjang yang berupa **konten** (legal, FAQ, kategori bantuan) ada di
  * `content.ts`, bukan di sini.
  */
+import { formatCompactCoin } from '@/lib/coin'
 import { formatNumber } from '@/lib/format'
 
 export const id = {
@@ -39,6 +40,27 @@ export const id = {
     authorCheckFailedSafe: 'Naskah dan penghasilanmu tidak berubah.',
   },
 
+  profile: {
+    label: 'Profil',
+    settings: 'Pengaturan',
+    since: (tahun: number) => `Pembaca sejak ${tahun}`,
+    edit: 'Sunting',
+    coinLabel: 'Koin kamu',
+    vouchers: (n: number) => (n > 0 ? `${n} voucher aktif` : 'Belum ada voucher aktif'),
+    topUp: 'Isi Koin',
+    statStories: 'Cerita dibaca',
+    statHours: 'Jam baca',
+    statReviews: 'Ulasan',
+    account: 'Akun',
+    transactions: 'Riwayat transaksi',
+    myVouchers: 'Voucher saya',
+    readerSettings: 'Pengaturan baca',
+    notifications: 'Notifikasi',
+    myWorks: 'Karya saya',
+    help: 'Bantuan',
+    signOut: 'Keluar',
+  },
+
   reader: {
     // Putaran 7 · ruang baca Type A.
     chapterLabel: (n: number) => `Bab ${n}`,
@@ -52,8 +74,14 @@ export const id = {
     fontSize: 'Ukuran huruf',
     darkTheme: 'Tema gelap',
     darkThemeHint: 'Berlaku di seluruh aplikasi, bukan hanya halaman ini.',
-    autoUnlock: 'Buka bab otomatis',
-    autoUnlockHint: 'Bab berbayar berikutnya dibuka sendiri saat kamu sampai di ujung bab.',
+    /** Ditawarkan **di gerbang bab**, bukan di panel pengaturan (§1.19). */
+    autoUnlock: 'Buka otomatis untuk cerita ini',
+    autoUnlockHint: 'Bab berbayar berikutnya terbuka sendiri sampai koinmu habis.',
+    autoUnlockOn: 'Buka otomatis menyala untuk cerita ini.',
+    autoUnlockOff: 'Matikan',
+    autoUnlockStopped: 'Buka otomatis dimatikan untuk cerita ini.',
+    unlockedAuto: (coins: number) =>
+      `Chapter dibuka otomatis · −${coins.toLocaleString('id-ID')} koin`,
     listen: 'Dengarkan',
     listenSoon: 'Pembacaan suara menyusul.',
     balance: 'Saldo koin',
@@ -69,26 +97,63 @@ export const id = {
 
     // ── gerbang bab terkunci · FR-READ-06/07/17/18 ────────────────────────
     gateTitle: 'Lanjutkan membaca bab ini',
-    gateBody: 'Awal babnya sudah kamu lihat. Pilih salah satu cara di bawah untuk membuka sisanya.',
-    optionSingle: 'Buka bab ini',
-    optionBundle: (n: number) => `Buka ${n} bab sekaligus`,
-    optionFull: 'Baca sampai tamat',
+    gateBadge: 'Premium Continuation',
+    gateFrom: (n: number) => `mulai ${formatCompactCoin(n)} koin + bonus`,
+    gateBody: 'Bagian di bawah tersensor. Pilih cara membuka chapter untuk melanjutkan membaca.',
+    gatePreviewLabel: 'Pratinjau tersensor',
+    gateBalance: 'Saldo kamu',
+    gateBalanceCoins: (n: number) => `${formatCompactCoin(n)} koin`,
+    optionSingle: 'Chapter ini',
+    optionSingleSub: (n: number) => `Bab ${n} saja`,
+    optionBundle: (n: number) => `${n} chapter`,
+    optionPerChapter: (n: number) => `${formatCompactCoin(n)} / bab`,
+    optionFull: 'Buka sampai tamat',
+    optionFullSub: (n: number) => `${formatNumber(n)} bab tersisa`,
     optionAd: 'Tonton iklan',
-    optionAdQuota: (left: number) => `Sisa ${left} kali hari ini`,
-    optionAdEmpty: 'Kuota iklan hari ini habis',
+    optionAdSub: 'Gratis, buka satu bab',
+    optionAdQuota: (left: number) => `${left}/3 hari ini`,
+    optionAdEmpty: 'Kuota habis',
+    lanjutanTerkunci: 'Lanjutan Terkunci',
+    chapterOpened: 'Chapter terbuka',
+    spent: (n: number) => `−${formatCompactCoin(n)} koin`,
     saving: (pct: number) => `Hemat ${pct}%`,
     unlocking: 'Membuka…',
     unlocked: 'Bab terbuka. Selamat membaca.',
 
-    // ── saldo kurang · FR-READ-17 ───────────────────────────────────
+    // ── tawaran bundel · FR-READ-19 · §1.21 ─────────────────────────
+    bundleTitle: (n: number) => `Sudah ${n} bab terbuka otomatis`,
+    bundleBody: (bab: number, bundel: number, satuan: number) =>
+      `Ambil ${bab} bab berikutnya sekaligus ${formatNumber(bundel)} koin — satuannya ${formatNumber(satuan)} koin.`,
+    bundleTake: (n: number) => `Ambil bundel · ${formatNumber(n)} koin`,
+    bundleDismiss: 'Tutup tawaran',
+    bundleTaken: 'Bundel diambil. Bab berikutnya sudah terbuka.',
+
+    // ── saldo kurang · FR-READ-17 · mockup `7z` ─────────────────────
     shortTitle: 'Saldo koinmu belum cukup',
     shortBy: (n: number) => `Kurang ${formatNumber(n)} koin`,
+    shortNeed: (bab: number, harga: number, saldo: number) =>
+      `Bab ${bab} butuh ${formatNumber(harga)} koin · saldo kamu ${formatNumber(saldo)} koin`,
     shortBalance: (n: number) => `Saldo sekarang ${formatNumber(n)} koin`,
     shortSafe: 'Tidak ada koin yang terpotong. Babnya tetap menunggu di sini.',
+    shortTopUpSub: (n: number) => `Paket terkecil yang cukup untuk kurang ${formatNumber(n)} koin`,
+    shortVoucher: 'Pakai voucher',
+    shortVoucherSub: (n: number) =>
+      n > 0
+        ? `${n} voucher aktif · satu bab gratis bisa dipakai di sini`
+        : 'Belum ada voucher aktif',
+    shortCancelNote:
+      'Kalau kamu membatalkan, kamu kembali ke bab ini dengan gerbangnya masih terbuka.',
     topUp: 'Isi koin',
 
     // ── iklan · FR-READ-18 ───────────────────────────────────────
-    adTitle: 'Iklan sebentar, lalu babnya terbuka',
+    adLabel: (bab: number) => `Iklan · Bab ${bab}`,
+    adBrand: 'Novelova Premium',
+    adBrandSub: 'Baca tanpa iklan, 7 hari pertama gratis',
+    adRule:
+      'Kuota baru dipotong setelah iklan habis. Kalau kamu batalkan di tengah, bab tetap terkunci dan kuota tidak berkurang.',
+    adQuotaLabel: 'Kuota hari ini',
+    adPayInstead: (n: number) => `Pakai ${formatNumber(n)} koin`,
+    adTitle: 'Bab dibuka setelah tayangan selesai.',
     adCountdown: (s: number) => `${s} detik lagi`,
     adDone: 'Selesai — bab dibuka',
     adCancel: 'Batalkan',
@@ -683,9 +748,13 @@ export const id = {
   },
 
   studio: {
-    title: 'Studio Penulis',
+    navEarnings: 'Penghasilan',
+    navSchedule: 'Jadwal terbit',
+    navReview: 'Antrean tinjauan',
+    navPrint: 'Riwayat cetak',
+    title: 'Studio penulis',
     subtitle: 'Kelola karyamu, dari draf sampai terbit.',
-    newStory: 'Buat Story Baru',
+    newStory: 'Buat story baru',
     statStories: 'Story',
     statViews: 'Dibaca',
     statSubs: 'Pengikut',

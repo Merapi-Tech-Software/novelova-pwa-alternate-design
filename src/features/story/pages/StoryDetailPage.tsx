@@ -109,7 +109,7 @@ export default function StoryDetailPage() {
           type="button"
           aria-expanded={expanded}
           onClick={() => setExpanded((on) => !on)}
-          className="pt-1 text-caption font-semibold text-nv-accent underline underline-offset-4"
+          className="nv-tap text-caption font-semibold text-nv-accent underline underline-offset-4"
         >
           {expanded ? t('story.readLess') : t('story.readMore')}
         </button>
@@ -127,7 +127,10 @@ export default function StoryDetailPage() {
         <Button variant="secondary" onClick={() => setRating(true)}>
           {myRating.data ? t('social.rated')(myRating.data.stars) : t('social.rate')}
         </Button>
-        <Link to={`/cerita/${detail.id}/ulasan`} className="text-body text-nv-accent underline">
+        <Link
+          to={`/cerita/${detail.id}/ulasan`}
+          className="nv-tap text-body text-nv-accent underline"
+        >
           {t('social.allReviews')}
         </Link>
         {/* Tombol Report prototipe tidak pernah punya handler (FR-SOCIAL-07);

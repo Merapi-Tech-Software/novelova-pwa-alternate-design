@@ -1,44 +1,70 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * Alur kritis #2 · **M2** · architecture.md §14.
+ * Alur kritis #2 · **M2** · architecture.md §14 · diperbarui di **R4**.
  *
- * Bab terkunci → saldo kurang → isi koin membawa konteksnya → bayar → **kembali
- * ke bab yang sama**, dan babnya terbuka. Inilah loop ekonomi yang menutup;
- * kalau ia putus, aplikasinya tidak bisa didemokan sebagai produk.
+ * Bab terkunci → **buka otomatis mengalir sendiri** → koin habis → isi koin
+ * membawa konteksnya → bayar → **kembali ke bab yang sama**, dan babnya terbuka.
+ * Inilah loop ekonomi yang menutup; kalau ia putus, aplikasinya tidak bisa
+ * didemokan sebagai produk.
  *
- * Saldo awal akun contoh 15.300 koin, jadi dua pembelian di awal bukan basa-basi
- * — itulah cara sah menurunkan saldo ke bawah harga satu bab lewat antarmuka,
- * tanpa menyentuh basis data dari luar.
+ * **Bentuknya berubah di R4** (`architecture.md` §1.19 & §1.21). Dulu tiap bab
+ * dibeli satu per satu lewat gerbangnya masing-masing; sekarang gerbang muncul
+ * **sekali per cerita**, izinnya tercentang bawaan, dan bab berbayar berikutnya
+ * terbuka sendiri sampai saldonya tidak cukup. Itu sebabnya test ini berjalan
+ * maju sampai lembar saldo kurang muncul, alih-alih menghitung bab di muka:
+ * jumlah bab yang muat di saldo 15.300 bergantung harga tiap bab, dan angka yang
+ * ditulis di sini akan lapuk pada perubahan harga berikutnya.
  */
-test('bab terkunci → saldo kurang → isi koin → kembali ke bab yang sama', async ({ page }) => {
+test('bab terkunci → buka otomatis → koin habis → isi koin → kembali ke bab yang sama', async ({
+  page,
+}) => {
+  const gerbang = page.getByLabel('Locked continuation gate')
+
   await page.goto('/cerita/s1/bab/s1-c8')
+  await expect(gerbang).toBeVisible()
 
-  // Gerbang bab: tiga pilihan berbayar, angkanya dari server.
-  await expect(page.getByText('Lanjutkan membaca bab ini')).toBeVisible()
+  // Izinnya tercentang bawaan — pembaca menyetujuinya sekali, di sini.
+  await expect(page.getByRole('switch', { name: 'Buka otomatis untuk cerita ini' })).toBeChecked()
 
-  // 15.300 − 12.000 = 3.300.
-  await page.getByRole('button', { name: /Buka 10 bab sekaligus/ }).click()
-  await expect(page.getByText('Lanjutkan membaca bab ini')).toBeHidden()
+  // 15.300 − 12.000 = 3.300, dan izin buka-otomatis ikut menyala.
+  await page.getByRole('button', { name: /10 chapter/ }).click()
+  await expect(gerbang).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Matikan' })).toBeVisible()
 
-  // Dua bab satuan lagi: 3.300 − 1.500 − 1.500 = 300 koin.
-  for (const chapter of ['s1-c20', 's1-c21']) {
-    await page.goto(`/cerita/s1/bab/${chapter}`)
-    await page.getByRole('button', { name: /Buka bab ini/ }).click()
-    await expect(page.getByText('Lanjutkan membaca bab ini')).toBeHidden()
+  /*
+   * Bab-bab berikutnya terbuka **sendiri**, tanpa satu pun ketukan, sampai
+   * saldonya tidak cukup — dan saat itu lembar `7z` yang muncul, bukan diam.
+   * Batas 30 hanya penjaga supaya kegagalan berhenti sebagai kegagalan, bukan
+   * sebagai loop tak berujung.
+   */
+  const kurang = page.getByText(/^Kurang /)
+  let sampai: string | null = null
+
+  for (let nomor = 20; nomor < 50 && sampai === null; nomor++) {
+    const id = `s1-c${nomor}`
+    await page.goto(`/cerita/s1/bab/${id}`)
+    await page.waitForLoadState('networkidle')
+
+    if (await kurang.isVisible().catch(() => false)) {
+      sampai = id
+      break
+    }
+    // Bab yang tidak berbayar tidak membuktikan apa pun — dilewati.
   }
 
-  // Bab 22 berharga 1.800 — di atas saldo yang tersisa.
-  await page.goto('/cerita/s1/bab/s1-c22')
-  await page.getByRole('button', { name: /Buka bab ini/ }).click()
+  expect(sampai, 'saldo tidak pernah habis sampai bab ke-50').not.toBeNull()
 
-  // Lembar saldo kurang menyatakan kekurangannya dan menawarkan isi koin.
-  await expect(page.getByText(/Kurang \d/)).toBeVisible()
-  await page.getByRole('link', { name: 'Isi koin' }).click()
+  // Lembar saldo kurang menawarkan **tiga** jalan keluar, bukan satu buntu.
+  const lembar = page.getByRole('dialog')
+  await expect(lembar.getByRole('link', { name: /Isi koin/ })).toBeVisible()
+  await expect(lembar.getByRole('button', { name: /Pakai voucher/ })).toBeVisible()
+
+  await lembar.getByRole('link', { name: /Isi koin/ }).click()
 
   // Konteksnya ikut: kekurangan disebut, dan paket terkecil yang mencukupi
   // sudah tersorot beserta keterangannya.
-  await expect(page).toHaveURL(/\/koin\?return=.*chapter_id=s1-c22&need=/)
+  await expect(page).toHaveURL(new RegExp(`/koin\\?return=.*chapter_id=${sampai}&need=`))
   await expect(page.getByText('Cukup untuk membuka bab ini')).toBeVisible()
 
   await page.getByRole('button', { name: /^QRIS/ }).click()
@@ -52,9 +78,9 @@ test('bab terkunci → saldo kurang → isi koin → kembali ke bab yang sama', 
 
   // Tombol utamanya menyesuaikan konteks — bukan "Mulai baca" ke beranda.
   await page.getByRole('button', { name: 'Lanjutkan membaca' }).click()
-  await expect(page).toHaveURL(/\/cerita\/s1\/bab\/s1-c22$/)
+  await expect(page).toHaveURL(new RegExp(`/cerita/s1/bab/${sampai}$`))
 
-  // Dan sekarang babnya benar-benar bisa dibuka.
-  await page.getByRole('button', { name: /Buka bab ini/ }).click()
-  await expect(page.getByText('Lanjutkan membaca bab ini')).toBeHidden()
+  // Dan sekarang babnya benar-benar terbuka — otomatis, karena izinnya masih
+  // menyala dan saldonya sudah cukup lagi.
+  await expect(gerbang).toBeHidden()
 })

@@ -26,7 +26,6 @@ describe('pengaturan baca · FR-READ-03 · FR-READ-04', () => {
     expect(merged.darkTheme).toBe(true)
     // Kunci yang belum pernah tersimpan tetap punya nilai.
     expect(merged.fontSize).toBeGreaterThanOrEqual(READER_FONT_MIN)
-    expect(merged.autoUnlock).toBe(false)
   })
 
   it('ukuran huruf di luar rentang dari penyimpanan ikut dijepit', () => {
@@ -39,7 +38,7 @@ describe('pengaturan baca · FR-READ-03 · FR-READ-04', () => {
   })
 
   it('menempel ke elemen akar, jadi berlaku sebelum React merender', () => {
-    applyReaderSettings({ fontSize: 21, darkTheme: true, autoUnlock: false })
+    applyReaderSettings({ fontSize: 21, darkTheme: true })
 
     expect(document.documentElement.style.getPropertyValue('--reader-font-size')).toBe('21px')
     expect(document.documentElement.dataset.theme).toBe('dark')

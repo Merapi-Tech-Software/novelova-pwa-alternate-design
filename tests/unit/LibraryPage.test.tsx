@@ -47,6 +47,7 @@ beforeEach(async () => {
     (a, b) => a.number - b.number,
   )
   await db.progress.put({
+    scrollByChapter: {},
     id: `${CURRENT_USER_ID}-s1`,
     userId: CURRENT_USER_ID,
     storyId: 's1',

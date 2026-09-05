@@ -9,6 +9,7 @@ import type { NovelovaApi } from '../../client'
 import type { LoginInput, RegisterInput, ResetRequest, Session } from '../../contracts'
 import { ApiError, INTERNAL_CODES, VISIBLE_CODES } from '../../errors'
 import { db } from '../db'
+import { emptyReaderPrefs } from '../defaults'
 import { CURRENT_USER_ID } from '../seed'
 
 /**
@@ -205,7 +206,7 @@ export const sessionHandlers: Pick<
       penName: null,
     })
     await db.wallets.add({ userId: id, balance: 0, bonus: 0, updatedAt: now })
-    await db.readerPrefs.add({ userId: id, genres: [], hiddenStoryIds: [], onboardedAt: null })
+    await db.readerPrefs.add(emptyReaderPrefs(id))
 
     writeCookie({ userId: id, remember: true, lastUsedAt: now })
     return issue(id)

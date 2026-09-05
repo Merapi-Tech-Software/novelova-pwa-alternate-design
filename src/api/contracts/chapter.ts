@@ -114,6 +114,22 @@ export const UnlockInputSchema = IdempotentSchema.extend({
   source: OwnershipSourceSchema,
   /** Diisi hanya untuk `source: 'voucher'`. */
   voucherId: IdSchema.optional(),
+  /**
+   * Beli bab **dan** nyalakan izin buka-otomatis cerita ini dalam satu
+   * panggilan (FR-READ-09).
+   *
+   * Satu panggilan, bukan dua: di gerbang itu memang satu tindakan pembaca, dan
+   * memecahnya membuka keadaan "koin terpotong, izin gagal tersimpan" — yang
+   * berarti pembaca membayar lalu dimintai persetujuan yang sama lagi di bab
+   * berikutnya.
+   */
+  enableAutoUnlock: z.boolean().optional(),
+  /**
+   * Menandai pembukaan yang dilakukan **aplikasi sendiri**, bukan pembaca.
+   * Satu-satunya gunanya menaikkan `autoUnlockCounts` — harga, potongan, dan
+   * kepemilikannya persis sama.
+   */
+  auto: z.boolean().optional(),
 })
 export type UnlockInput = z.infer<typeof UnlockInputSchema>
 
@@ -144,6 +160,28 @@ export const UnlockResultSchema = z.object({
   alreadyOwned: z.boolean(),
 })
 export type UnlockResult = z.infer<typeof UnlockResultSchema>
+
+/**
+ * Tawaran bundling setelah sepuluh bab dibuka otomatis · FR-READ-19 · §1.21.
+ *
+ * **Server yang memutuskan kapan ia muncul**, bukan layar: ambangnya kebijakan
+ * (`SERVER_CONFIG.bundleOfferAfter`) dan angka hematnya harus dari harga bab
+ * sungguhan. `prd_00` §6 dan `prd_05` §2 sama-sama menulis "hemat 5%" padahal
+ * sepuluh bab seed berjumlah 17.200 melawan bundel 12.000 — **30%**. Persentase
+ * tetap di layar akan berbohong pada tiap cerita yang harganya berbeda.
+ */
+export const BundleOfferSchema = z.object({
+  storyId: IdSchema,
+  /** Harga bundelnya. */
+  coins: z.number().int().positive(),
+  /** Berapa bab yang ikut terbuka — bisa kurang dari sepuluh di ujung cerita. */
+  chapterCount: z.number().int().positive(),
+  /** Total bila bab-bab itu dibeli satuan — dasar angka hematnya. */
+  individualCoins: z.number().int().nonnegative(),
+  /** Berapa bab yang sudah dibuka otomatis di cerita ini saat tawaran ini lahir. */
+  autoUnlockedCount: z.number().int().nonnegative(),
+})
+export type BundleOffer = z.infer<typeof BundleOfferSchema>
 
 /** Dikirim maksimal sekali per 10 detik (`PROGRESS_THROTTLE_MS`). FR-READ-16. */
 export const ProgressInputSchema = z.object({

@@ -123,10 +123,7 @@ export function RateSheet({ storyId, open, onClose, myReview }: RateSheetProps) 
       {blocked && (
         <div className="mt-3 rounded-nv-md border border-nv-danger p-3">
           <p className="text-body text-nv-danger">{blocked}</p>
-          <Link
-            to={`/cerita/${storyId}`}
-            className="inline-block pt-1 text-body text-nv-accent underline"
-          >
+          <Link to={`/cerita/${storyId}`} className="nv-tap text-body text-nv-accent underline">
             {t('social.needReadCta')}
           </Link>
         </div>

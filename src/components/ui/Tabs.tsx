@@ -67,7 +67,10 @@ export function Tabs<T extends string>({ items, value, onChange, label, classNam
               // `-mb-px` menaruh garis bawah tab tepat di atas garis tablist,
               // bukan 1px di bawahnya — tanpa itu keduanya terlihat sebagai dua
               // garis kembar.
-              '-mb-px shrink-0 border-b-2 px-0.5 pt-1 pb-2.5 text-body transition',
+              // Kotak sentuh 44px lewat `::after`, sama seperti tombol `sm`
+              // (R7): tingginya sendiri 38px, dan menaikkan padding akan
+              // menebalkan garis tab yang justru jadi ciri putaran 7.
+              "-mb-px relative shrink-0 border-b-2 px-0.5 pt-1 pb-2.5 text-body transition after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
               selected
                 ? 'border-nv-accent font-bold text-nv-text'
                 : 'border-transparent font-medium text-nv-muted hover:text-nv-text-2',

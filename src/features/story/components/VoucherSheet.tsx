@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/Button'
 import { Confetti } from '@/components/ui/Confetti'
 import { Input } from '@/components/ui/Field'
 import { Sheet } from '@/components/ui/Modal'
+import { useVouchers } from '@/hooks/useVouchers'
 import { t } from '@/i18n/t'
 import { cx } from '@/lib/cx'
 import { formatDate } from '@/lib/format'
-import { useApplyVoucher, useRedeemAndApply, useVouchers } from '../hooks/useVoucher'
+import { useApplyVoucher, useRedeemAndApply } from '../hooks/useVoucher'
 
 /** Kode voucher tidak pernah lebih panjang dari ini (FR-DETAIL-09). */
 const CODE_MAX = 20

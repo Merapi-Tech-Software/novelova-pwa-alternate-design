@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/api/client'
 import { db } from '@/api/mock/db'
+import { emptyReaderPrefs } from '@/api/mock/defaults'
 import { CURRENT_USER_ID } from '@/api/mock/seed'
 
 beforeEach(async () => {
   await db.readerPrefs.put({
-    userId: CURRENT_USER_ID,
+    ...emptyReaderPrefs(CURRENT_USER_ID),
     genres: ['Mystery', 'Fantasy'],
-    hiddenStoryIds: [],
     onboardedAt: new Date().toISOString(),
   })
 })
@@ -145,9 +145,8 @@ describe('favorit onboarding memengaruhi beranda · FR-AUTH-11', () => {
 
   it('genre favorit naik ke depan di dalam section, tanpa membuang yang lain', async () => {
     await db.readerPrefs.put({
-      userId: CURRENT_USER_ID,
+      ...emptyReaderPrefs(CURRENT_USER_ID),
       genres: ['Fantasy'],
-      hiddenStoryIds: [],
       onboardedAt: new Date().toISOString(),
     })
 
@@ -165,9 +164,8 @@ describe('favorit onboarding memengaruhi beranda · FR-AUTH-11', () => {
 
   it('tab yang dipilih mengalahkan favorit, bukan menumpuk di atasnya', async () => {
     await db.readerPrefs.put({
-      userId: CURRENT_USER_ID,
+      ...emptyReaderPrefs(CURRENT_USER_ID),
       genres: ['Fantasy'],
-      hiddenStoryIds: [],
       onboardedAt: new Date().toISOString(),
     })
 

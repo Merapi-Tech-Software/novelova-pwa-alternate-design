@@ -576,7 +576,7 @@ Type B **adalah** Fase 5b. Gerbang per cerita, `Buka otomatis untuk cerita ini` 
 
 ### 1.21 Auto-unlock jadi alur utama, dan tawaran bundling setelah sepuluh bab
 
-**Permintaan produk 4 September**, diputuskan lewat diskusi. Belum diimplementasikan saat catatan ini ditulis; rencananya `todo.md` **Fase R4**.
+**Permintaan produk 4 September**, diputuskan lewat diskusi. **Dikerjakan di R4** (5 September) — seluruh 57 kotaknya selesai; catatan "belum diimplementasikan" di bawah sudah tidak berlaku dan disimpan apa adanya sebagai riwayat keputusan.
 
 **Empat dari lima butir permintaannya sudah jadi FR-READ-09 versi revisi** dan tidak berubah sama sekali: gerbang di bab berbayar pertama tiap cerita · sakelar per cerita tercentang default · bab berikutnya terbuka sendiri sampai saldo tidak cukup · pindah cerita mengulang alurnya. Bagian ini mencatat **yang benar-benar baru** dan tiga temuan yang muncul saat jalur uangnya ditelusuri.
 
@@ -690,6 +690,37 @@ Sakelar global auto-unlock dicabut seluruhnya — sisa satu sakelar akan bersain
 `stores/readerSettings.ts` (kolom `autoUnlock`) · `lib/coin.ts:86` (`READER_DEFAULTS.autoUnlock`) · `features/reader/components/ReaderSettingsPanel.tsx:52-55` · `i18n/id.ts:47-48` (`reader.autoUnlock`, `reader.autoUnlockHint`) · `tests/unit/readerSettings.test.ts`.
 
 
+
+#### Yang berubah saat R4 benar-benar dikerjakan
+
+Tiga hal tidak seperti yang direncanakan, dan ketiganya lebih baik dicatat
+daripada dibiarkan jadi selisih diam antara rencana dan kode:
+
+**1. Bentuk awal `ReaderPrefs` jadi satu pabrik, bukan tiga tempat yang diisi
+satu per satu.** Rencananya menambal `seed.ts`, `handlers/session.ts`, dan
+fallback `handlers/onboarding.ts`. Jebakannya justru pengulangannya — dan ada
+tempat **keempat** yang tidak disebut rencana: berkas test. `emptyReaderPrefs()`
+di `api/mock/defaults.ts` sekarang satu-satunya bentuk awalnya.
+
+**2. `useUnlockChapter` harus ikut membatalkan cache preferensi.** Tidak ada di
+rencana, dan ketahuan hanya karena alurnya **ditekan** di e2e: izinnya tersimpan
+di server, tetapi baris status "buka otomatis aktif" tidak pernah muncul karena
+`['reader','prefs']` tidak dibatalkan. Gejalanya persis seperti izin yang gagal
+tersimpan, padahal yang gagal cuma kabarnya.
+
+**3. Bagian gratis bab terkunci dibaca normal, bukan ikut diburamkan.** `7x`
+menggambarkan satu paragraf terbaca lalu blok tersensor; implementasi pertama
+memburamkan `preview` seluruhnya. Halaman yang isinya blok abu-abu seluruhnya
+terbaca sebagai kerusakan, bukan sebagai batas berbayar. Seam mengirim dua
+paragraf: yang pertama dibaca, sisanya tersensor.
+
+**Dan satu angka yang layak dilihat:** lencana hemat "Buka sampai tamat" di data
+contoh berbunyi **81%**, bukan 10% seperti `7x` menuliskannya. Itu bukan cacat —
+itu `individualCoins` yang bekerja: 113 bab satuan melawan satu harga paket.
+Persentase tetap di layar akan berbohong pada tiap cerita berharga beda, dan
+inilah bukti yang bisa dilihat.
+
+---
 
 ### 1.22 Beranda disusun ulang — tiga section global, semua mendatar, sampul 80px
 
@@ -915,6 +946,134 @@ Dipilih dari lebar tersempit yang wajib lulus (`CLAUDE.md` §2). Pada lebar kont
 judul jadi satu baris terpotong dan membuat `★ rating` + jumlah baca tidak lagi
 muat berdampingan. 80px satu-satunya yang mengubah kesan tanpa membuang
 metadata.
+
+
+### 1.23 Target ketuk 44px tanpa mengubah ukuran yang terlihat
+
+Aturan `CLAUDE.md` §2 butir 8 menuntut tiap target ketuk ≥44px. Ukuran `sm` di
+`Button`/`IconButton` tingginya **36px**, dan itulah ukuran baris aksi komentar,
+bilah melayang ruang baca, baris aksi studio, dan hampir tiap lembar.
+
+**Menaikkannya ke 44px bukan pilihan**: itu menghapus perbedaan `sm` dan `md`,
+dan perbedaan itu yang dipakai seluruh aplikasi untuk membedakan aksi utama dari
+aksi sekunder. Yang diperluas **kotak sentuhnya**, lewat `::after` transparan:
+36 + 4 + 4 = 44. Jarak antar tombol minimal `gap-2` (8px), jadi perluasan 4px
+tiap sisi bersentuhan tetapi tidak pernah bertindih.
+
+Tiga tempat memakainya, dan ketiganya perlu karena bentuknya berbeda:
+
+| Tempat | Cara |
+|---|---|
+| `Button` `sm`, `Tabs` | `::after` diperluas **vertikal** — lebarnya sudah cukup |
+| `IconButton` `sm` | `::after` diperluas **dua arah** — 36×36 → 44×44 |
+| kontrol teks sebaris | utilitas `nv-tap` di `base.css`: `min-height`, `min-width`, dan `::after` penuh |
+
+**Ini tidak bisa diperiksa mata**, dan itu bagian pentingnya: kotak sentuh tidak
+terlihat sama sekali. Penjaganya `tests/e2e/isi-koin-di-hp.spec.ts`, yang membaca
+`getComputedStyle(el, '::after')` dan menghitung kotak efektifnya — mengukur
+`getBoundingClientRect()` saja akan menyatakan tombol `sm` gagal padahal jarinya
+mengenai.
+
+**Sapuan itu langsung menemukan satu yang lolos selama ini:** tautan `See all`
+di tiap kepala section beranda berukuran **38×22**. Ia lolos pemeriksaan pertama
+hanya karena diukur sebelum section-nya selesai dirender — dan `expect.poll`
+yang membuat pengukurannya menunggu tata letak tenang justru yang membuka
+kedoknya.
+
+### 1.24 Posisi baca disimpan per bab, bukan satu angka per cerita
+
+`ReadingProgress.scrollPct` menyimpan posisi bab yang **terakhir** dibaca, dan
+itu benar untuk tombol "Lanjut Baca". Tetapi kembali ke bab yang lebih awal
+selalu mulai dari atas, dan bagi pembaca itu tidak bisa dibedakan dari kehilangan
+tempat.
+
+`scrollByChapter: Record<chapterId, number>` menyimpan satu angka per bab.
+`scrollPct` **tetap ada** dan tetap menunjuk bab terakhir: keduanya menjawab
+pertanyaan berbeda, dan menggabungkannya berarti salah satu pertanyaan berhenti
+terjawab.
+
+**Baris progres yang ditulis sebelum kolom ini ada tidak punya objeknya**, jadi
+pembacaannya memakai `?.` dan `SEED_VERSION` dinaikkan ke 13. Mengindeks
+`undefined` di sana melempar — di halaman yang sedang dibaca.
+
+
+### 1.25 Ruang baca menerus — bab mengalir, bukan berhalaman
+
+**Permintaan produk 5 September, diklarifikasi lewat diskusi.** Ia menimpa
+sebagian §1.21 dan seluruh bentuk navigasi bab yang dibangun di R3b/R4.
+
+Kalimat aslinya:
+
+> *"YANG SAYA MAU DIA BACA TERUS MENERUS SECARA VERTICAL DAN DIKASIH GARIS TIPIS
+> UNTUK TANDAI BAHWA INI SUDAH ADA DI NEXT CHAPTER. TUJUAN SAYA ADALAH INGIN USER
+> TERUS MEMBACA DAN TIDAK SADAR BAHWA KOIN NYA OTOMATIS MEMBUKA CHAPTER YANG
+> TERKUNCI."*
+
+#### Apa yang salah dipahami sebelumnya
+
+R4 membangun auto-unlock sebagai **pembukaan per halaman**: tiap bab punya
+alamatnya sendiri, pembaca menekan `Bab 4 ›` di ujung bab, dan bab berikutnya
+terbuka sendiri di halaman baru. Itu memenuhi kalimat "buka terus menerus sampai
+koin habis" tetapi melewatkan intinya — **perpindahan babnya masih terasa**.
+
+Yang diminta: satu halaman yang mengalir. Bab 6 menyambung bab 5 di bawahnya,
+dipisah garis rambut, tanpa satu pun tombol di antaranya.
+
+#### Empat keputusan, dikonfirmasi lewat pertanyaan langsung
+
+| Hal | Keputusan | Konsekuensi |
+|---|---|---|
+| Jejak potongan koin | **Tidak ada sama sekali** | Menimpa §1.4 di satu titik — lihat di bawah |
+| Pemisah bab | **Garis rambut polos**, tanpa teks | Nomor bab hanya terbaca di bilah atas |
+| Tombol bab sebelumnya/berikutnya | **Dibuang**; URL ikut bab yang terlihat | `history.replaceState`, bukan navigasi |
+| Komentar bab | Mengikuti bab yang terlihat | Jumlahnya ikut berganti saat gulir |
+
+#### Menimpa §1.4: mutasi uang tanpa jejak di layar
+
+§1.4 dan FR-CORE-01 menuntut mutasi uang selalu terlihat, dan R4 memenuhinya
+lewat toast `−1.5rb koin` dan lencana `CHAPTER TERBUKA`. Keduanya **dicabut** di
+sini: mereka justru yang membuat pembaca sadar, dan "tidak sadar" adalah tujuan
+yang dinyatakan.
+
+Yang **tidak** dicabut, dan tidak boleh:
+
+- **Persetujuannya tetap eksplisit.** Gerbang `7x` tetap muncul di bab berbayar
+  pertama tiap cerita, dengan sakelar izin yang bisa dimatikan. Tanpa gerbang
+  itu, ini bukan "tidak sadar" — ini memotong koin tanpa izin.
+- **Baris status `Buka otomatis aktif` beserta tombol `Matikan` tetap ada.**
+  Izin yang memotong koin tanpa tombol mati bukan izin.
+- **Buku besar tetap mencatat tiap potongan**, dan chip saldo tetap membaca
+  angka yang sama dengan seluruh aplikasi.
+- **Saldo habis tetap menghentikan alurnya** dengan lembar `7z`. Itu satu-satunya
+  interupsi yang tersisa, dan ia memang harus menginterupsi.
+
+**Sakelar mode disiapkan sekarang, dipakai nanti.** `READER_UNLOCK_FEEDBACK`
+punya dua nilai: `'none'` (bawaan sekarang) dan `'balance'` (chip saldo ikut
+berubah saat kontrol dibuka, tetap tanpa toast). Satu konstanta, satu tempat
+dibaca — supaya menghidupkannya nanti tidak menuntut menulis ulang alurnya.
+
+#### Yang membuat ini bukan sekadar "gabungkan beberapa halaman"
+
+**1. Bab terkunci punya tiga nasib berbeda di tengah gulir**, dan ketiganya harus
+diputuskan tanpa menghentikan bacaan:
+izin ada + saldo cukup → dibeli diam-diam, isinya disambung ·
+izin belum ada → **gerbang disisipkan sebagai blok**, bukan halaman baru ·
+izin ada + saldo kurang → lembar `7z`, dan ini satu-satunya yang menginterupsi.
+
+**2. URL berganti tanpa navigasi.** `history.replaceState`, bukan `navigate()`:
+yang kedua akan melepas seluruh halaman dan membuang posisi gulirnya — persis
+yang alur ini berusaha hilangkan. Akibatnya tombol kembali peramban tidak
+menyusuri tiap bab yang dilewati, dan itu benar: pembaca tidak "pergi ke" bab 6.
+
+**3. Bab yang terlihat menggerakkan empat hal sekaligus** — judul di bilah atas,
+tombol komentar, progres baca, dan URL. Satu sumber, bukan empat pengamat:
+empat `IntersectionObserver` untuk satu pertanyaan adalah empat tempat yang bisa
+berselisih.
+
+**4. Batas jumlah bab yang dimuat.** Cerita 120 bab yang seluruhnya disambung
+akan menghabiskan memori dan membuat gulirnya tersendat. `ponytail:` dimuat
+maksimal N bab sekaligus, yang paling atas dilepas saat jauh di luar layar —
+virtualisasi penuh baru perlu kalau N terbukti tidak cukup.
 
 
 ---

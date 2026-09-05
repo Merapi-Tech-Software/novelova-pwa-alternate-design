@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/api/client'
 import { db } from '@/api/mock/db'
+import { emptyReaderPrefs } from '@/api/mock/defaults'
 import { CURRENT_USER_ID } from '@/api/mock/seed'
 import { GENRE_TABS } from '@/i18n/content'
 import { ONBOARDING_GENRES_MAX } from '@/lib/limits'
@@ -8,9 +9,8 @@ import { ONBOARDING_GENRES_MAX } from '@/lib/limits'
 /** Akun contoh sudah pernah onboarding; test ini mengulangnya dari nol. */
 beforeEach(async () => {
   await db.readerPrefs.put({
-    userId: CURRENT_USER_ID,
+    ...emptyReaderPrefs(CURRENT_USER_ID),
     genres: [],
-    hiddenStoryIds: [],
     onboardedAt: null,
   })
 })

@@ -818,7 +818,7 @@ Mystery dan CEO "Tamat & Siap Dibaca" **1 cerita**.
 - [x] Sisa kulit yang hanya terlihat dari sudut pandang per halaman: sinopsis & judul voucher jadi serif, badan ulasan `RateSheet` jadi serif di wadah `--nv-line-soft`, dan halaman komentar mencetak **rujukan babnya** · `P1` · `[LUAR]`
   ↳ Ketiganya tidak ada di daftar R3 ini tetapi ada di `todo-redesign.md`, yang memandang pekerjaan yang sama per halaman — brief §2 menaruh sinopsis, judul voucher, dan isi ulasan di sisi "yang *adalah* cerita", jadi ketiganya Lora. Rujukan bab hanya perlu di halaman `7t`: lembar `7w` punya babnya terbuka di belakangnya. `useChapter` ikut naik ke `src/hooks/` dengan alasan yang sama seperti `useComments` di R3c — aturan struktur #2.
 
-### R4 — Reader Type B & ekonomi buka bab · 4–6 hari · mockup `7x` `7y` `7z` `7aa` `7h` · **menutup Fase 5b**
+### R4 — Reader Type B & ekonomi buka bab · 4–6 hari · mockup `7x` `7y` `7z` `7aa` `7h` · **selesai — menutup Fase 5b**
 
 Aturan dan alasannya di `architecture.md` **§1.19** (izin per cerita) dan **§1.21**
 (auto-unlock jadi alur utama + pita bundling, beserta keadaan kode sekarang).
@@ -835,131 +835,189 @@ lebih dulu berarti menulisnya dua kali.
 
 #### R4a — Data & seam · **dikerjakan pertama**
 
-- [ ] `ReaderPrefsSchema` (`api/contracts/user.ts:68`) + tiga kolom: `autoUnlockStoryIds` · `autoUnlockCounts` (`Record<storyId, number>`) · `bundleOfferSeenStoryIds`, semuanya `.default(...)` · `P0` · `[PRODUK]`
-- [ ] Tiga tempat yang membangun `ReaderPrefs` ikut diisi: `api/mock/seed.ts:1825` · `handlers/session.ts:208` · fallback `handlers/onboarding.ts:27` · `P0`
-  ↳ Melewatkan salah satunya membuat pengguna baru punya `undefined` di jalur uang, dan gejalanya muncul sebagai auto-unlock yang diam-diam tidak jalan.
-- [ ] `SERVER_CONFIG.bundleOfferAfter = 10` di `api/mock/config.ts` — **bukan** `lib/coin.ts`: ia tuas kebijakan, dan §1.13 sudah menetapkan angka kebijakan harus bisa berubah tanpa rilis · `P0` · `[PRODUK]`
-- [ ] `UnlockInputSchema` + `enableAutoUnlock?: boolean` — beli bab **dan** nyalakan izinnya dalam **satu** panggilan. Di gerbang itu memang satu tindakan; memecahnya membuka keadaan "koin terpotong, izin gagal tersimpan" · `P0` · `[PRODUK]`
-- [ ] `UnlockInputSchema` + `auto?: boolean` — menandai pembukaan yang dilakukan aplikasi sendiri. **Satu-satunya gunanya menaikkan penghitung** · `P0`
-- [ ] `unlockChapter` menaikkan `autoUnlockCounts[storyId]` **hanya bila `auto === true` dan `alreadyOwned === false`** · `P0`
+- [x] `ReaderPrefsSchema` (`api/contracts/user.ts:68`) + tiga kolom: `autoUnlockStoryIds` · `autoUnlockCounts` (`Record<storyId, number>`) · `bundleOfferSeenStoryIds`, semuanya `.default(...)` · `P0` · `[PRODUK]`
+- [x] **`emptyReaderPrefs()` di `api/mock/defaults.ts` jadi satu-satunya bentuk awal**; seed, pembuatan akun, fallback onboarding, dan berkas test memakainya · `P0` · `[LUAR]`
+  ↳ Rencananya mengisi ketiga tempat itu satu per satu. Diganti satu pabrik karena jebakannya justru pengulangannya: melewatkan salah satu tempat membuat pengguna baru punya `undefined` di jalur uang, dan gejalanya muncul jauh dari sebabnya. Tempat keempat memang ada dan tidak disebut rencana — berkas test.
+- [x] `SERVER_CONFIG.bundleOfferAfter = 10` di `api/mock/config.ts` — **bukan** `lib/coin.ts`: ia tuas kebijakan, dan §1.13 sudah menetapkan angka kebijakan harus bisa berubah tanpa rilis · `P0` · `[PRODUK]`
+- [x] `UnlockInputSchema` + `enableAutoUnlock?: boolean` — beli bab **dan** nyalakan izinnya dalam **satu** panggilan. Di gerbang itu memang satu tindakan; memecahnya membuka keadaan "koin terpotong, izin gagal tersimpan" · `P0` · `[PRODUK]`
+- [x] `UnlockInputSchema` + `auto?: boolean` — menandai pembukaan yang dilakukan aplikasi sendiri. **Satu-satunya gunanya menaikkan penghitung** · `P0`
+- [x] `unlockChapter` menaikkan `autoUnlockCounts[storyId]` **hanya bila `auto === true` dan `alreadyOwned === false`** · `P0`
   ↳ Kunci idempotency yang terpakai ulang tidak memotong koin; menaikkan penghitung di sana mendekatkan pembaca ke tawaran belanja tanpa ia membayar apa pun.
-- [ ] `setAutoUnlock(storyId, on)` — mengikuti pola `hideStory(storyId)` yang sudah ada: mutator sempit, bukan `updatePrefs` serba bisa · `P0`
-- [ ] `BundleOfferSchema` + `getBundleOffer(storyId, chapterId)` — mengembalikan `null` bila belum waktunya. **Server yang memutuskan**, karena ambangnya kebijakan dan angka hematnya harus dari harga bab sungguhan · `P0` · `[PRODUK]`
-- [ ] `getBundleOffer` memakai **`scopeOf(userId, chapter, 'bundle')` yang sudah ada** dan mengembalikan `individualCoins` — tidak ada aritmetika harga baru di mana pun · `P0`
-- [ ] `dismissBundleOffer(storyId)` menulis `bundleOfferSeenStoryIds` · `P1`
-- [ ] Ketiganya terdaftar di `api/client.ts` dan `handlers/index.ts`; hitung ulang jumlah metode `NovelovaApi` (**109 → 112**) dan perbarui `CLAUDE.md` · `P0`
-- [ ] **Test unit handler:** izin tersimpan per cerita · penghitung naik sekali per pembukaan otomatis · **tidak** naik pada pemakaian ulang kunci idempotency · `getBundleOffer` `null` sebelum ambang dan berisi sesudahnya · cerita lain menghitung dari nol
+- [x] `setAutoUnlock(storyId, on)` — mengikuti pola `hideStory(storyId)` yang sudah ada: mutator sempit, bukan `updatePrefs` serba bisa · `P0`
+- [x] `BundleOfferSchema` + `getBundleOffer(storyId, chapterId)` — mengembalikan `null` bila belum waktunya. **Server yang memutuskan**, karena ambangnya kebijakan dan angka hematnya harus dari harga bab sungguhan · `P0` · `[PRODUK]`
+- [x] `getBundleOffer` memakai **`scopeOf(userId, chapter, 'bundle')` yang sudah ada** dan mengembalikan `individualCoins` — tidak ada aritmetika harga baru di mana pun · `P0`
+- [x] `dismissBundleOffer(storyId)` menulis `bundleOfferSeenStoryIds` · `P1`
+- [x] Ketiganya terdaftar di `api/client.ts` dan ikut lewat spread `unlockHandlers`; jumlah metode `NovelovaApi` **109 → 112** (dihitung ulang dari berkasnya) · `P0`
+  ↳ Tidak ada `handlers/index.ts` — perakitnya `mock/index.ts`, dan registrasinya otomatis lewat spread. Yang menahan kalau sebuah metode lupa didaftarkan adalah `Pick<NovelovaApi, …>` di tiap berkas handler, bukan daftar manual.
+- [x] **Test unit handler:** izin tersimpan per cerita · penghitung naik sekali per pembukaan otomatis · **tidak** naik pada pemakaian ulang kunci idempotency · `getBundleOffer` `null` sebelum ambang dan berisi sesudahnya · cerita lain menghitung dari nol
 
 #### R4b — Cabut sakelar global auto-unlock
 
-- [ ] Lima berkas, sekaligus: `stores/readerSettings.ts` · `lib/coin.ts:86` (`READER_DEFAULTS.autoUnlock`) · `features/reader/components/ReaderSettingsPanel.tsx:52-55` · `i18n/id.ts:47-48` · `tests/unit/readerSettings.test.ts` · `P1` · `[PRODUK]`
+- [x] Lima berkas, sekaligus: `stores/readerSettings.ts` · `lib/coin.ts:86` (`READER_DEFAULTS.autoUnlock`) · `features/reader/components/ReaderSettingsPanel.tsx:52-55` · `i18n/id.ts:47-48` · `tests/unit/readerSettings.test.ts` · `P1` · `[PRODUK]`
   ↳ Dua sakelar untuk satu hal saling membingungkan, dan yang global melanggar aturan struktur #5.
-- [ ] `ReaderPage.tsx:130` membaca izin dari **`getReaderPrefs()`**, bukan dari store · `P0`
+- [x] `ReaderPage.tsx:130` membaca izin dari **`getReaderPrefs()`**, bukan dari store · `P0`
 
 #### R4c — Gerbang Type B · mockup `7x`
 
-- [ ] **Bilah atas selalu terlihat** — kembali → judul + `Lanjutan Terkunci` → chip koin `15,3rb +23` → dengarkan → pengaturan. Type A menyembunyikannya; Type B tidak boleh · `P0` · `[PRODUK]`
-- [ ] Bagian gratis membaca persis seperti Type A, lalu berhenti di blok gerbang · `P0`
-- [ ] Gerbang: badge mahkota `PREMIUM CONTINUATION`, `mulai 1.5rb koin + bonus` rata kanan, kalimat penuntun · `P0`
-- [ ] Label `PRATINJAU TERSENSOR` **tidak diburamkan**; paragraf di bawahnya buram, memudar ke permukaan, dan **`aria-hidden="true"`** · `P0`
-- [ ] Gerbang membawa `aria-label="Locked continuation gate"` · `P0`
-- [ ] **Ringkasan saldo di dalam gerbang** (`15.3rb koin` + `+23 bonus`) — supaya pembaca tidak perlu melihat ke atas untuk memutuskan · `P0` · `[PRODUK]`
-- [ ] Empat pilihan **berurutan**: `Chapter ini` (utama, terisi) · `10 chapter` · `Buka sampai tamat` · `Tonton iklan` dengan kuota `2/3 hari ini` · `P0`
-- [ ] Harga dan lencana hemat tiap pilihan dari **`getUnlockOptions`**, tidak pernah dari konstanta — `PRICE_SINGLE` sudah jadi kode mati dan harga bab berbeda-beda per bab · `P0`
-- [ ] Pilihan yang tidak mencakup bab apa pun **tidak dirender** — handler sudah membuangnya; layar tidak boleh mengembalikannya · `P1`
-- [ ] **`Buka otomatis untuk cerita ini` menutup gerbang, tercentang default**, dengan satu baris keterangan bahwa bab berbayar berikutnya terbuka sendiri · `P0` · `[PRODUK]`
-- [ ] Menekan `Chapter ini` dengan kotak tercentang mengirim **satu** panggilan `unlockChapter({ source: 'coin', enableAutoUnlock: true })` · `P0`
+- [x] **Bilah atas selalu terlihat** — kembali → judul + `Lanjutan Terkunci` → chip koin `15,3rb +23` → dengarkan → pengaturan. Type A menyembunyikannya; Type B tidak boleh · `P0` · `[PRODUK]`
+- [x] Bagian gratis membaca persis seperti Type A, lalu berhenti di blok gerbang · `P0`
+- [x] Gerbang: badge mahkota `PREMIUM CONTINUATION`, `mulai 1.5rb koin + bonus` rata kanan, kalimat penuntun · `P0`
+- [x] Label `PRATINJAU TERSENSOR` **tidak diburamkan**; paragraf di bawahnya buram, memudar ke permukaan, dan **`aria-hidden="true"`** · `P0`
+- [x] Gerbang membawa `aria-label="Locked continuation gate"` · `P0`
+- [x] **Ringkasan saldo di dalam gerbang** (`15.3rb koin` + `+23 bonus`) — supaya pembaca tidak perlu melihat ke atas untuk memutuskan · `P0` · `[PRODUK]`
+- [x] Empat pilihan **berurutan**: `Chapter ini` (utama, terisi) · `10 chapter` · `Buka sampai tamat` · `Tonton iklan` dengan kuota `2/3 hari ini` · `P0`
+- [x] Harga dan lencana hemat tiap pilihan dari **`getUnlockOptions`**, tidak pernah dari konstanta — `PRICE_SINGLE` sudah jadi kode mati dan harga bab berbeda-beda per bab · `P0`
+- [x] Pilihan yang tidak mencakup bab apa pun **tidak dirender** — handler sudah membuangnya; layar tidak boleh mengembalikannya · `P1`
+- [x] **`Buka otomatis untuk cerita ini` menutup gerbang, tercentang default**, dengan satu baris keterangan bahwa bab berbayar berikutnya terbuka sendiri · `P0` · `[PRODUK]`
+- [x] Menekan `Chapter ini` dengan kotak tercentang mengirim **satu** panggilan `unlockChapter({ source: 'coin', enableAutoUnlock: true })` · `P0`
 
 #### R4d — Setelah terbuka · mockup `7y`
 
-- [ ] Buram hilang, badge jadi `CHAPTER TERBUKA` + gembok terbuka + `−1.5rb koin` · `P0`
-- [ ] **Saldo berubah di semua tempat sekaligus** — bilah atas, gerbang, chip beranda · `P0`
+- [x] Buram hilang, badge jadi `CHAPTER TERBUKA` + gembok terbuka + `−1.5rb koin` · `P0`
+- [x] **Saldo berubah di semua tempat sekaligus** — bilah atas, gerbang, chip beranda · `P0`
   ↳ Jebakan lama: layar sukses membaca saldo dari hasil pesanan sementara bilah atas menunggu `['wallet']` diambil ulang. Assertion yang memotret keduanya sekaligus gagal sesekali (`CLAUDE.md` §8).
-- [ ] Toast `Chapter dibuka · −1.5rb koin` (2,6 dtk, `role="status"`) · `P0`
-- [ ] Baris status auto menawarkan **`Matikan`** → `setAutoUnlock(storyId, false)`. Izin memotong koin tanpa tombol mati bukan izin · `P0`
-- [ ] Toast auto-unlock **berbunyi beda**: `Chapter dibuka otomatis · −1.5rb koin` · `P1` · `[PRODUK]`
-- [ ] Buka bab **idempoten**: ketukan kedua setelah berhasil tidak pernah menagih lagi · `P0`
-- [ ] Setelah terbuka, permukaan bacanya **berperilaku sebagai Type A** · `P0`
+- [x] Toast `Chapter dibuka · −1.5rb koin` (2,6 dtk, `role="status"`) · `P0`
+- [x] Baris status auto menawarkan **`Matikan`** → `setAutoUnlock(storyId, false)`. Izin memotong koin tanpa tombol mati bukan izin · `P0`
+- [x] Toast auto-unlock **berbunyi beda**: `Chapter dibuka otomatis · −1.5rb koin` · `P1` · `[PRODUK]`
+- [x] Buka bab **idempoten**: ketukan kedua setelah berhasil tidak pernah menagih lagi · `P0`
+- [x] Setelah terbuka, permukaan bacanya **berperilaku sebagai Type A** · `P0`
 
 #### R4e — Saldo kurang · mockup `7z`
 
-- [ ] **Lembar, bukan toast** — kekurangan tepatnya sebagai judul serif (`Kurang 1.200 koin`), harga dan saldo di bawahnya · `P0`
-- [ ] **Tiga** jalan keluar: `Isi koin` (menyorot paket terkecil yang cukup) · `Pakai voucher` (dengan jumlah voucher aktif) · `Tonton iklan` (dengan kuota) · `P0`
+- [x] **Lembar, bukan toast** — kekurangan tepatnya sebagai judul serif (`Kurang 1.200 koin`), harga dan saldo di bawahnya · `P0`
+- [x] **Tiga** jalan keluar: `Isi koin` (menyorot paket terkecil yang cukup) · `Pakai voucher` (dengan jumlah voucher aktif) · `Tonton iklan` (dengan kuota) · `P0`
   ↳ Permintaan produk 4 September menyebut dua; voucher tetap ada karena ia satu-satunya jalan yang tidak menuntut uang **maupun** menonton iklan, dan lembar buntu yang menawarkan lebih sedikit melanggar §1.4.
-- [ ] Menyatakan **membatalkan mengembalikan ke bab yang sama dengan gerbang masih terbuka** · `P0`
-- [ ] Lembar yang **sama** muncul saat auto-unlock menyala tetapi saldo kurang — tidak pernah diam, tidak pernah membeli tanpa izin · `P0`
-- [ ] Saldo **tidak diperiksa klien**: klien memanggil, server menolak dengan `INSUFFICIENT_COINS`, lembar dibuka dari kekurangannya · `P0`
+- [x] Menyatakan **membatalkan mengembalikan ke bab yang sama dengan gerbang masih terbuka** · `P0`
+- [x] Lembar yang **sama** muncul saat auto-unlock menyala tetapi saldo kurang — tidak pernah diam, tidak pernah membeli tanpa izin · `P0`
+- [x] Saldo **tidak diperiksa klien**: klien memanggil, server menolak dengan `INSUFFICIENT_COINS`, lembar dibuka dari kekurangannya · `P0`
   ↳ Harga ada di `Chapter.priceCoins` dan berbeda per bab; klien yang memeriksa sendiri harus menebak harganya (§1.21).
-- [ ] Lembar voucher (`7h`) dijangkau dari sini **dan** dari detail cerita — pertama kalinya voucher muncul di ruang baca · `P0`
+- [x] Lembar voucher (`7h`) dijangkau dari sini **dan** dari detail cerita — pertama kalinya voucher muncul di ruang baca · `P0`
 
 #### R4f — Buka lewat iklan · mockup `7aa`
 
-- [ ] Chip hitung mundur, garis progres, "Bab dibuka setelah tayangan selesai" · `P0`
-- [ ] Catatan bahwa **kuota dipotong hanya setelah selesai** dan membatalkan tidak berbiaya · `P0`
-- [ ] Kartu gagal-muat menawarkan `Coba lagi` **dan** `Pakai 1.500 koin` · `P0`
+- [x] Chip hitung mundur, garis progres, "Bab dibuka setelah tayangan selesai" · `P0`
+- [x] Catatan bahwa **kuota dipotong hanya setelah selesai** dan membatalkan tidak berbiaya · `P0`
+- [x] Kartu gagal-muat menawarkan `Coba lagi` **dan** `Pakai 1.500 koin` · `P0`
 
 #### R4g — Pita tawaran bundling · `[PRODUK]` · §1.21
 
-- [ ] **Pita non-blocking di pembuka bab**, bukan lembar dan bukan dialog — alur ini menjanjikan baca tanpa terputus · `P0` · `[PRODUK]`
-- [ ] Isinya dari `getBundleOffer`: harga bundel, jumlah bab, dan **hemat dihitung dari `individualCoins`** · `P0`
+- [x] **Pita non-blocking di pembuka bab**, bukan lembar dan bukan dialog — alur ini menjanjikan baca tanpa terputus · `P0` · `[PRODUK]`
+- [x] Isinya dari `getBundleOffer`: harga bundel, jumlah bab, dan **hemat dihitung dari `individualCoins`** · `P0`
   ↳ Tidak boleh persentase tetap: `prd_00` §6 **dan** `prd_05` §2 langkah 5 sama-sama menulis "5%" padahal sepuluh bab seed berjumlah 17.200 melawan bundel 12.000 — **30%**. Yang membawa catatan "angkanya nominal" baru `prd_00`; jangan membaca `prd_05` apa adanya di titik ini.
-- [ ] Dua aksi: ambil bundel (`unlockChapter({ source: 'bundle' })`, **pembelian eksplisit**) dan tolak (`dismissBundleOffer`) · `P0`
-- [ ] Muncul **sekali per cerita**; ditolak berarti tidak muncul lagi di cerita itu · `P1` · `[PRODUK]`
-- [ ] Auto-unlock tetap **tidak pernah** membeli bundel atau paket tamat sendiri (FR-READ-09) · `P0`
-- [ ] Setelah bundel dibeli, sepuluh bab berikutnya **tidak dipotong lagi** — pengaman "bab belum terbuka" sudah menanganinya, jadi tidak ada saldo bundel yang perlu disimpan · `P0`
-- [ ] **Sakelar dev di `/dev/kitchen-sink`** yang melompatkan `autoUnlockCounts` ke ambangnya · `P0` · `[LUAR]`
+- [x] Dua aksi: ambil bundel (`unlockChapter({ source: 'bundle' })`, **pembelian eksplisit**) dan tolak (`dismissBundleOffer`) · `P0`
+- [x] Muncul **sekali per cerita**; ditolak berarti tidak muncul lagi di cerita itu · `P1` · `[PRODUK]`
+- [x] Auto-unlock tetap **tidak pernah** membeli bundel atau paket tamat sendiri (FR-READ-09) · `P0`
+- [x] Setelah bundel dibeli, sepuluh bab berikutnya **tidak dipotong lagi** — pengaman "bab belum terbuka" sudah menanganinya, jadi tidak ada saldo bundel yang perlu disimpan · `P0`
+- [x] **Sakelar dev di `/dev/kitchen-sink`** yang melompatkan `autoUnlockCounts` ke ambangnya · `P0` · `[LUAR]`
   ↳ Tanpa itu pitanya nyaris tidak pernah terlihat saat dicoba dengan tangan: saldo contoh 15.300 habis di bab ke-12, **dua bab sebelum ambang**. Hitungannya di §1.21.
 
 #### R4h — Test
 
-- [ ] **Test:** bab pertama bergerbang; bab kedua cerita yang sama terbuka tanpa dialog; bab pertama cerita **lain** bergerbang lagi
-- [ ] **Test:** menolak sakelar → tiap bab tetap bergerbang
-- [ ] **Test:** saldo kurang → lembar tiga jalan keluar, bukan diam
-- [ ] **Test:** ketukan kedua tidak menagih dua kali
-- [ ] **Test:** izin bertahan setelah muat ulang — **uji ulang paling murah untuk aturan struktur #5**
-- [ ] **Test:** pita muncul setelah pembukaan otomatis ke-10, tidak sebelumnya; ditolak → tidak muncul lagi di cerita itu; cerita lain menghitung dari nol
-- [ ] **Test:** membeli bundel dari pita → sepuluh bab berikutnya terbuka tanpa potongan tambahan, dan saldo berkurang **tepat** sekali
-- [ ] **Test e2e:** bab pertama → setuju → bab berikutnya mulus → koin habis → topup/voucher/iklan, **di dua lebar layar**
-- [ ] `/cerita/:id/bab/:id` masuk daftar sapuan lima lebar di `tests/e2e/isi-koin-di-hp.spec.ts` — gerbang, lembar, dan pita semuanya baru
+- [x] **Test:** bab pertama bergerbang; bab kedua cerita yang sama terbuka tanpa dialog; bab pertama cerita **lain** bergerbang lagi
+- [x] **Test:** menolak sakelar → tiap bab tetap bergerbang
+- [x] **Test:** saldo kurang → lembar tiga jalan keluar, bukan diam
+- [x] **Test:** ketukan kedua tidak menagih dua kali
+- [x] **Test:** izin bertahan setelah muat ulang — **uji ulang paling murah untuk aturan struktur #5**
+- [x] **Test:** pita muncul setelah pembukaan otomatis ke-10, tidak sebelumnya; ditolak → tidak muncul lagi di cerita itu; cerita lain menghitung dari nol
+- [x] **Test:** membeli bundel dari pita → sepuluh bab berikutnya terbuka tanpa potongan tambahan, dan saldo berkurang **tepat** sekali
+- [x] **Test e2e:** bab pertama → setuju → bab berikutnya mulus → koin habis → topup/voucher/iklan, **di dua lebar layar**
+- [x] `/cerita/:id/bab/:id` masuk daftar sapuan lima lebar di `tests/e2e/isi-koin-di-hp.spec.ts` — gerbang, lembar, dan pita semuanya baru
 
 > **Skala harga bab sengaja dibiarkan.** Paket koin terbesar (2.000) hanya cukup
 > untuk satu bab, dan penulis cuma boleh mematok 1–50 koin — dua skala yang tidak
 > mungkin benar bersamaan. Diputuskan dikerjakan belakangan; akibat yang bisa
 > dihitung ada di `architecture.md` §1.21.
 
-### R5 — Pustaka, pencarian, lihat-semua, profil · 2–3 hari · mockup `7c` `7e` `7d` `7i` `7s`
+### R4b — Ruang baca menerus · 3–4 hari · `[PRODUK]` · §1.25
 
-- [ ] Pustaka: judul serif + baris hitungan, tab teks (Semua · Sedang dibaca · Selesai · Belum dimulai), lalu **satu daftar berpembatas** — sampul, judul serif, kata status rata kanan, penulis, batang progres `Bab 8 / 88`. **Tanpa kartu, tanpa blok hero** · `P0` · `[PRODUK]`
-- [ ] Pencarian: kueri serif di atas garis bawah, saran hidup (label + tipe `Cerita`/`Tag` di kanan), pill saringan, daftar `CERITA` dengan jumlah hasil, grup pill `TAG TERKAIT` · `P0`
-- [ ] Lihat-semua: **satu tata letak untuk empat kategori** — hanya judul, baris hitungan, dan badge yang berganti. Tab periode teks, urut sebagai aksi rata kanan, tiap baris membawa peringkat, sampul, judul serif, `★`/baca/bab, pill `Simpan` ↔ `Tersimpan`, dan `···` · `P0`
-- [ ] Saringan + urutan tetap hidup di URL; 20 per muat dengan baris skeleton · `P0`
-- [ ] Profil: label `PROFIL`, avatar, nama serif, baris keanggotaan, `Sunting` hairline; panel koin putih (`KOIN KAMU`, saldo serif, jumlah voucher aktif, `Isi Koin` terisi); strip tiga sel; daftar `AKUN` enam baris; `Keluar` sebagai teks redup · `P0`
-- [ ] Lembar pengaturan section: sembilan baris berketerangan + sakelar, berlaku dan tersimpan seketika, `Selesai` dan `Atur ulang` di dasar. **Kesembilan baris tetap terdaftar walau section-nya sedang disembunyikan karena kosong** · `P0` · `[PRODUK]`
+**Permintaan produk 5 September**, diklarifikasi lewat diskusi setelah R4
+selesai. Ia **menimpa bentuk navigasi bab** yang dibangun di R3b dan R4: bab
+tidak lagi berhalaman, ia mengalir.
 
-### R6 — Author studio, buat cerita, riwayat cetak · 3–4 hari · mockup `7j` `7m` `7n` `7k` `7l` `7o`–`7r`
+Empat keputusannya dikonfirmasi lewat pertanyaan langsung dan dicatat di §1.25.
+**Yang paling penting dibaca lebih dulu:** ini menimpa §1.4 di satu titik —
+potongan koin berhenti punya jejak di layar. Daftar apa yang **tidak** boleh ikut
+dicabut ada di §1.25.
 
-- [ ] Studio: "Studio penulis" serif, strip empat sel di atas putih (Story · Dibaca · Pengikut · Koin emas), `Buat story baru` terisi, baris tautan cepat hairline, tab status teks · `P0`
-- [ ] Daftar karya: sampul, judul serif, kata status berwarna status, genre + tanggal, baca/rating/bab, **alasan penolakan dikutip di balik garis bernuansa merah**, baris aksi Edit · Bab · Pratinjau · Analisa dengan `Hapus` didorong ke kanan sebagai teks redup · `P0`
-- [ ] Jadwal terbit: strip tiga penghitung, tab saringan, entri sebagai **kolom tanggal (`AGU 31 · 20.00`) di samping detail bab** dengan `Ubah jadwal`/`Batalkan`, dan dua catatan kaki serif tentang penyimpanan UTC · `P0`
-- [ ] Antrean tinjauan: dua penghitung, lalu per butir label jenis, judul serif, karya sumber, stempel waktu pengajuan, kata status, alasan penolakan bila ada, aksi yang tersedia; ditutup catatan kaki serif tentang empat sumber antrean · `P0`
-- [ ] Buat cerita: alur empat langkah dengan **garis progres empat segmen** di bawah kepala dan `Simpan` selalu tersedia · `P0`
-- [ ] Langkah 1: pengunggah sampul (slot putus-putus 2:3 + aturan), `Judul story` (garis bawah serif, `0/100`), `Sinopsis` (kotak, `0/1000`), `Nama pena`, kategorisasi (genre & bahasa sebagai select garis bawah, genre tambahan & tag sebagai pill dengan grup `SARAN`), lalu pratinjau langkah tersisa · `P0`
+#### R4b-a — Rangka gulir menerus
+
+- [ ] Ruang baca memuat **beberapa bab dalam satu halaman**, disambung ke bawah · `P0` · `[PRODUK]`
+- [ ] Pemisah antar bab **garis rambut polos**, tanpa nomor dan tanpa judul · `P0` · `[PRODUK]`
+  ↳ Pembuka bab besar (`BAB 6` + judul serif + garis emas) dari R3b **dicabut** untuk bab kedua dan seterusnya. Bab yang dibuka lewat tautan langsung tetap punya pembukanya — ia awal bacaan, bukan sambungan.
+- [ ] Bab berikutnya dimuat saat pembaca mendekati ujung bab sekarang, bukan saat menyentuhnya · `P0`
+- [ ] **Batas bab yang dimuat sekaligus**, dan yang terlama dilepas · `P1`
+  ↳ `ponytail:` cerita 120 bab yang seluruhnya disambung menghabiskan memori dan membuat gulirnya tersendat. Virtualisasi penuh baru perlu kalau batas sederhana terbukti tidak cukup.
+- [ ] Ujung cerita tetap punya keadaan penutupnya sendiri — gulir yang berhenti tanpa kabar terbaca sebagai gagal memuat · `P0`
+
+#### R4b-b — Bab terkunci di tengah gulir
+
+- [ ] **Izin ada + saldo cukup → dibeli diam-diam**, isinya langsung disambung tanpa jeda visual · `P0` · `[PRODUK]`
+- [ ] **Izin belum ada → gerbang `7x` disisipkan sebagai blok** di tempat isi babnya, bukan halaman baru · `P0`
+  ↳ Ini momen persetujuannya, dan ia tetap wajib: tanpa gerbang, "tidak sadar" berubah jadi memotong koin tanpa izin.
+- [ ] **Izin ada + saldo kurang → lembar `7z`**, dan ini satu-satunya yang menginterupsi · `P0`
+- [ ] Toast `Chapter dibuka otomatis` dan lencana `CHAPTER TERBUKA` **dicabut** · `P0` · `[PRODUK]`
+- [ ] `READER_UNLOCK_FEEDBACK` disiapkan dengan dua nilai — `'none'` (bawaan) dan `'balance'` · `P1` · `[PRODUK]`
+  ↳ Diminta pengguna: mode kedua belum dipakai, tetapi jalurnya disiapkan sekarang supaya menghidupkannya nanti tidak menuntut menulis ulang alurnya. Satu konstanta, satu tempat dibaca.
+- [ ] Baris status `Buka otomatis aktif` + `Matikan` **tetap ada** · `P0`
+- [ ] Buku besar tetap mencatat tiap potongan, dan chip saldo tetap satu angka dari `useWallet` · `P0`
+
+#### R4b-c — Yang mengikuti bab yang terlihat
+
+- [ ] **Satu sumber "bab yang sedang terlihat"**, bukan empat pengamat · `P0`
+  ↳ Ia menggerakkan judul bilah atas, tombol komentar, progres baca, dan URL sekaligus. Empat `IntersectionObserver` untuk satu pertanyaan adalah empat tempat yang bisa berselisih.
+- [ ] URL berganti lewat **`history.replaceState`**, bukan `navigate()` · `P0`
+  ↳ `navigate()` melepas halaman dan membuang posisi gulirnya — persis yang alur ini berusaha hilangkan. Akibatnya tombol kembali peramban tidak menyusuri tiap bab yang dilewati, dan itu benar: pembaca tidak "pergi ke" bab 6.
+- [ ] Tombol bab sebelumnya/berikutnya dan penutup bab `Bab 4 ›` **dibuang** · `P0` · `[PRODUK]`
+- [ ] Bilah bawah tinggal komentar, pengaturan, dan dengarkan · `P0`
+- [ ] `Komentar bab` membuka komentar **bab yang terlihat**, dan jumlahnya ikut berganti · `P0`
+- [ ] TTS membaca bab yang terlihat · `P1`
+- [ ] Progres baca disimpan per bab yang terlihat, memakai `scrollByChapter` yang sudah ada (§1.24) · `P0`
+
+#### R4b-d — Test
+
+- [ ] **Test:** dua bab tersambung dalam satu halaman, dipisah garis, tanpa tombol di antaranya
+- [ ] **Test:** melewati batas bab mengganti URL **tanpa** melepas halaman — posisi gulirnya tidak berubah
+- [ ] **Test:** izin ada + saldo cukup → bab terkunci tersambung tanpa gerbang dan tanpa toast
+- [ ] **Test:** izin belum ada → gerbang muncul sebagai blok di tengah gulir, bukan halaman baru
+- [ ] **Test:** saldo kurang → lembar `7z`, dan gulirnya berhenti di sana
+- [ ] **Test:** tombol komentar mengikuti bab yang terlihat
+- [ ] **Test:** `READER_UNLOCK_FEEDBACK = 'balance'` memunculkan perubahan saldo; `'none'` tidak memunculkan apa pun
+- [ ] **Test e2e:** membaca menerus melewati tiga bab di **dua lebar**, dan tidak ada satu pun tombol lanjut yang ditekan
+
+### R5 — Pustaka, pencarian, lihat-semua, profil · 2–3 hari · mockup `7c` `7e` `7d` `7i` `7s` · **selesai**
+
+- [x] Pustaka: judul serif + baris hitungan, tab teks (Semua · Sedang dibaca · Selesai · Belum dimulai), lalu **satu daftar berpembatas** — sampul, judul serif, kata status rata kanan, penulis, batang progres `Bab 8 / 88`. **Tanpa kartu, tanpa blok hero** · `P0` · `[PRODUK]`
+- [x] Pencarian: kueri serif di atas garis bawah, saran hidup (label + tipe `Cerita`/`Tag` di kanan), pill saringan, daftar `CERITA` dengan jumlah hasil, grup pill `TAG TERKAIT` · `P0`
+- [x] Lihat-semua: **satu tata letak untuk empat kategori** — hanya judul, baris hitungan, dan badge yang berganti. Tab periode teks, urut sebagai aksi rata kanan, tiap baris membawa peringkat, sampul, judul serif, `★`/baca/bab, pill `Simpan` ↔ `Tersimpan`, dan `···` · `P0`
+- [x] Saringan + urutan tetap hidup di URL; 20 per muat dengan baris skeleton · `P0`
+- [x] Profil: label `PROFIL`, avatar, nama serif, baris keanggotaan, `Sunting` hairline; panel koin putih (`KOIN KAMU`, saldo serif, jumlah voucher aktif, `Isi Koin` terisi); strip tiga sel; daftar `AKUN` enam baris; `Keluar` sebagai teks redup · `P0`
+- [x] Lembar pengaturan section: sembilan baris berketerangan + sakelar, berlaku dan tersimpan seketika, `Selesai` dan `Atur ulang` di dasar. **Kesembilan baris tetap terdaftar walau section-nya sedang disembunyikan karena kosong** · `P0` · `[PRODUK]`
+
+### R6 — Author studio, buat cerita, riwayat cetak · 3–4 hari · mockup `7j` `7m` `7n` `7k` `7l` `7o`–`7r` · **selesai**
+
+- [x] Studio: "Studio penulis" serif, strip empat sel di atas putih (Story · Dibaca · Pengikut · Koin emas), `Buat story baru` terisi, baris tautan cepat hairline, tab status teks · `P0`
+- [x] Daftar karya: sampul, judul serif, kata status berwarna status, genre + tanggal, baca/rating/bab, **alasan penolakan dikutip di balik garis bernuansa merah**, baris aksi Edit · Bab · Pratinjau · Analisa dengan `Hapus` didorong ke kanan sebagai teks redup · `P0`
+- [x] Jadwal terbit: strip tiga penghitung, tab saringan, entri sebagai **kolom tanggal (`AGU 31 · 20.00`) di samping detail bab** dengan `Ubah jadwal`/`Batalkan`, dan dua catatan kaki serif tentang penyimpanan UTC · `P0`
+- [x] Antrean tinjauan: dua penghitung, lalu per butir label jenis, judul serif, karya sumber, stempel waktu pengajuan, kata status, alasan penolakan bila ada, aksi yang tersedia; ditutup catatan kaki serif tentang empat sumber antrean · `P0`
+- [x] Buat cerita: alur empat langkah dengan **garis progres empat segmen** di bawah kepala dan `Simpan` selalu tersedia · `P0`
+- [x] Langkah 1: pengunggah sampul (slot putus-putus 2:3 + aturan), `Judul story` (garis bawah serif, `0/100`), `Sinopsis` (kotak, `0/1000`), `Nama pena`, kategorisasi (genre & bahasa sebagai select garis bawah, genre tambahan & tag sebagai pill dengan grup `SARAN`), lalu pratinjau langkah tersisa · `P0`
   ↳ Batas **100 · 1000 tetap dari PRD**, bukan dari mockup — aturan lama `architecture.md` §1.5 masih berlaku: mockup menentukan susunan, PRD menentukan angka.
-- [ ] Langkah 2: Status & visibilitas, Monetisasi (+ catatan bisa berubah jadi sebagian berbayar setelah 10 bab), Pengaturan lanjutan (`Dedikasi` `0/300`, `Catatan penulis` `0/1000`), lalu `Simpan` dengan `Batalkan` redup · `P0`
-- [ ] Riwayat cetak: **satu komponen baris, empat tampilan tersaring** — hanya baris hitungan dan isi daftar yang berubah · `P0`
-- [ ] Baris cetak: judul serif, jenis (`PDF` emas / `HARDCOPY` redup), baris spesifikasi, status + id pesanan + tanggal, lalu **bersyarat**: pelacak enam tahap (selesai terisi gelap, tahap kini emas, **tanpa garis penghubung setelah tahap terakhir**), catatan serif di balik garis emas, baris berkas dengan ukuran & kedaluwarsa, harga dengan resi/ETA, dan pill aksi (yang pertama terisi) · `P0`
+- [x] Langkah 2: Status & visibilitas, Monetisasi (+ catatan bisa berubah jadi sebagian berbayar setelah 10 bab), Pengaturan lanjutan (`Dedikasi` `0/300`, `Catatan penulis` `0/1000`), lalu `Simpan` dengan `Batalkan` redup · `P0`
+  ↳ Kolom, batas, dan urutannya sudah sesuai sejak Fase 8. Yang berubah di R6 hanya kepala section-nya: judul serif besar → label 9,5px + garis, sepola dengan seluruh aplikasi.
+- [x] Riwayat cetak: **satu komponen baris, empat tampilan tersaring** — hanya baris hitungan dan isi daftar yang berubah · `P0`
+- [x] Baris cetak: judul serif, jenis (`PDF` emas / `HARDCOPY` redup), baris spesifikasi, status + id pesanan + tanggal, lalu **bersyarat**: pelacak enam tahap (selesai terisi gelap, tahap kini emas, **tanpa garis penghubung setelah tahap terakhir**), catatan serif di balik garis emas, baris berkas dengan ukuran & kedaluwarsa, harga dengan resi/ETA, dan pill aksi (yang pertama terisi) · `P0`
 
-### R7 — Lintas-fitur · 1–2 hari · doc §14
+### R7 — Lintas-fitur · 1–2 hari · doc §14 · **selesai**
 
-- [ ] **Bertahan lintas muat ulang:** ukuran font & tema baca, visibilitas section beranda, saringan pustaka, dan izin auto-unlock (server). Posisi baca dipulihkan per bab · `P0`
-- [ ] Keadaan kosong & memuat: baris skeleton **setinggi barisnya**; kosong = satu kalimat polos tinta redup, **tanpa ilustrasi** · `P0`
-- [ ] Aksesibilitas: pratinjau buram `aria-hidden`; toast `role="status" aria-live="polite"`; baris cerita adalah tautan yang bisa dicapai keyboard dengan Enter **dan** Space; tiap target ketuk ≥44px; pemicu pengaturan menjaga `aria-expanded` · `P0`
+- [x] **Bertahan lintas muat ulang:** ukuran font & tema baca, visibilitas section beranda, saringan pustaka, dan izin auto-unlock (server). Posisi baca dipulihkan per bab · `P0`
+- [x] Keadaan kosong & memuat: baris skeleton **setinggi barisnya**; kosong = satu kalimat polos tinta redup, **tanpa ilustrasi** · `P0`
+- [x] Aksesibilitas: pratinjau buram `aria-hidden`; toast `role="status" aria-live="polite"`; baris cerita adalah tautan yang bisa dicapai keyboard dengan Enter **dan** Space; tiap target ketuk ≥44px; pemicu pengaturan menjaga `aria-expanded` · `P0`
   ↳ Ambang 44px punya **satu** penyebab, ditemukan saat R3: `Button`/`IconButton` ukuran `sm` tingginya 36px (`Button.tsx:25,85`), dan itulah ukuran baris aksi komentar, bilah melayang ruang baca, serta hampir tiap lembar. Naikkan di primitifnya sekali — menambalnya per halaman berarti ~30 tempat, dan halaman berikutnya akan memakai `sm` lagi karena primitifnya masih 36px.
-- [ ] Gerak: lembar naik sambil meredupkan latar; overlay reader **cross-fade**; tidak ada yang memantul atau membesar · `P1`
-- [ ] **Tidak boleh masuk:** bayangan berat, gradien di luar satu glow radial sampul gelap, emoji, warna aksen baru, sampul "album art" membulat · `P0`
+- [x] Gerak: lembar naik sambil meredupkan latar; overlay reader **cross-fade**; tidak ada yang memantul atau membesar · `P1`
+- [x] **Tidak boleh masuk:** bayangan berat, gradien di luar satu glow radial sampul gelap, emoji, warna aksen baru, sampul "album art" membulat · `P0`
 - [x] `tests/e2e/isi-koin-di-hp.spec.ts` diperbarui — kini **25 halaman × 5 lebar** (320 · 360 · 390 · 412 · 430), bukan 22 halaman × 1 lebar · `P0` · `[LUAR]`
   ↳ Dikerjakan lebih awal, di Langkah 44, karena pengguna memintanya: sapuannya menemukan 10 kombinasi rusak — semuanya di ≤390px, nol di 412 ke atas. Tata letak baru tiap halaman tetap diperiksa ulang saat halamannya digarap.
-- [ ] **Test:** muat ulang setelah tiap perubahan yang bertahan; empat keadaan di tiap layar baru
+- [x] **Test:** muat ulang setelah tiap perubahan yang bertahan; empat keadaan di tiap layar baru
 
 **Definition of done per layar** (doc §15): struktur, copy, peran tipografi, dan pemakaian
 aksen cocok dengan PNG di `putaran7/`; perilaku fitur di bagiannya jalan; aturan §14 di

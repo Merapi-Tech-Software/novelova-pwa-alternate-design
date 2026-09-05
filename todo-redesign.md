@@ -87,8 +87,8 @@ membulat.
 
 ## Kemajuan
 
-**4 / 42 halaman selesai** — beranda (R2 + **R2b**, susunan ulang 5 September),
-detail cerita, ruang baca Type A, dan komentar bab (R3). Keempatnya menyisakan
+**4 / 42 halaman selesai** — beranda (R2 + **R2b**), detail cerita, **ruang baca
+(Type A *dan* Type B — R3 + R4)**, dan komentar bab. Keempatnya menyisakan
 **hanya** kotak `Pemeriksaan baku`,
 yang tertahan butir 8 di seluruh aplikasi (lihat catatan di bawah daftar itu),
 dan ruang baca menyisakan satu kotak perilaku yang diserap R4. **Fondasi
@@ -445,59 +445,59 @@ tidak berbagi apa pun. Ini perubahan perilaku, bukan kulit — dan Type B
 > `stores/readerSettings.ts` ke server — sebuah izin memotong koin yang selama
 > ini melanggar aturan struktur #5.
 
-- [ ] **Bilah atas selalu terlihat** — kembali → judul + `Lanjutan Terkunci` →
+- [x] **Bilah atas selalu terlihat** — kembali → judul + `Lanjutan Terkunci` →
       chip koin `15,3rb +23` → dengarkan → pengaturan. Type A menyembunyikannya;
       Type B tidak boleh
-- [ ] Bagian gratis membaca persis seperti Type A, lalu berhenti di blok gerbang
-- [ ] Gerbang: badge mahkota `PREMIUM CONTINUATION`, `mulai 1.5rb koin + bonus`
+- [x] Bagian gratis membaca persis seperti Type A, lalu berhenti di blok gerbang
+- [x] Gerbang: badge mahkota `PREMIUM CONTINUATION`, `mulai 1.5rb koin + bonus`
       rata kanan, kalimat penuntun
-- [ ] Label `PRATINJAU TERSENSOR` **tidak diburamkan**; paragraf di bawahnya
+- [x] Label `PRATINJAU TERSENSOR` **tidak diburamkan**; paragraf di bawahnya
       buram, memudar ke permukaan, dan **`aria-hidden="true"`**
-- [ ] Gerbang membawa `aria-label="Locked continuation gate"`
-- [ ] **Ringkasan saldo di dalam gerbang** (`15.3rb koin` + `+23 bonus`) — supaya
+- [x] Gerbang membawa `aria-label="Locked continuation gate"`
+- [x] **Ringkasan saldo di dalam gerbang** (`15.3rb koin` + `+23 bonus`) — supaya
       pembaca tidak perlu melihat ke atas untuk memutuskan
-- [ ] Empat pilihan **berurutan**: `Chapter ini` 1.500 (utama, terisi) ·
+- [x] Empat pilihan **berurutan**: `Chapter ini` 1.500 (utama, terisi) ·
       `10 chapter` 12.000 `5% Off` `1.2rb / bab` · `Buka sampai tamat` 36.900
       `10% Off` · `Tonton iklan` dengan kuota `2/3 hari ini`
-- [ ] **`Buka otomatis untuk cerita ini` menutup gerbang, tercentang default**,
+- [x] **`Buka otomatis untuk cerita ini` menutup gerbang, tercentang default**,
       dengan satu baris keterangan bahwa bab berbayar berikutnya terbuka 1.500
       masing-masing
-- [ ] Izin per cerita disimpan **di server** (`readerPrefs.autoUnlockStoryIds`) —
+- [x] Izin per cerita disimpan **di server** (`readerPrefs.autoUnlockStoryIds`) —
       ia memberi wewenang memotong koin, dan aturan struktur #5 melarang
       `stores/`
-- [ ] **Sakelar global auto-unlock di panel pengaturan dihapus** — dua sakelar
+- [x] **Sakelar global auto-unlock di panel pengaturan dihapus** — dua sakelar
       untuk satu hal saling membingungkan
-- [ ] Setelah terbuka (`7y`): buram hilang, badge jadi `CHAPTER TERBUKA` + gembok
+- [x] Setelah terbuka (`7y`): buram hilang, badge jadi `CHAPTER TERBUKA` + gembok
       terbuka + `−1.5rb koin`, **saldo berubah di semua tempat sekaligus**
-- [ ] Toast `Chapter dibuka · −1.5rb koin` (2,6 dtk, `role="status"`), dan baris
+- [x] Toast `Chapter dibuka · −1.5rb koin` (2,6 dtk, `role="status"`), dan baris
       status auto menawarkan `Matikan`
-- [ ] Toast auto-unlock **berbunyi beda**: `Chapter dibuka otomatis · −1.5rb koin`
-- [ ] **Saldo kurang adalah lembar (`7z`), bukan toast** — kekurangan tepatnya
+- [x] Toast auto-unlock **berbunyi beda**: `Chapter dibuka otomatis · −1.5rb koin`
+- [x] **Saldo kurang adalah lembar (`7z`), bukan toast** — kekurangan tepatnya
       sebagai judul serif (`Kurang 1.200 koin`), harga dan saldo di bawahnya
-- [ ] Tiga jalan keluar di lembar itu: `Isi koin` (menyorot paket terkecil yang
+- [x] Tiga jalan keluar di lembar itu: `Isi koin` (menyorot paket terkecil yang
       cukup) · `Pakai voucher` (dengan jumlah voucher aktif) · `Tonton iklan`
       (dengan kuota)
-- [ ] Lembar itu menyatakan **membatalkan mengembalikan ke bab yang sama dengan
+- [x] Lembar itu menyatakan **membatalkan mengembalikan ke bab yang sama dengan
       gerbang masih terbuka**
-- [ ] Lembar yang **sama** muncul saat auto-unlock menyala tetapi saldo kurang —
+- [x] Lembar yang **sama** muncul saat auto-unlock menyala tetapi saldo kurang —
       tidak pernah diam, tidak pernah membeli tanpa izin
-- [ ] Layar iklan (`7aa`): chip hitung mundur, garis progres, "Bab dibuka setelah
+- [x] Layar iklan (`7aa`): chip hitung mundur, garis progres, "Bab dibuka setelah
       tayangan selesai", catatan bahwa **kuota dipotong hanya setelah selesai**
       dan membatalkan tidak berbiaya
-- [ ] Kartu gagal-muat iklan menawarkan `Coba lagi` **dan** `Pakai 1.500 koin`
-- [ ] Auto-unlock **tetap tidak pernah membeli bundel atau paket tamat** — aturan
+- [x] Kartu gagal-muat iklan menawarkan `Coba lagi` **dan** `Pakai 1.500 koin`
+- [x] Auto-unlock **tetap tidak pernah membeli bundel atau paket tamat** — aturan
       FR-READ-09 yang tidak berubah
-- [ ] Buka bab **idempoten**: ketukan kedua setelah berhasil tidak pernah menagih
+- [x] Buka bab **idempoten**: ketukan kedua setelah berhasil tidak pernah menagih
       lagi
-- [ ] Setelah terbuka, permukaan bacanya **berperilaku sebagai Type A**
-- [ ] **Test:** bab pertama bergerbang; bab kedua cerita yang sama terbuka tanpa
+- [x] Setelah terbuka, permukaan bacanya **berperilaku sebagai Type A**
+- [x] **Test:** bab pertama bergerbang; bab kedua cerita yang sama terbuka tanpa
       dialog; bab pertama cerita **lain** bergerbang lagi
-- [ ] **Test:** menolak sakelar → tiap bab tetap bergerbang
-- [ ] **Test:** saldo kurang → lembar tiga jalan keluar, bukan diam
-- [ ] **Test:** ketukan kedua tidak menagih dua kali
-- [ ] **Test e2e:** bab pertama → setuju → bab berikutnya mulus → koin habis →
+- [x] **Test:** menolak sakelar → tiap bab tetap bergerbang
+- [x] **Test:** saldo kurang → lembar tiga jalan keluar, bukan diam
+- [x] **Test:** ketukan kedua tidak menagih dua kali
+- [x] **Test e2e:** bab pertama → setuju → bab berikutnya mulus → koin habis →
       topup/voucher/iklan, **di dua lebar layar**
-- [ ] **Pita tawaran bundling** di pembuka bab setelah sepuluh pembukaan
+- [x] **Pita tawaran bundling** di pembuka bab setelah sepuluh pembukaan
       otomatis — non-blocking, sekali per cerita, hemat dihitung dari
       `individualCoins`, dan menerimanya adalah pembelian **eksplisit**
 
@@ -604,23 +604,23 @@ Hanya chip koin yang punya frame. Sisanya diturunkan dari §1 dan §9 brief.
 
 ## `/karya` — Studio penulis · `ADA` · mockup **`7j`**
 
-- [ ] Pemeriksaan baku
-- [ ] Judul `Studio penulis` serif
-- [ ] Strip **empat sel** di atas putih: Story · Dibaca · Pengikut · **Koin
+- [x] Pemeriksaan baku
+- [x] Judul `Studio penulis` serif
+- [x] Strip **empat sel** di atas putih: Story · Dibaca · Pengikut · **Koin
       (emas)** — angkanya serif
-- [ ] `Buat story baru` jadi tombol isi gelap
-- [ ] Baris tautan cepat hairline: Penghasilan · Jadwal terbit · Antrean tinjauan
+- [x] `Buat story baru` jadi tombol isi gelap
+- [x] Baris tautan cepat hairline: Penghasilan · Jadwal terbit · Antrean tinjauan
       · Riwayat cetak
-- [ ] Delapan tab status jadi tab teks bergaris bawah
-- [ ] Daftar karya: sampul, judul serif, **kata status berwarna status**, genre +
+- [x] Delapan tab status jadi tab teks bergaris bawah
+- [x] Daftar karya: sampul, judul serif, **kata status berwarna status**, genre +
       tanggal, baca/rating/bab
-- [ ] **Alasan penolakan dikutip di balik garis bernuansa merah** — garis, bukan
+- [x] **Alasan penolakan dikutip di balik garis bernuansa merah** — garis, bukan
       isi merah
-- [ ] Baris aksi Edit · Bab · Pratinjau · Analisa, dengan **`Hapus` didorong ke
+- [x] Baris aksi Edit · Bab · Pratinjau · Analisa, dengan **`Hapus` didorong ke
       kanan sebagai teks redup**
-- [ ] Tujuh status cerita tetap **diturunkan**, tidak disimpan
+- [x] Tujuh status cerita tetap **diturunkan**, tidak disimpan
       (`architecture.md` §1.9)
-- [ ] Tiga keadaan kosong tetap berbeda
+- [x] Tiga keadaan kosong tetap berbeda
 
 ## `/karya/daftar-penulis` — Daftar sebagai penulis · `ADA` · tanpa mockup
 
@@ -633,29 +633,29 @@ Hanya chip koin yang punya frame. Sisanya diturunkan dari §1 dan §9 brief.
 
 Satu komponen dua mode — jangan dipecah saat meredesign.
 
-- [ ] Pemeriksaan baku
-- [ ] **Garis progres empat segmen** di bawah kepala; `Simpan` selalu tersedia
-- [ ] Langkah 1: pengunggah sampul (slot putus-putus **2:3** + aturan), `Judul
+- [x] Pemeriksaan baku
+- [x] **Garis progres empat segmen** di bawah kepala; `Simpan` selalu tersedia
+- [x] Langkah 1: pengunggah sampul (slot putus-putus **2:3** + aturan), `Judul
       story` garis bawah serif `0/100`, `Sinopsis` kotak hairline `0/1000` +
       petunjuk panjang minimum, `Nama pena`
-- [ ] Kategorisasi: genre utama & bahasa jadi **select garis bawah**; genre
+- [x] Kategorisasi: genre utama & bahasa jadi **select garis bawah**; genre
       tambahan & tag jadi pill dengan grup `SARAN`
-- [ ] Pratinjau daftar langkah tersisa di dasar langkah 1
-- [ ] Langkah 2: Status & visibilitas (target pembaca, visibilitas tiga arah,
+- [x] Pratinjau daftar langkah tersisa di dasar langkah 1
+- [x] Langkah 2: Status & visibilitas (target pembaca, visibilitas tiga arah,
       sakelar komentar)
-- [ ] Langkah 2: Monetisasi + catatan bahwa ia bisa berubah jadi sebagian
+- [x] Langkah 2: Monetisasi + catatan bahwa ia bisa berubah jadi sebagian
       berbayar setelah 10 bab
-- [ ] Langkah 2: Pengaturan lanjutan (terjemahan, fanfiction, label konten,
+- [x] Langkah 2: Pengaturan lanjutan (terjemahan, fanfiction, label konten,
       `Dedikasi` `0/300`, `Catatan penulis` `0/1000`)
-- [ ] `Simpan` isi gelap dengan `Batalkan` sebagai teks redup
-- [ ] **Batas 100 · 1000 tetap dari PRD, bukan dari mockup** — aturan
+- [x] `Simpan` isi gelap dengan `Batalkan` sebagai teks redup
+- [x] **Batas 100 · 1000 tetap dari PRD, bukan dari mockup** — aturan
       `architecture.md` §1.5 masih berlaku: mockup menentukan susunan, PRD
       menentukan angka
-- [ ] Penghitung karakter rata kanan **di baris label**, bukan di bawah kolom
-- [ ] Peringatan monetisasi tetap **terbalik** antara dua mode
-- [ ] Zona bahaya tetap hanya di mode sunting, dan tetap lewat pola ketik-ulang
+- [x] Penghitung karakter rata kanan **di baris label**, bukan di bawah kolom
+- [x] Peringatan monetisasi tetap **terbalik** antara dua mode
+- [x] Zona bahaya tetap hanya di mode sunting, dan tetap lewat pola ketik-ulang
       judul — **tanpa isi merah**
-- [ ] `markDirty` empat efek dan draf yang menyimpan isinya tetap jalan
+- [x] `markDirty` empat efek dan draf yang menyimpan isinya tetap jalan
 
 ## `/karya/:storyId/bab` — Kelola bab · `ADA` · tanpa mockup
 
@@ -715,25 +715,25 @@ Halaman paling berisiko: yang dipegangnya naskah yang belum tersimpan.
 
 ## `/karya/jadwal` — Jadwal terbit · `ADA` · mockup **`7m`**
 
-- [ ] Pemeriksaan baku
-- [ ] Strip **tiga penghitung**: Terjadwal · Celah · Bentrok
-- [ ] Tab saringan jadi tab teks
-- [ ] Tiap entri jadi **kolom tanggal (`AGU 31 · 20.00`) di samping detail bab**,
+- [x] Pemeriksaan baku
+- [x] Strip **tiga penghitung**: Terjadwal · Celah · Bentrok
+- [x] Tab saringan jadi tab teks
+- [x] Tiap entri jadi **kolom tanggal (`AGU 31 · 20.00`) di samping detail bab**,
       dengan `Ubah jadwal` / `Batalkan`
-- [ ] Dua **catatan kaki serif** tentang penyimpanan UTC dan penjadwal lama
-- [ ] Waktu tetap disimpan UTC + zona penulis, ditampilkan menurut zona pembaca
-- [ ] Empat keadaan gagal tetap beda tingkat penyampaiannya: `SCHED-409` sisipan
+- [x] Dua **catatan kaki serif** tentang penyimpanan UTC dan penjadwal lama
+- [x] Waktu tetap disimpan UTC + zona penulis, ditampilkan menurut zona pembaca
+- [x] Empat keadaan gagal tetap beda tingkat penyampaiannya: `SCHED-409` sisipan
       · `SCHED-422` inline · `SCHED-200` toast · `SCHED-000` **peringatan, bukan
       kegagalan**
 
 ## `/karya/tinjauan` — Antrean tinjauan · `ADA` · mockup **`7n`**
 
-- [ ] Pemeriksaan baku
-- [ ] **Dua penghitung**: Dalam tinjauan · Perlu perbaikan
-- [ ] Tiap butir: label jenis, judul serif, karya sumber, stempel waktu
+- [x] Pemeriksaan baku
+- [x] **Dua penghitung**: Dalam tinjauan · Perlu perbaikan
+- [x] Tiap butir: label jenis, judul serif, karya sumber, stempel waktu
       pengajuan, kata status, alasan penolakan bila ada, aksi yang tersedia
-- [ ] Ditutup **catatan kaki serif** tentang empat sumber antrean
-- [ ] Antrean tetap **diturunkan** — memperbaiki ceritanya menghapus barisnya
+- [x] Ditutup **catatan kaki serif** tentang empat sumber antrean
+- [x] Antrean tetap **diturunkan** — memperbaiki ceritanya menghapus barisnya
       sendiri (`architecture.md` §1.11)
 
 ## `/karya/cetak` — Riwayat cetak · `ADA` · mockup **`7o` `7p` `7q` `7r`**
@@ -741,24 +741,24 @@ Halaman paling berisiko: yang dipegangnya naskah yang belum tersimpan.
 Empat frame, **satu komponen baris**. Kalau berakhir jadi empat komponen,
 redesign-nya salah.
 
-- [ ] Pemeriksaan baku
-- [ ] Saringan jadi tab teks; **hanya baris hitungan dan isi daftar yang
+- [x] Pemeriksaan baku
+- [x] Saringan jadi tab teks; **hanya baris hitungan dan isi daftar yang
       berubah** antar keempat tampilan
-- [ ] Garis bawah tab aktif di saringan ini memakai **emas** — satu-satunya tab
+- [x] Garis bawah tab aktif di saringan ini memakai **emas** — satu-satunya tab
       yang begitu (§1)
-- [ ] Baris: judul serif, jenis (`PDF` emas / `HARDCOPY` redup), baris
+- [x] Baris: judul serif, jenis (`PDF` emas / `HARDCOPY` redup), baris
       spesifikasi, status + id pesanan + tanggal
-- [ ] **Pelacak enam tahap**: selesai terisi gelap, tahap kini emas, **tanpa
+- [x] **Pelacak enam tahap**: selesai terisi gelap, tahap kini emas, **tanpa
       garis penghubung setelah tahap terakhir**
-- [ ] Catatan serif di balik garis emas
-- [ ] Baris berkas dengan ukuran & kedaluwarsa; harga dengan resi/ETA
-- [ ] Pill aksi dengan **yang pertama terisi**
-- [ ] Keadaan kosong tetap **berbeda per tab**
-- [ ] Invoice `Blob` tetap benar-benar terunduh
-- [ ] Empat keadaan gagal tetap beda tingkat: `PRINT-504` sisipan · `PRINT-410`
+- [x] Catatan serif di balik garis emas
+- [x] Baris berkas dengan ukuran & kedaluwarsa; harga dengan resi/ETA
+- [x] Pill aksi dengan **yang pertama terisi**
+- [x] Keadaan kosong tetap **berbeda per tab**
+- [x] Invoice `Blob` tetap benar-benar terunduh
+- [x] Empat keadaan gagal tetap beda tingkat: `PRINT-504` sisipan · `PRINT-410`
       inline · `PRINT-409` toast · `PRINT-402` **layar penuh yang benar-benar
       menghentikan halaman**
-- [ ] Peringatan biaya tetap dibaca dari daftar **tanpa saringan** — saringan
+- [x] Peringatan biaya tetap dibaca dari daftar **tanpa saringan** — saringan
       tampilan tidak boleh menyembunyikan keadaan uang
 
 ---
@@ -823,18 +823,18 @@ membangunnya nanti berarti membangunnya dua kali.
 
 ## `/profil` — Profil · `PENAMPUNG` · mockup **`7i`** · dibangun di R5
 
-- [ ] Label `PROFIL`, avatar, **nama serif**, baris keanggotaan, `Sunting`
+- [x] Label `PROFIL`, avatar, **nama serif**, baris keanggotaan, `Sunting`
       hairline
-- [ ] Panel koin putih: `KOIN KAMU`, **saldo serif**, jumlah voucher aktif,
+- [x] Panel koin putih: `KOIN KAMU`, **saldo serif**, jumlah voucher aktif,
       tombol `Isi Koin` terisi
-- [ ] Strip tiga sel statistik
-- [ ] Daftar `AKUN`: Riwayat transaksi · Voucher saya · Pengaturan baca ·
+- [x] Strip tiga sel statistik
+- [x] Daftar `AKUN`: Riwayat transaksi · Voucher saya · Pengaturan baca ·
       Notifikasi · Karya saya · Bantuan — ikon, label, nilai rata kanan, chevron
-- [ ] `Keluar` sebagai **teks redup**, bukan tombol merah
-- [ ] Saldo di sini adalah **titik ke-5** dari enam yang dijanjikan FR-WALLET-17
+- [x] `Keluar` sebagai **teks redup**, bukan tombol merah
+- [x] Saldo di sini adalah **titik ke-5** dari enam yang dijanjikan FR-WALLET-17
       — dibaca dari server, tidak pernah disimpan halaman
-- [ ] Pemeriksaan baku
-- [ ] **Test:** saldo di profil sama dengan saldo di bilah atas dan di `/koin`
+- [x] Pemeriksaan baku
+- [x] **Test:** saldo di profil sama dengan saldo di bilah atas dan di `/koin`
 
 ## `/profil/ubah` — Ubah profil · `PENAMPUNG` · tanpa mockup
 

@@ -146,7 +146,9 @@ describe('riwayat cetak · FR-STUDIO-32', () => {
     await user.click(await screen.findByRole('button', { name: 'Lihat riwayat dulu' }))
     await screen.findAllByText('Dicetak')
 
-    const row = screen.getByText('#HDC-20260822-001').closest('div.nv-card')
+    // Baris pesanan bukan `.nv-card` lagi sejak R6 — kartu diganti baris
+    // berpembatas (`7o`–`7r`, brief §4). Yang dicari elemen `<article>`-nya.
+    const row = screen.getByText('#HDC-20260822-001').closest('article')
     if (!row) throw new Error('baris pesanan tidak ditemukan')
     // Tombolnya **ada** — yang menolak servernya, dan penolakannya bisa dibaca.
     await user.click(within(row as HTMLElement).getByRole('button', { name: 'Batalkan pesanan' }))

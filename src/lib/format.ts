@@ -128,3 +128,19 @@ export function formatCountdown(msLeft: number): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
 }
+
+/**
+ * Bulan tiga huruf huruf besar — `AGU`, `SEP`.
+ *
+ * Dipakai kolom tanggal jadwal terbit (`7m`), tempat bulan berdiri sendiri di
+ * atas angka tanggalnya. `Intl` dipakai supaya nama bulannya ikut lokal, bukan
+ * larik tiga huruf yang ditulis tangan.
+ */
+export function formatMonthShort(date: Date): string {
+  return new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date).toUpperCase()
+}
+
+/** Jam dan menit saja — `20.00`. Pasangan `formatMonthShort` di kolom tanggal. */
+export function formatClock(date: Date): string {
+  return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(date)
+}

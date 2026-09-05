@@ -27,6 +27,7 @@ function renderAt(path: string) {
 
 async function markAsRead() {
   await db.progress.put({
+    scrollByChapter: {},
     id: `${CURRENT_USER_ID}-s1`,
     userId: CURRENT_USER_ID,
     storyId: 's1',

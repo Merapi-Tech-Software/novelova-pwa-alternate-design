@@ -5,6 +5,234 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-05 · Langkah 64 — rencana ruang baca menerus (R4b)
+
+> "mengapa konsep auto unlock nya otomatis terbuka setiap next chapter? yang saya
+> inginkan adalah misal user start chapter 5, dan di chapter 6 terkunci nah itu
+> proses pergantian chapter jangan ada opsi button buka berikutnya. YANG SAYA MAU
+> DIA BACA TERUS MENERUS SECARA VERTICAL DAN DIKASIH GARIS TIPIS UNTUK TANDAI
+> BAHWA INI SUDAH ADA DI NEXT CHAPTER. TUJUAN SAYA ADALAH INGIN USER TERUS
+> MEMBACA DAN TIDAK SADAR BAHWA KOIN NYA OTOMATIS MEMBUKA CHAPTER YANG TERKUNCI."
+
+**Rencana, belum implementasi.** `todo.md` **R4b** (30 kotak) dan
+`architecture.md` **§1.25**. Nol baris kode berubah.
+
+### Apa yang salah saya pahami di R4
+
+R4 membangun auto-unlock sebagai **pembukaan per halaman**: tiap bab punya
+alamatnya sendiri, dan bab berikutnya terbuka sendiri di halaman baru. Itu
+memenuhi kalimat "buka terus menerus sampai koin habis" tetapi melewatkan
+intinya — perpindahan babnya masih terasa, dan itu justru yang harus hilang.
+
+### Empat keputusan, dikonfirmasi
+
+Jejak potongan koin: **tidak ada sama sekali** · pemisah bab: **garis rambut
+polos** · tombol bab: **dibuang**, URL ikut bab yang terlihat · komentar:
+mengikuti bab yang terlihat.
+
+Ditambah satu permintaan: **sakelar mode disiapkan sekarang, dipakai nanti** —
+`READER_UNLOCK_FEEDBACK` dengan nilai `'none'` (bawaan) dan `'balance'`.
+
+### Ini menimpa §1.4, dan itu disebut terang
+
+§1.4 dan FR-CORE-01 menuntut mutasi uang selalu terlihat. Toast `−1.5rb koin`
+dan lencana `CHAPTER TERBUKA` dicabut — keduanya justru yang membuat pembaca
+sadar, dan "tidak sadar" adalah tujuan yang dinyatakan.
+
+**Empat hal tidak ikut dicabut, dan tidak boleh:** gerbang `7x` di bab berbayar
+pertama tiap cerita (itu momen persetujuannya), baris status `Buka otomatis
+aktif` beserta tombol `Matikan`, catatan buku besar, dan lembar `7z` saat saldo
+habis — satu-satunya interupsi yang tersisa, dan ia memang harus menginterupsi.
+
+Tanpa keempatnya, "tidak sadar" berhenti jadi kenyamanan dan berubah jadi
+memotong koin tanpa izin.
+
+---
+
+## 2026-09-05 · Langkah 63 — jalur iklan membuang izin buka-otomatis
+
+> "ada yang perlu saya tanyakan ke anda. Mengapa pas proses chapter unlock dia
+> tidak auto unlock?"
+
+**Satu cacat nyata ditemukan, dan diukur bukan ditebak.** Sakelar "Buka otomatis
+untuk cerita ini" tercentang bawaan di gerbang, tetapi hanya jalur **koin** yang
+mengirimkannya ke server. Jalur **iklan** membuangnya diam-diam.
+
+| Jalur | Izin tersimpan | Bab berikutnya |
+|---|---|---|
+| Chapter ini / bundel / tamat | `["s1"]` | terbuka sendiri |
+| **Tonton iklan** (sebelum) | `[]` | **bergerbang lagi** |
+| Tonton iklan (sesudah) | `["s1"]` | terbuka sendiri |
+
+Akibatnya bagi pembaca: ia menyetujui di gerbang, menonton iklan sampai habis,
+lalu bab berikutnya menagihnya lagi seolah ia tidak pernah menyetujui apa pun.
+
+`npm run check` bersih · **583 test unit** · **72 e2e**.
+
+### Tiga hal lain yang bisa terlihat seperti cacat yang sama
+
+Disebut di sini supaya tidak dicari dua kali:
+
+1. **Gerbang pertama tiap cerita memang selalu muncul** (FR-READ-09). Kalau yang
+   dicoba hanya satu bab, itu perilaku yang benar, bukan kegagalan.
+2. **`SEED_VERSION` naik ke 13 di Langkah 62.** Perangkat yang sudah punya basis
+   data lama ditulis ulang saat dibuka, dan izin yang diberikan sebelum itu ikut
+   hilang — sekali, lalu tidak lagi.
+3. **Saldo habis menghentikan alurnya**, dan itu memang yang dijanjikan: lembar
+   `7z` muncul alih-alih pembukaan diam-diam.
+
+---
+
+## 2026-09-05 · Langkah 62 — R5, R6, R7 selesai
+
+> "oke sekarang lanjutkan redesign untuk phase R5, R6, dan R7. Dan pastikan
+> ketika dijakankan dalam preview mobile, semua func nya berjalan dan hasil
+> tampilan rapih dan clean. Begitu juga untuk preview window"
+
+`npm run check` bersih · **582 test unit** · **72 e2e** (naik dari 65).
+
+### R7 dikerjakan **lebih dulu**, dan itu disengaja
+
+Butir 44px adalah satu perubahan primitif yang membuka kotak `Pemeriksaan baku`
+di **setiap** halaman. Mengerjakannya belakangan berarti R5 dan R6 dibangun di
+atas primitif yang salah, lalu ditambal lagi.
+
+Ukuran `sm` tetap 36px — menaikkannya menghapus perbedaan `sm` dan `md` yang
+dipakai seluruh aplikasi. Yang diperluas **kotak sentuhnya** lewat `::after`
+transparan. Rinciannya `architecture.md` §1.23.
+
+**Sapuan barunya langsung menemukan satu yang lolos selama ini:** tautan
+`See all` di tiap kepala section beranda berukuran **38×22**. Ia lolos
+pemeriksaan pertama hanya karena diukur sebelum section-nya selesai dirender;
+`expect.poll` yang membuat pengukurannya menunggu tata letak tenang yang membuka
+kedoknya.
+
+### R5 — profil `7i`
+
+Satu-satunya halaman R5 yang masih `<Placeholder>`; pustaka, pencarian, dan
+lihat-semua sudah ditata ulang di Langkah 51, lembar section di R2.
+
+Tiga angka kepalanya **diturunkan server** lewat `getReaderStats` baru
+(seam 112 → 113): cerita dibaca dari `progress`, jam baca dari `readMinutes` bab
+yang selesai, ulasan dari baris `reviews`. Penghitung tersimpan akan berselisih
+dengan sumbernya pada penghapusan pertama — dan yang berselisih di halaman profil
+adalah klaim tentang pengguna sendiri.
+
+FAB koin **tidak lagi dirender** di `/profil`, `/karya`, dan `/penulis`: ketiganya
+punya aksi utamanya sendiri, dan pintasan yang menutupi baris terakhir bukan
+pintasan.
+
+### R6 — studio, jadwal, tinjauan, formulir, cetak
+
+Studio `7j`: strip empat sel di atas satu panel putih (Koin emas), `Buat story
+baru` selebar halaman, tautan cepat jadi pil garis rambut berlabel pendek, dan
+daftar karya jadi **baris berpembatas** — kata status berwarna menggantikan
+lencana berlatar, alasan penolakan dikutip di balik garis merah, `Hapus` didorong
+ke kanan sebagai teks redup.
+
+Jadwal `7m`: kolom tanggal (`AGU 31 · 20.00`) di samping detail bab, dua catatan
+kaki serif. Tinjauan `7n`: label jenis 9,5px, kata status, alasan di balik garis.
+Formulir `7k`: garis progres empat segmen, slot sampul putus-putus rasio 2:3,
+kepala section jadi label + garis. Cetak `7o`–`7r`: baris berpembatas, jenis
+sebagai kata (`PDF` emas / `HARDCOPY` redup).
+
+### R7 — sisanya
+
+**Posisi baca kini disimpan per bab.** Koreksi atas yang saya laporkan di
+Langkah 52: pemulihannya **sudah ada**, tetapi hanya untuk bab terakhir —
+`ReadingProgress` cuma menyimpan satu `scrollPct` per cerita. Sekarang ada
+`scrollByChapter`, dan `SEED_VERSION` naik ke 13. Rinciannya §1.24.
+
+### Delapan test lama diperbarui, bukan dilonggarkan
+
+Enam locator berubah karena markup-nya memang berubah: nama aksesibel sel `Koin`
+(angka kini mendahului label), label nav yang dipendekkan, dan baris pesanan
+cetak yang bukan `.nv-card` lagi. Satu berubah karena **regexnya terlalu longgar
+sejak awal** — `/koin$/i` juga mengenai tautan "Isi Koin" di bilah navigasi.
+
+---
+
+## 2026-09-05 · Langkah 61 — R4 selesai: reader Type B & ekonomi buka bab
+
+> "oke sekarang lanjutkan redesign untuk phase r4. Semua 1/2 steps yang ada di
+> phase R4 dikerjakan saja. Dan pastikan ketika dijakankan dalam preview mobile,
+> semua func nya berjalan dan hasil tampilan rapih dan clean. Begitu juga untuk
+> preview window"
+
+**Seluruh 57 kotak R4 selesai — dan ia menutup Fase 5b.** `npm run check` bersih
+· **581 test unit** (naik dari 563) · **65 e2e** (naik dari 62).
+
+### Server dulu, layar belakangan
+
+Seam **109 → 112 metode**: `setAutoUnlock` · `getBundleOffer` ·
+`dismissBundleOffer`. `ReaderPrefs` dapat tiga kolom jalur uang
+(`autoUnlockStoryIds`, `autoUnlockCounts`, `bundleOfferSeenStoryIds`), dan
+`UnlockInput` dua bendera (`enableAutoUnlock`, `auto`).
+
+**Penghitung naik hanya bila `auto === true` dan pembukaannya sungguhan.**
+Pemakaian ulang kunci idempotency tidak memotong koin, dan menaikkan penghitung
+di sana mendekatkan pembaca ke tawaran belanja tanpa ia membayar apa pun.
+
+### Sakelar global dicabut — pelanggaran aturan struktur #5 ditutup
+
+`stores/readerSettings.ts` berhenti menyimpan `autoUnlock`. Izin itu memberi
+wewenang **memotong koin**, jadi ia harus ikut saat pengguna berganti perangkat.
+Sekarang per cerita, di server, dan diminta **di gerbang babnya** — tempat
+pembaca memang sedang memutuskan soal uang, bukan di panel pengaturan.
+
+### Empat layar
+
+`7x` gerbang Type B (bilah atas selalu terlihat, mahkota `PREMIUM CONTINUATION`,
+pratinjau tersensor yang `aria-hidden` sementara labelnya tidak, saldo diulang di
+dalam gerbang, empat pilihan, izin tercentang bawaan) · `7y` bab terbuka
+(lencana + baris status berikut tombol `Matikan`) · `7z` saldo kurang (**tiga**
+jalan keluar) · `7aa` iklan (hitung mundur, aturan kuota, kartu gagal-muat).
+
+Plus **pita tawaran bundel** — pita, bukan lembar: alur ini menjanjikan membaca
+tanpa terputus, dan menghentikan pembaca dengan layar penuh untuk menawarinya
+belanja adalah kebalikan dari yang dibelinya.
+
+### Tiga hal yang tidak seperti rencana
+
+1. **Bentuk awal `ReaderPrefs` jadi satu pabrik**, bukan tiga tempat ditambal
+   satu per satu — dan ada tempat **keempat** yang tidak disebut rencana: berkas
+   test.
+2. **`useUnlockChapter` harus ikut membatalkan `['reader','prefs']`.** Ketahuan
+   hanya karena alurnya **ditekan** di e2e: izinnya tersimpan, tetapi baris
+   status tidak pernah muncul. Gejalanya persis seperti izin yang gagal
+   tersimpan, padahal yang gagal cuma kabarnya.
+3. **Bagian gratis bab terkunci dibaca normal**, bukan ikut diburamkan. Halaman
+   yang isinya blok abu-abu seluruhnya terbaca sebagai kerusakan, bukan sebagai
+   batas berbayar.
+
+### Alur e2e lama ditulis ulang, bukan ditambal
+
+`isi-koin-lalu-buka-bab.spec.ts` dulu membeli bab satu per satu lewat gerbangnya
+masing-masing. Itu **bukan lagi alurnya**: gerbang muncul sekali per cerita, dan
+bab berikutnya terbuka sendiri. Test-nya sekarang berjalan maju sampai lembar
+saldo kurang muncul, alih-alih menghitung bab di muka — jumlah bab yang muat di
+saldo 15.300 bergantung harga tiap bab, dan angka yang ditulis di muka akan lapuk
+pada perubahan harga berikutnya.
+
+### Diperiksa di mobile dan window
+
+Bab terkunci masuk sapuan lima lebar. Alur gerbang → beli → izin dijalankan di
+**390 dan 1280** lewat satu fungsi yang dipanggil dua kali, dan tombolnya
+**ditekan**, bukan sekadar dilihat.
+
+**Satu angka yang layak dilihat:** lencana hemat "Buka sampai tamat" berbunyi
+**81%**, bukan 10% seperti `7x` menuliskannya. Itu bukan cacat — itu
+`individualCoins` yang bekerja: 113 bab satuan melawan satu harga paket.
+
+### Sakelar dev
+
+`/dev/kitchen-sink` dapat **"Siapkan tawaran bundel (s1)"**. Tanpa itu pitanya
+nyaris tidak pernah terlihat saat dicoba dengan tangan: saldo contoh 15.300 habis
+di bab ke-12, dua bab sebelum ambang sepuluh (§1.21). Menaikkan saldo seed bukan
+pilihan — `15,3rb` tercetak di tiga mockup.
+
+---
+
 ## 2026-09-05 · Langkah 60 — jarak antar section kembali 16px
 
 > "oh ya untuk jarak antar section sebelumnya pernah diubah menjadi 14 sekarang

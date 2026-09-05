@@ -5,8 +5,10 @@ import { api } from '@/api/client'
 import type { ChapterSummary, Story, UserRowData } from '@/api/contracts'
 import { PRINT_STAGES } from '@/api/contracts'
 import { ApiError, VISIBLE_CODES } from '@/api/errors'
+import { jumpAutoUnlockCountAsDev } from '@/api/mock/defaults'
 import { setMockDraftSaveFails } from '@/api/mock/handlers/chapters'
 import { approveAllPendingAsAdmin } from '@/api/mock/handlers/schedule'
+import { CURRENT_USER_ID } from '@/api/mock/seed'
 import { AdSlot } from '@/components/patterns/AdSlot'
 import { ChapterRow } from '@/components/patterns/ChapterRow'
 import { CoinChip } from '@/components/patterns/CoinChip'
@@ -487,6 +489,29 @@ export default function KitchenSink() {
             onClick={() => void approveAllPendingAsAdmin().then(() => window.location.reload())}
           >
             Setujui seluruh antrean
+          </Button>
+        </div>
+
+        {/*
+          Pita tawaran bundel · FR-READ-19 · §1.21. Tanpa tombol ini pitanya
+          nyaris tidak pernah terlihat saat dicoba dengan tangan: saldo contoh
+          15.300 habis di bab ke-12, **dua bab sebelum ambang sepuluh**.
+        */}
+        <p className="pt-3 text-body text-nv-muted">
+          Melompatkan penghitung buka-otomatis <code>s1</code> ke ambangnya, lalu buka bab berbayar
+          mana pun di cerita itu — pitanya muncul di pembuka bab.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              void jumpAutoUnlockCountAsDev('s1', CURRENT_USER_ID).then(() =>
+                window.location.reload(),
+              )
+            }
+          >
+            Siapkan tawaran bundel (s1)
           </Button>
         </div>
 

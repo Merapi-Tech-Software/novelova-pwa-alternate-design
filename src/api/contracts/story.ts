@@ -230,6 +230,18 @@ export const ReadingProgressSchema = z.object({
   scrollPct: z.number().min(0).max(1),
   finishedChapterIds: z.array(IdSchema),
   updatedAt: IsoDateTimeSchema,
+  /**
+   * Posisi gulir **per bab** · FR-READ-16 · R7.
+   *
+   * `scrollPct` di atas hanya menyimpan posisi bab yang terakhir dibaca, jadi
+   * kembali ke bab yang lebih awal selalu mulai dari atas — dan bagi pembaca
+   * itu tidak bisa dibedakan dari kehilangan tempat. Kolom ini menyimpan satu
+   * angka per bab, sehingga tiap bab punya posisinya sendiri.
+   *
+   * `Record`, bukan larik: yang dicari selalu satu bab tertentu, dan larik
+   * menuntut pencarian linear pada cerita 120 bab.
+   */
+  scrollByChapter: z.record(IdSchema, z.number().min(0).max(1)).default({}),
 })
 export type ReadingProgress = z.infer<typeof ReadingProgressSchema>
 

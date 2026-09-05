@@ -20,4 +20,12 @@ export const SERVER_CONFIG = {
   withdrawFeeRupiah: 5_000,
   /** Batas minimum satu pengajuan. */
   withdrawMinRupiah: 100_000,
+  /**
+   * Berapa bab yang harus terbuka **otomatis** sebelum tawaran bundel muncul
+   * (FR-READ-19, §1.21).
+   *
+   * Di sini, bukan di `lib/coin.ts`: ia tuas kebijakan pemasaran, dan §1.13
+   * sudah menetapkan angka kebijakan harus bisa berubah tanpa rilis baru.
+   */
+  bundleOfferAfter: 10,
 } as const

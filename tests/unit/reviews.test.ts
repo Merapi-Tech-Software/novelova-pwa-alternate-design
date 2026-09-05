@@ -19,6 +19,7 @@ const STORY = 's1'
 /** Progres baca = syarat kelayakan menilai. Dipasang ulang tiap test. */
 async function markAsRead(storyId = STORY) {
   await db.progress.put({
+    scrollByChapter: {},
     id: `${CURRENT_USER_ID}-${storyId}`,
     userId: CURRENT_USER_ID,
     storyId,

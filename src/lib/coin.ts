@@ -83,7 +83,7 @@ export const WITHDRAW_MIN = 100_000
 export const WITHDRAW_FEE = 5_000
 
 /** Nilai awal pengaturan pembaca. FR-READ-03/04/09. */
-export const READER_DEFAULTS = { fontSize: 18, darkTheme: false, autoUnlock: false } as const
+export const READER_DEFAULTS = { fontSize: 18, darkTheme: false } as const
 
 /**
  * Harga rupiah untuk sejumlah koin, dibulatkan ke kelipatan 100 terdekat.

@@ -10,7 +10,7 @@ import { Tabs } from '@/components/ui/Tabs'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
 import { localTimeZone } from '@/lib/date'
-import { formatDateTime } from '@/lib/format'
+import { formatClock, formatDateTime, formatMonthShort } from '@/lib/format'
 import { useCancelScheduleEntry, useSchedule } from '../hooks/useSchedule'
 
 const TABS = [
@@ -88,17 +88,19 @@ export default function SchedulePage() {
           menghasilkan **dua `<h1>`** dan dua panah kembali bertumpuk. */}
       <p className="text-body text-nv-muted">{t('schedule.subtitle')}</p>
 
-      <dl className="grid grid-cols-3 gap-2 pt-4">
+      {/* Strip tiga sel · `7m`: angka serif, label 9,5px, pembatas garis rambut
+          — pola yang sama dengan strip di studio, detail cerita, dan profil. */}
+      <dl className="mt-4 grid grid-cols-3 gap-3 border-nv-line border-y py-4">
         {[
           { label: t('schedule.mScheduled'), value: metrics.scheduled },
           { label: t('schedule.mGap'), value: metrics.gap },
           { label: t('schedule.mClash'), value: metrics.clash },
         ].map((metric) => (
-          <div key={metric.label} className="rounded-nv-lg bg-nv-surface px-3 py-2.5 text-center">
-            <dt className="text-caption text-nv-muted">{metric.label}</dt>
-            <dd className="pt-0.5 font-display font-bold text-section text-nv-text tabular-nums">
+          <div key={metric.label}>
+            <dd className="font-display font-bold text-page text-nv-text tabular-nums">
               {metric.value}
             </dd>
+            <dt className="nv-section-label pt-1">{metric.label}</dt>
           </div>
         ))}
       </dl>
@@ -170,59 +172,77 @@ export default function SchedulePage() {
           }
         >
           {(list) => (
-            <ul className="grid grid-cols-1 gap-2.5">
+            <ul className="divide-y divide-nv-line">
               {list.map((entry) => (
-                <li key={entry.id} className="rounded-nv-lg border border-nv-line bg-nv-card p-3.5">
-                  <p className="font-semibold text-body text-nv-text">{entry.storyTitle}</p>
-                  {entry.chapterLabel && (
-                    <p className="truncate pt-0.5 text-caption text-nv-muted">
-                      {entry.chapterLabel}
-                    </p>
-                  )}
-
-                  <p className="pt-1 text-caption text-nv-text tabular-nums">
-                    {entry.publishAtUtc
-                      ? formatDateTime(new Date(entry.publishAtUtc))
-                      : t('schedule.gapTitle')}
-                    {' · '}
-                    {entry.cadence}
-                  </p>
-                  {entry.note && (
-                    <p
-                      className={
-                        entry.kind === 'clash'
-                          ? 'pt-1 text-caption text-nv-danger'
-                          : 'pt-1 text-caption text-nv-warning'
-                      }
-                    >
-                      {entry.note}
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap gap-2 pt-2.5">
-                    {entry.chapterId ? (
-                      <Link
-                        to={`/karya/${entry.storyId}/bab`}
-                        className="inline-flex h-9 items-center rounded-nv-pill border border-nv-line px-3 font-semibold text-caption text-nv-text"
-                      >
-                        {t('schedule.reschedule')}
-                      </Link>
+                <li key={entry.id} className="flex items-start gap-4 py-4">
+                  {/*
+                    **Kolom tanggal di samping detailnya** (`7m`), bukan satu
+                    baris waktu di bawah judul. Halaman ini dibaca dengan
+                    memindai kapan, bukan apa — dan kolom kiri yang seragam
+                    membuat tanggal bisa dipindai tanpa membaca judulnya.
+                  */}
+                  <p className="w-12 shrink-0 text-center">
+                    {entry.publishAtUtc ? (
+                      <>
+                        <span className="nv-section-label block text-nv-gold">
+                          {formatMonthShort(new Date(entry.publishAtUtc))}
+                        </span>
+                        <span className="block font-display text-page font-bold tabular-nums">
+                          {new Date(entry.publishAtUtc).getDate()}
+                        </span>
+                        <span className="block text-caption text-nv-muted tabular-nums">
+                          {formatClock(new Date(entry.publishAtUtc))}
+                        </span>
+                      </>
                     ) : (
+                      <span className="nv-section-label block">{t('schedule.mGap')}</span>
+                    )}
+                  </p>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-card font-bold text-nv-text">
+                      {entry.storyTitle}
+                    </p>
+                    {entry.chapterLabel && (
+                      <p className="truncate pt-0.5 text-caption text-nv-muted">
+                        {entry.chapterLabel}
+                      </p>
+                    )}
+                    <p className="pt-0.5 text-caption text-nv-muted tabular-nums">
+                      {entry.publishAtUtc
+                        ? formatDateTime(new Date(entry.publishAtUtc))
+                        : t('schedule.gapTitle')}
+                      {' · '}
+                      {entry.cadence}
+                    </p>
+                    {entry.note && (
+                      <p
+                        className={
+                          entry.kind === 'clash'
+                            ? 'pt-1 text-caption text-nv-danger'
+                            : 'pt-1 text-caption text-nv-warning'
+                        }
+                      >
+                        {entry.note}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 pt-3">
                       <Link
-                        to="/karya"
-                        className="inline-flex h-9 items-center rounded-nv-pill border border-nv-line px-3 font-semibold text-caption text-nv-text"
+                        to={entry.chapterId ? `/karya/${entry.storyId}/bab` : '/karya'}
+                        className="relative inline-flex h-9 items-center rounded-nv-pill bg-nv-accent px-3.5 font-semibold text-caption text-nv-card after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']"
                       >
                         {t('schedule.reschedule')}
                       </Link>
-                    )}
 
-                    {/* Tombol batalkan per entri — diminta PRD, tidak digambar
-                        kanvas. Entri celah tidak punya jadwal untuk dibatalkan. */}
-                    {entry.publishAtUtc && (
-                      <Button variant="ghost" size="sm" onClick={() => void onCancel(entry)}>
-                        {t('schedule.cancel')}
-                      </Button>
-                    )}
+                      {/* Tombol batalkan per entri — diminta PRD, tidak digambar
+                          kanvas. Entri celah tidak punya jadwal untuk dibatalkan. */}
+                      {entry.publishAtUtc && (
+                        <Button variant="secondary" size="sm" onClick={() => void onCancel(entry)}>
+                          {t('schedule.cancel')}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </li>
               ))}
@@ -231,8 +251,12 @@ export default function SchedulePage() {
         </AsyncState>
       </div>
 
-      <p className="pt-4 text-caption text-nv-muted">{t('schedule.tzNote')}</p>
-      <p className="pt-2 text-caption text-nv-muted">{t('schedule.quickPaths')}</p>
+      {/* Dua catatan kaki **serif** (`7m`): keduanya menjelaskan aturan, bukan
+          memberi label pada kontrol — dan aturan dibaca, bukan dipindai. */}
+      <p className="border-nv-line border-t pt-4 font-display text-card text-nv-text-2">
+        {t('schedule.tzNote')}
+      </p>
+      <p className="pt-3 font-display text-card text-nv-text-2">{t('schedule.quickPaths')}</p>
     </div>
   )
 }

@@ -28,6 +28,7 @@ async function finish(storyId: string, count: number, updatedAt = new Date().toI
     (a, b) => a.number - b.number,
   )
   await db.progress.put({
+    scrollByChapter: {},
     id: `${CURRENT_USER_ID}-${storyId}`,
     userId: CURRENT_USER_ID,
     storyId,

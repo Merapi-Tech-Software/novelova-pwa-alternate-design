@@ -5,7 +5,7 @@ import { READER_FONT_DEFAULT, READER_FONT_MAX, READER_FONT_MIN } from '@/lib/lim
  * Pengaturan baca · FR-READ-03 · FR-READ-04.
  *
  * Kunci `novelova-reader-settings-v1` dipertahankan **byte-exact** dari
- * prototipe, dan isinya tetap objek datar `{ fontSize, darkTheme, autoUnlock }`
+ * prototipe, dan isinya tetap objek datar `{ fontSize, darkTheme }`
  * — pengguna lama membawa pengaturannya ikut pindah ke versi ini. Itu juga
  * sebabnya `zustand/persist` tidak dipakai: ia membungkus nilai dalam
  * `{ state, version }`.
@@ -18,16 +18,20 @@ import { READER_FONT_DEFAULT, READER_FONT_MAX, READER_FONT_MIN } from '@/lib/lim
 
 const KEY = 'novelova-reader-settings-v1'
 
+/**
+ * **Hanya tampilan.** `autoUnlock` pernah tinggal di sini dan dicabut di R4b
+ * (`architecture.md` §1.19): ia memberi wewenang memotong koin, dan aturan
+ * struktur #5 melarang `stores/` menyimpan apa yang dimiliki pengguna. Sekarang
+ * izinnya per cerita, di server, lewat `setAutoUnlock`.
+ */
 export interface ReaderSettings {
   fontSize: number
   darkTheme: boolean
-  autoUnlock: boolean
 }
 
 const DEFAULTS: ReaderSettings = {
   fontSize: READER_FONT_DEFAULT,
   darkTheme: false,
-  autoUnlock: false,
 }
 
 /** Di luar rentang ini teksnya berhenti bisa dibaca, jadi dijepit, bukan ditolak. */
@@ -81,7 +85,6 @@ export function applyReaderSettings(settings: ReaderSettings = read()): void {
 interface ReaderSettingsState extends ReaderSettings {
   setFontSize: (size: number) => void
   toggleDarkTheme: () => void
-  toggleAutoUnlock: () => void
 }
 
 export const useReaderSettings = create<ReaderSettingsState>()((set, get) => {
@@ -95,11 +98,10 @@ export const useReaderSettings = create<ReaderSettingsState>()((set, get) => {
     ...read(),
     setFontSize: (size) => commit({ ...current(get), fontSize: clampFontSize(size) }),
     toggleDarkTheme: () => commit({ ...current(get), darkTheme: !get().darkTheme }),
-    toggleAutoUnlock: () => commit({ ...current(get), autoUnlock: !get().autoUnlock }),
   }
 })
 
 function current(get: () => ReaderSettingsState): ReaderSettings {
-  const { fontSize, darkTheme, autoUnlock } = get()
-  return { fontSize, darkTheme, autoUnlock }
+  const { fontSize, darkTheme } = get()
+  return { fontSize, darkTheme }
 }

@@ -144,6 +144,7 @@ export const storyHandlers: Pick<
         storyId,
         lastChapterId: chapterId,
         scrollPct: 0,
+        scrollByChapter: {} as Record<string, number>,
         finishedChapterIds: [] as string[],
         updatedAt: new Date().toISOString(),
       }

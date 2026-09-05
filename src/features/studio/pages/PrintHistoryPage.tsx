@@ -7,10 +7,10 @@ import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { StageTrack } from '@/components/patterns/StageTrack'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
 import { Tabs } from '@/components/ui/Tabs'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { formatDate, formatRupiah } from '@/lib/format'
 import {
   useApprovePrintCost,
@@ -232,20 +232,32 @@ function PrintRow({ order, onCancel, onApprove, onRegenerate }: PrintRowProps) {
   const cost = order.costFinal ?? order.costQuoted
 
   return (
-    <Card className="mt-3">
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="font-display text-section leading-tight">{order.storyTitle}</h2>
-        <span className="shrink-0 rounded-nv-pill border border-nv-line px-2 py-0.5 text-caption text-nv-muted uppercase">
+    /*
+      **Baris berpembatas, bukan kartu** (`7o`–`7r`, brief §4). Empat tampilan
+      tersaring memakai baris yang sama; yang berganti hanya baris hitungan dan
+      isi daftarnya, bukan bentuk barisnya.
+    */
+    <article className="border-nv-line border-b py-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="min-w-0 font-display text-card font-bold leading-tight">
+          {order.storyTitle}
+        </h2>
+        {/* Jenis sebagai **kata**, bukan pil: `PDF` emas, `HARDCOPY` redup —
+            keduanya penanda jenis, dan pil berlatar di tiap baris membuat
+            daftar tujuh pesanan terlihat seperti tujuh lencana. */}
+        <span
+          className={cx('nv-section-label shrink-0', isHard ? 'text-nv-muted' : 'text-nv-gold')}
+        >
           {isHard ? t('print.kindHard') : t('print.kindSoft')}
         </span>
       </div>
       <p className="pt-1 text-caption text-nv-muted">{order.spec}</p>
 
-      <p className="flex flex-wrap items-center gap-2 pt-2 text-caption text-nv-muted tabular-nums">
-        <span className="rounded-nv-pill border border-nv-line px-2 py-0.5">
-          {STATUS_LABEL[order.status]}
-        </span>
+      <p className="flex flex-wrap items-center gap-x-2 pt-1 text-caption text-nv-muted tabular-nums">
+        <span className="font-semibold text-nv-text-2">{STATUS_LABEL[order.status]}</span>
+        <span aria-hidden>·</span>
         <span>{order.id}</span>
+        <span aria-hidden>·</span>
         <span>{formatDate(new Date(order.createdAt))}</span>
       </p>
 
@@ -367,6 +379,6 @@ function PrintRow({ order, onCancel, onApprove, onRegenerate }: PrintRowProps) {
           </Link>
         )}
       </div>
-    </Card>
+    </article>
   )
 }

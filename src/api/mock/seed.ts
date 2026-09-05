@@ -40,6 +40,7 @@ import {
 } from './data/catalog'
 import { CHAPTER_SEED, PAID_PRICES, PROSE } from './data/chapters'
 import { db } from './db'
+import { emptyReaderPrefs } from './defaults'
 import { BANNER_URLS, COVER_URLS, pickImage } from './sampleImages'
 
 /**
@@ -724,6 +725,7 @@ const progress: Array<ReadingProgress & { id: string }> = LIB_SEED.map(([storyId
   userId: ME,
   storyId,
   lastChapterId: at > 0 ? `${storyId}-c${Math.min(at, 8)}` : null,
+  scrollByChapter: {},
   scrollPct: at > 0 ? 0.42 : 0,
   finishedChapterIds:
     at > 0 ? Array.from({ length: Math.min(at, 8) }, (_, i) => `${storyId}-c${i + 1}`) : [],
@@ -1535,15 +1537,14 @@ const deviceSessions: DeviceSession[] = [
 export const CURRENT_USER_ID = ME
 
 const readerPrefs: ReaderPrefs = {
-  userId: ME,
+  ...emptyReaderPrefs(ME),
   genres: ['Romance', 'CEO'],
-  hiddenStoryIds: [],
   // Akun contoh sudah lama memakai aplikasi, jadi onboarding-nya sudah lewat.
   onboardedAt: iso(days(300)),
 }
 
 /** Dinaikkan bila bentuk seed berubah, supaya database lama ditulis ulang. */
-const SEED_VERSION = 12
+const SEED_VERSION = 13
 
 /**
  * Mengisi database bila kosong atau versinya usang.

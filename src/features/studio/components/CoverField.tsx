@@ -56,13 +56,20 @@ export function CoverField({ value, onChange, placeholder }: CoverFieldProps) {
 
   return (
     <div>
-      <p className="font-semibold text-body text-nv-text">{t('storyForm.cover')}</p>
+      <p className="nv-section-label border-nv-line border-b pb-1.5">{t('storyForm.cover')}</p>
 
-      <div className="flex items-start gap-3 pt-2">
+      <div className="flex items-start gap-3 pt-3">
         {value ? (
-          <img src={value} alt="" className="h-32 w-[86px] rounded-nv-md object-cover" />
+          <img src={value} alt="" className="w-[86px] rounded-nv-md object-cover" />
         ) : (
-          <span className="grid h-32 w-[86px] place-items-center rounded-nv-md bg-nv-surface px-2 text-center text-caption text-nv-muted">
+          /*
+            **Slot putus-putus rasio 2:3** (`7k`), bukan kotak abu solid: garis
+            putus-putus dibaca sebagai "belum diisi, taruh sesuatu di sini",
+            sementara kotak solid dibaca sebagai gambar yang gagal dimuat. Dan
+            rasionya sama dengan sampul sungguhan, jadi penulis melihat bentuk
+            yang akan ia dapat sebelum mengunggah apa pun.
+          */
+          <span className="grid aspect-[2/3] w-[86px] shrink-0 place-items-center rounded-nv-md border border-nv-line border-dashed px-2 text-center text-caption text-nv-muted">
             {placeholder}
           </span>
         )}

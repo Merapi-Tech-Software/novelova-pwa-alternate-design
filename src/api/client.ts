@@ -8,6 +8,7 @@ import type {
   AuthorChapterParams,
   AuthorProfile,
   AuthorSignupInput,
+  BundleOffer,
   Chapter,
   ChapterAccessInfo,
   ChapterAccessInput,
@@ -42,6 +43,7 @@ import type {
   Rating,
   ReactTarget,
   ReaderPrefs,
+  ReaderStats,
   ReadingProgress,
   RedeemResult,
   RegisterInput,
@@ -150,6 +152,26 @@ export interface NovelovaApi {
   listProgress(): Promise<ReadingProgress[]>
   /** Menyembunyikan cerita dari rekomendasi pembaca ini (FR-HOME-14). */
   hideStory(storyId: string): Promise<void>
+
+  /**
+   * Tiga angka kepala profil · `7i`. **Diturunkan**, bukan penghitung tersimpan.
+   */
+  getReaderStats(): Promise<ReaderStats>
+
+  /**
+   * Izin buka-otomatis **per cerita** · FR-READ-09 · `architecture.md` §1.19.
+   *
+   * Di seam, bukan di `stores/`: ia memberi wewenang memotong koin, dan izin
+   * seperti itu harus ikut saat pengguna berganti perangkat (aturan struktur #5).
+   */
+  setAutoUnlock(storyId: string, on: boolean): Promise<void>
+  /**
+   * Tawaran bundel setelah sepuluh bab dibuka otomatis · FR-READ-19 · §1.21.
+   * `null` bila belum waktunya — **server yang memutuskan**, bukan layar.
+   */
+  getBundleOffer(storyId: string, chapterId: string): Promise<BundleOffer | null>
+  /** Ditolak berarti tidak muncul lagi di cerita itu · FR-READ-19. */
+  dismissBundleOffer(storyId: string): Promise<void>
   toggleFollow(storyId: string): Promise<LibraryEntry>
   /**
    * Perpustakaan · FR-LIB-11.

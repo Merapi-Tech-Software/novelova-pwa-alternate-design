@@ -13,6 +13,7 @@ import { ReaderLayout } from '@/app/layouts/ReaderLayout'
 import { TopBarLayout } from '@/app/layouts/TopBarLayout'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { EmptyState } from '@/components/ui/EmptyState'
+import ProfilePage from '@/features/profile/pages/ProfilePage'
 import { RequireAuth, RequireAuthor, RequireGuest } from './guards'
 
 /**
@@ -293,7 +294,7 @@ export const ROUTES: RouteDef[] = [
   },
 
   // ── profil, pengaturan, bantuan, legal ────────────────────────────────────
-  { path: '/profil', title: 'Profil', layout: 'shell', guard: 'auth' },
+  { path: '/profil', title: 'Profil', layout: 'shell', guard: 'auth', element: <ProfilePage /> },
   {
     path: '/profil/ubah',
     title: 'Ubah profil',
