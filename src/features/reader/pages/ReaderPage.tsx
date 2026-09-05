@@ -184,7 +184,6 @@ export default function ReaderPage() {
 
   // Pindah bab mereset gulir dan menyetel ulang pengaman auto-unlock — tetapi
   // **tidak** menyentuh pengaturan baca (FR-READ-15).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: berpindah bab yang jadi pemicunya
   /*
    * **Rantai direset hanya saat pembaca benar-benar berpindah**, bukan saat URL
    * berganti mengikuti gulir. Keduanya mengubah `chapterId`, dan membedakannya

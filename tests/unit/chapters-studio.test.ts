@@ -46,8 +46,11 @@ describe('enam status bab · FR-STUDIO-08 · FR-STUDIO-38', () => {
   })
 
   it('draf membawa perkiraan kelengkapan dari jumlah katanya', async () => {
-    // 620 kata dari target 1.500 ≈ 41%.
-    expect((await find('ms1-c51'))?.progressPct).toBe(41)
+    // 650 kata dari target 1.500 ≈ 43%. Angkanya **diturunkan dari naskahnya**
+    // sejak R9b — sebelumnya `wordCount` dipatok 620 sementara babnya tidak
+    // punya satu baris isi pun, jadi editor terbuka kosong untuk draf yang
+    // mengaku 620 kata.
+    expect((await find('ms1-c51'))?.progressPct).toBe(43)
   })
 
   it('cerita orang lain ditolak, bukan dikembalikan kosong', async () => {

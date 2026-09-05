@@ -103,11 +103,17 @@ export function calcPrice(coins: number): number {
  * terlihat lebih besar daripada yang sebenarnya, dan pemotongan sekaligus
  * mencegah `999.999` menjadi `"1000rb"`.
  *
+ * **Desimalnya koma, bukan titik.** Di Indonesia titik adalah pemisah ribuan,
+ * jadi `15.3rb` terbaca sebagai lima belas ribu tiga ratus **ribu**. Mockup `7a`
+ * dan `7i` sama-sama mencetak `15,3rb`; kode ini yang meleset, bukan mockup-nya.
+ * Diperbaiki 5 September 2026 saat R8 — satu-satunya tempat pemisah ini
+ * ditentukan, jadi seluruh chip koin, jumlah baca, dan rating ikut benar.
+ *
  * @example
  * formatCompactCoin(800)      // "800"
- * formatCompactCoin(12_000)   // "12rb"   — bukan "12.0rb"
- * formatCompactCoin(15_300)   // "15.3rb"
- * formatCompactCoin(1_500_000) // "1.5jt"
+ * formatCompactCoin(12_000)   // "12rb"   — bukan "12,0rb"
+ * formatCompactCoin(15_300)   // "15,3rb"
+ * formatCompactCoin(1_500_000) // "1,5jt"
  */
 export function formatCompactCoin(value: number): string {
   const sign = value < 0 ? '-' : ''
@@ -118,10 +124,10 @@ export function formatCompactCoin(value: number): string {
   return `${sign}${trimOneDecimal(n / 1_000_000)}jt`
 }
 
-/** 12.04 → "12" · 15.36 → "15.3" — satu desimal, dipotong, `.0` dibuang. */
+/** 12,04 → "12" · 15,36 → "15,3" — satu desimal, dipotong, `,0` dibuang. */
 function trimOneDecimal(n: number): string {
   const truncated = Math.floor(n * 10) / 10
-  return Number.isInteger(truncated) ? String(truncated) : truncated.toFixed(1)
+  return Number.isInteger(truncated) ? String(truncated) : truncated.toFixed(1).replace('.', ',')
 }
 
 /**

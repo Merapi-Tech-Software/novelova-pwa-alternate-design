@@ -83,7 +83,7 @@ export function StudioCard({ item, onSchedule, onPrint, onDelete }: StudioCardPr
             className="h-20 w-14 shrink-0 rounded-nv-md object-cover"
           />
         ) : (
-          <span className="block h-20 w-14 shrink-0 rounded-nv-md bg-nv-surface" />
+          <span className="block h-20 w-14 shrink-0 rounded-nv-md bg-nv-paper-2" />
         )}
 
         <div className="min-w-0 flex-1">
@@ -204,7 +204,7 @@ function ActionLink({
         "relative inline-flex h-9 items-center rounded-nv-pill px-3.5 font-semibold text-caption transition after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']",
         primary
           ? 'bg-nv-accent text-nv-card'
-          : 'border border-nv-line-soft text-nv-text hover:bg-nv-surface',
+          : 'border border-nv-line-soft text-nv-text hover:bg-nv-paper-2',
       )}
     >
       {children}

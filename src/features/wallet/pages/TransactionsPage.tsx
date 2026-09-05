@@ -5,13 +5,14 @@ import type { Transaction, TxListParams } from '@/api/contracts'
 import { CoinChip } from '@/components/patterns/CoinChip'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
-import { Chip } from '@/components/ui/Chip'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Tabs } from '@/components/ui/Tabs'
 import { useToast } from '@/components/ui/Toast'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
 import { todayLocalISO } from '@/lib/date'
 import { formatDateTime } from '@/lib/format'
-import { TransactionRow } from '../components/TransactionRow'
+import { TransactionRow, TX_REF_LABEL, TX_STATUS_LABEL } from '../components/TransactionRow'
 import { useTransactions, useWalletSummary } from '../hooks/useTopup'
 
 /** Empat saringan · FR-WALLET-15. "Menunggu" memilih status, bukan jenis. */
@@ -76,9 +77,13 @@ export default function TransactionsPage() {
     const total = spend.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
     if (total === 0) return []
 
+    // Dikelompokkan lewat labelnya, bukan lewat nilai enum-nya: yang dibaca
+    // pengguna adalah "Buka bab", dan dua enum yang berbeda tidak pernah
+    // memetakan ke label yang sama, jadi pengelompokannya tetap setara.
     const byRef = new Map<string, number>()
     for (const tx of spend) {
-      byRef.set(tx.refType, (byRef.get(tx.refType) ?? 0) + Math.abs(tx.amount))
+      const label = TX_REF_LABEL[tx.refType]
+      byRef.set(label, (byRef.get(label) ?? 0) + Math.abs(tx.amount))
     }
     return [...byRef.entries()]
       .map(([label, coins]) => ({ label, pct: Math.round((coins / total) * 100) }))
@@ -86,12 +91,18 @@ export default function TransactionsPage() {
   }, [rows])
 
   const receiptStatus = useMemo(() => {
+    // Dihitung atas **label**-nya, bukan atas nilai enum-nya: panel ini dibaca
+    // pengguna, dan `success`/`reversed` adalah satu-satunya bahasa Inggris yang
+    // sempat tersisa di layar — tepat di halaman uang.
     const counts = new Map<string, number>()
-    for (const tx of rows) counts.set(tx.status, (counts.get(tx.status) ?? 0) + 1)
+    for (const tx of rows) {
+      const label = TX_STATUS_LABEL[tx.status]
+      counts.set(label, (counts.get(label) ?? 0) + 1)
+    }
     return [...counts.entries()]
   }, [rows])
 
-  function setFilter(id: string) {
+  function setFilter(id: (typeof FILTERS)[number]['id']) {
     const next = new URLSearchParams(params)
     next.set('f', id)
     next.delete('page')
@@ -119,31 +130,43 @@ export default function TransactionsPage() {
           satu halaman membuat pembaca layar mengumumkan dua judul berbeda. */}
       <p className="px-4 pt-4 text-body text-nv-muted">{t('tx.subtitle')}</p>
 
-      <section className="mx-4 flex items-center justify-between rounded-nv-lg bg-nv-surface px-4 py-3.5">
-        <div>
-          <p className="text-caption text-nv-muted">{t('tx.available')}</p>
-          <CoinChip amount={wallet.data?.balance ?? 0} format="exact" className="pt-0.5 text-lg" />
+      {/*
+        **Brankas: panel putih, angka serif** (`7i`). Ia satu-satunya blok putih
+        di halaman ini, dan itu disengaja — ia satu-satunya yang menyatakan saldo.
+        Angkanya serif karena brief §1 menaruh angka di dalam blok statistik pada
+        muka yang sama dengan judul cerita; label di sekelilingnya tetap sans.
+      */}
+      <section className="mx-4 mt-4 flex items-start justify-between gap-4 rounded-nv-lg bg-nv-card p-4">
+        <div className="min-w-0">
+          <p className="nv-section-label">{t('tx.available')}</p>
+          <p className="pt-1">
+            <CoinChip
+              amount={wallet.data?.balance ?? 0}
+              bonus={wallet.data?.bonus ?? 0}
+              className="font-display text-page"
+            />
+          </p>
         </div>
-        <div className="text-right">
-          <p className="text-caption text-nv-muted">{t('tx.thisMonth')}</p>
-          <p className="pt-0.5 font-semibold text-body text-nv-success tabular-nums">
+        <div className="shrink-0 text-right">
+          <p className="nv-section-label">{t('tx.thisMonth')}</p>
+          <p className="pt-1 font-display text-card font-bold text-nv-text tabular-nums">
             {thisMonth >= 0 ? '+' : '−'}
             {Math.abs(thisMonth).toLocaleString('id-ID')}
           </p>
         </div>
       </section>
 
-      <div className="flex flex-wrap gap-2 px-4 pt-4">
-        {FILTERS.map((filter) => (
-          <Chip
-            key={filter.id}
-            selected={filter.id === active.id}
-            onClick={() => setFilter(filter.id)}
-          >
-            {filter.label}
-          </Chip>
-        ))}
-      </div>
+      {/* **Tab teks bergaris bawah 2px, bukan pil** (brief §1 aturan 5): saringan
+          adalah tab teks di seluruh aplikasi ini, dan pil dipakai hanya di tempat
+          mockup memang menggambar pil. Yang tidak berubah: menekannya tetap
+          **meminta ulang barisnya ke server**, bukan menyembunyikan baris. */}
+      <Tabs
+        items={FILTERS.map((f) => ({ value: f.id, label: f.label }))}
+        value={active.id}
+        onChange={setFilter}
+        label={t('tx.title')}
+        className="mt-4 px-4"
+      />
 
       <p className="px-4 pt-2.5 text-caption text-nv-muted">
         {t('tx.note')(active.label.toLowerCase())}
@@ -169,7 +192,9 @@ export default function TransactionsPage() {
         >
           {(data) => (
             <>
-              <div className="mx-4 overflow-hidden rounded-nv-lg border border-nv-line bg-nv-card">
+              {/* Baris berpembatas tanpa kotak: daftar mengalahkan kartu, dan
+                  garisnya sendiri sudah memisahkan baris satu dari lainnya. */}
+              <div className="-mx-0 border-nv-line border-y">
                 {data.items.map((tx) => (
                   <TransactionRow key={tx.id} tx={tx} />
                 ))}
@@ -195,17 +220,20 @@ export default function TransactionsPage() {
         </AsyncState>
       </div>
 
-      <div className="grid gap-3 px-4 pt-6 sm:grid-cols-2">
-        <section className="rounded-nv-lg border border-nv-line p-3.5">
-          <h2 className="font-semibold text-body text-nv-text">{t('tx.spendMap')}</h2>
+      <div className="grid grid-cols-1 gap-5 px-4 pt-6 sm:grid-cols-2">
+        <section>
+          <SectionHeader label={t('tx.spendMap')} />
           {spendMap.length === 0 ? (
             <p className="pt-2 text-caption text-nv-muted">{t('tx.noSpend')}</p>
           ) : (
-            <dl className="pt-2">
+            <dl className="pt-1">
               {spendMap.map((slice) => (
-                <div key={slice.label} className="flex items-center justify-between py-0.5">
-                  <dt className="text-body text-nv-muted capitalize">{slice.label}</dt>
-                  <dd className="font-semibold text-body text-nv-text tabular-nums">
+                <div
+                  key={slice.label}
+                  className="flex items-center justify-between gap-3 border-nv-line border-b py-2 last:border-0"
+                >
+                  <dt className="min-w-0 truncate text-body text-nv-text-2">{slice.label}</dt>
+                  <dd className="shrink-0 font-semibold text-body text-nv-text tabular-nums">
                     {slice.pct}%
                   </dd>
                 </div>
@@ -214,13 +242,18 @@ export default function TransactionsPage() {
           )}
         </section>
 
-        <section className="rounded-nv-lg border border-nv-line p-3.5">
-          <h2 className="font-semibold text-body text-nv-text">{t('tx.receiptStatus')}</h2>
-          <dl className="pt-2">
+        <section>
+          <SectionHeader label={t('tx.receiptStatus')} />
+          <dl className="pt-1">
             {receiptStatus.map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between py-0.5">
-                <dt className="text-body text-nv-muted capitalize">{status}</dt>
-                <dd className="font-semibold text-body text-nv-text tabular-nums">{count}</dd>
+              <div
+                key={status}
+                className="flex items-center justify-between gap-3 border-nv-line border-b py-2 last:border-0"
+              >
+                <dt className="min-w-0 truncate text-body text-nv-text-2">{status}</dt>
+                <dd className="shrink-0 font-semibold text-body text-nv-text tabular-nums">
+                  {count}
+                </dd>
               </div>
             ))}
           </dl>

@@ -1,9 +1,10 @@
-import { CheckCircle2, Circle } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import type { AuthorProfile } from '@/api/contracts'
+import { SettingRow } from '@/components/patterns/SettingRow'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Card'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Switch } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
@@ -62,7 +63,7 @@ function SignupForm({ profile: loaded }: { profile: AuthorProfile }) {
           satu halaman membuat pembaca layar mengumumkan dua judul berbeda. */}
       <p className="text-body text-nv-muted">{t('studio.signupBody')}</p>
 
-      <p className="pt-3 font-semibold text-body text-nv-accent">
+      <p className="pt-3 font-semibold text-body text-nv-text">
         {tier === 'verified'
           ? t('studio.tierVerified')
           : tier === 'registered'
@@ -70,25 +71,37 @@ function SignupForm({ profile: loaded }: { profile: AuthorProfile }) {
             : t('studio.tierNone')}
       </p>
 
-      <div className="grid grid-cols-1 gap-2.5 pt-4">
-        <Requirement
-          checked={terms}
-          onChange={setTerms}
-          title={t('studio.reqTerms')}
-          body={t('studio.reqTermsBody')}
-          required
+      {/* Tiga prasyarat → **daftar berpembatas** lewat `SettingRow` yang sudah
+          ada, bukan tiga kotak bergaris rambut: judul, keterangan, dan sakelar
+          di kanan adalah persis bentuk baris itu. Nol komponen baru, dan
+          bintang wajibnya tetap di judul. */}
+      <SectionHeader label={t('studio.reqLabel')} className="pt-6" />
+      <div className="pt-1">
+        <SettingRow
+          title={`${t('studio.reqTerms')} *`}
+          description={t('studio.reqTermsBody')}
+          control={
+            <Switch checked={terms} onChange={setTerms} label={t('studio.reqTerms')} hideLabel />
+          }
         />
-        <Requirement
-          checked={payout}
-          onChange={setPayout}
+        <SettingRow
           title={t('studio.reqPayout')}
-          body={t('studio.reqPayoutBody')}
+          description={t('studio.reqPayoutBody')}
+          control={
+            <Switch checked={payout} onChange={setPayout} label={t('studio.reqPayout')} hideLabel />
+          }
         />
-        <Requirement
-          checked={twoFactor}
-          onChange={setTwoFactor}
+        <SettingRow
           title={t('studio.reqTwoFactor')}
-          body={t('studio.reqTwoFactorBody')}
+          description={t('studio.reqTwoFactorBody')}
+          control={
+            <Switch
+              checked={twoFactor}
+              onChange={setTwoFactor}
+              label={t('studio.reqTwoFactor')}
+              hideLabel
+            />
+          }
         />
       </div>
 
@@ -110,40 +123,13 @@ function SignupForm({ profile: loaded }: { profile: AuthorProfile }) {
       {!terms && <p className="pt-2 text-caption text-nv-danger">{t('studio.signupNeedTerms')}</p>}
 
       <p className="pt-4 text-center">
-        <Link to="/karya" className="text-body text-nv-accent underline">
+        <Link
+          to="/karya"
+          className="nv-tap font-semibold text-body text-nv-muted underline underline-offset-4"
+        >
           {t('studio.backToStudio')}
         </Link>
       </p>
-    </div>
-  )
-}
-
-function Requirement({
-  checked,
-  onChange,
-  title,
-  body,
-  required = false,
-}: {
-  checked: boolean
-  onChange: (next: boolean) => void
-  title: string
-  body: string
-  required?: boolean
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-nv-lg border border-nv-line p-3.5">
-      <span aria-hidden className={checked ? 'text-nv-success' : 'text-nv-muted'}>
-        {checked ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-body text-nv-text">
-          {title}
-          {required && <span className="pl-1 text-nv-danger">*</span>}
-        </p>
-        <p className="pt-0.5 text-caption text-nv-muted">{body}</p>
-      </div>
-      <Switch checked={checked} onChange={onChange} label={title} hideLabel />
     </div>
   )
 }

@@ -266,7 +266,7 @@ export function PrintSheet({ item, onClose, onSubmit, submitting }: PrintSheetPr
             onChange={(e) => setShip({ ...ship, note: e.target.value })}
           />
 
-          <dl className="mt-4 rounded-nv-lg bg-nv-surface p-3.5">
+          <dl className="mt-4 rounded-nv-lg bg-nv-paper-2 p-3.5">
             <div className="flex items-center justify-between">
               <dt className="text-body text-nv-muted">{t('studio.costEstimate')}</dt>
               <dd className="font-semibold text-body text-nv-text tabular-nums">

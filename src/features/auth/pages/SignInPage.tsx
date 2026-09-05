@@ -87,6 +87,11 @@ export default function SignInPage() {
 
   return (
     <form noValidate onSubmit={submit}>
+      {/* `AuthLayout` merender nama aplikasinya sebagai `<p>`, bukan judul —
+          jadi halaman ini yang harus punya `<h1>`-nya. `/daftar` dan
+          `/lupa-sandi` sudah punya; sampai R8 hanya `/masuk` yang tidak, dan
+          halaman tanpa `<h1>` tidak punya judul sama sekali bagi pembaca layar. */}
+      <h1 className="mb-2 font-display text-page font-bold">{t('auth.signIn')}</h1>
       <p className="mb-6 text-body text-nv-muted">{t('auth.signInLead')}</p>
 
       <SignInFields
@@ -113,7 +118,7 @@ export default function SignInPage() {
         />
         <Link
           to="/lupa-sandi"
-          className="shrink-0 pt-1 text-caption font-semibold text-nv-accent underline underline-offset-2"
+          className="nv-tap shrink-0 pt-1 text-caption font-semibold text-nv-muted underline underline-offset-4"
         >
           {t('auth.forgot')}
         </Link>
@@ -131,7 +136,10 @@ export default function SignInPage() {
 
       <p className="mt-6 text-center text-caption text-nv-muted">
         {t('auth.noAccount')}{' '}
-        <Link to="/daftar" className="font-semibold text-nv-accent underline underline-offset-2">
+        <Link
+          to="/daftar"
+          className="nv-tap font-semibold text-nv-text underline underline-offset-4"
+        >
           {t('auth.register')}
         </Link>
       </p>

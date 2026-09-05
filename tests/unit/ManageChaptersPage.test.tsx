@@ -82,7 +82,7 @@ describe('baris bab per status · FR-STUDIO-08', () => {
     renderChapters('?tab=draft')
     expect(await screen.findByText('Sarapan Pukul Empat Pagi')).toBeInTheDocument()
 
-    expect(screen.getAllByText(/sekitar 620 kata/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/sekitar 650 kata/).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('link', { name: 'Lanjut Tulis' }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: 'Terbitkan' }).length).toBeGreaterThan(0)
   })

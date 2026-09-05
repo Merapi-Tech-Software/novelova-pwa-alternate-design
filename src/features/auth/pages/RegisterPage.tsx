@@ -9,6 +9,7 @@ import { t } from '@/i18n/t'
 import { cx } from '@/lib/cx'
 import { PASSWORD_MIN } from '@/lib/limits'
 import { PasswordMeter } from '../components/PasswordMeter'
+import { PasswordToggle } from '../components/PasswordToggle'
 import { useRegister } from '../hooks/useRegister'
 
 /** Email dinilai dengan pola PRD, bukan `type="email"` peramban (FR-AUTH-05). */
@@ -112,25 +113,15 @@ export default function RegisterPage() {
         />
 
         <div>
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <Input
-                label={t('auth.password')}
-                type={show ? 'text' : 'password'}
-                autoComplete="new-password"
-                placeholder={t('auth.passwordPlaceholder')(PASSWORD_MIN)}
-                value={password}
-                onChange={(e) => clear(setPassword)(e.target.value)}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => setShow((on) => !on)}
-              className="h-11 shrink-0 rounded-nv-md border border-nv-line px-3 text-caption font-semibold text-nv-muted"
-            >
-              {show ? t('auth.hide') : t('auth.show')}
-            </button>
-          </div>
+          <Input
+            label={t('auth.password')}
+            type={show ? 'text' : 'password'}
+            autoComplete="new-password"
+            placeholder={t('auth.passwordPlaceholder')(PASSWORD_MIN)}
+            value={password}
+            onChange={(e) => clear(setPassword)(e.target.value)}
+            counter={<PasswordToggle show={show} onToggle={() => setShow((on) => !on)} />}
+          />
           <PasswordMeter password={password} />
         </div>
       </div>
@@ -173,7 +164,10 @@ export default function RegisterPage() {
 
       <p className="mt-6 text-center text-caption text-nv-muted">
         {t('auth.haveAccount')}{' '}
-        <Link to="/masuk" className="font-semibold text-nv-accent underline underline-offset-2">
+        <Link
+          to="/masuk"
+          className="nv-tap font-semibold text-nv-text underline underline-offset-4"
+        >
           {t('auth.signIn')}
         </Link>
       </p>

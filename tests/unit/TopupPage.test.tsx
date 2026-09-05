@@ -124,14 +124,18 @@ describe('konteks dari gerbang bab · FR-WALLET-18', () => {
     // Pelunasan menyentuh tiga tabel dalam satu transaksi lalu menyegarkan
     // saldo — di jsdom itu bisa lebih lambat daripada ambang bawaan 1 detik.
     expect(await screen.findByText('Koin sudah masuk', {}, { timeout: 5_000 })).toBeInTheDocument()
-    // 15.300 + 500 + 50 bonus, dan **dua kali**: di layar sukses dan di bilah
-    // atas — saldo di bilah atas ikut berubah (FR-WALLET-10).
+    // 15.300 + 500 + 50 bonus, di **dua** tempat dengan **dua bentuk angka**:
+    // layar sukses menulisnya penuh (`15.850`) karena di situ jumlahnya yang
+    // jadi pokok, sementara chip di bilah atas menulisnya ringkas (`15,8rb`)
+    // seperti `7a` dan `7i`. Keduanya wajib berubah — yang diuji FR-WALLET-10
+    // adalah saldo di bilah atas ikut bergerak, bukan bentuk hurufnya.
     //
     // Ditunggu, bukan dipotret: layar sukses tahu saldo barunya dari pesanan,
     // sedangkan bilah atas menunggu `['wallet']` diambil ulang. Keduanya benar,
     // tetapi tidak tiba pada render yang sama — dan assertion tanpa penantian
     // gagal sesekali karenanya.
-    await vi.waitFor(() => expect(screen.getAllByText('15.850')).toHaveLength(2))
+    await vi.waitFor(() => expect(screen.getAllByText('15.850')).toHaveLength(1))
+    await vi.waitFor(() => expect(screen.getAllByText('15,8rb')).toHaveLength(1))
 
     await userEvent.click(screen.getByRole('button', { name: 'Lanjutkan membaca' }))
     expect(await screen.findByText('ruang baca')).toBeInTheDocument()

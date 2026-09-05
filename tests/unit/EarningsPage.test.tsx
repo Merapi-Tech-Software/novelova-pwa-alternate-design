@@ -63,11 +63,11 @@ describe('analitik penulis · FR-EARN-01..03', () => {
 
     expect(await screen.findByText('Kurva pendapatan')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Retensi' }))
+    await user.click(screen.getByRole('tab', { name: 'Retensi' }))
     expect(await screen.findByText('Titik berhenti')).toBeInTheDocument()
     expect(screen.queryByText('Kurva pendapatan')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Traffic' }))
+    await user.click(screen.getByRole('tab', { name: 'Traffic' }))
     expect(await screen.findByText('Sumber pembaca')).toBeInTheDocument()
     expect(screen.queryByText('Titik berhenti')).not.toBeInTheDocument()
   })
@@ -87,7 +87,7 @@ describe('analitik penulis · FR-EARN-01..03', () => {
     renderAt('/penulis/analitik')
     await screen.findByText(/30 hari terakhir/)
 
-    await user.click(screen.getByRole('button', { name: '7H' }))
+    await user.click(screen.getByRole('tab', { name: '7H' }))
     expect(await screen.findByText(/7 hari terakhir/)).toBeInTheDocument()
   })
 
@@ -96,12 +96,11 @@ describe('analitik penulis · FR-EARN-01..03', () => {
     renderAt('/penulis/analitik')
     await screen.findByText(/30 hari terakhir/)
 
-    await user.click(screen.getByRole('button', { name: 'Retensi' }))
-    const funnel = await screen.findByRole('heading', { name: 'Corong pembaca' })
-    // `<ol>` pertama sesudah judulnya — bukan `closest('div')`, yang bisa naik
-    // ke wadah yang memuat kartu "Titik berhenti" sekaligus.
-    const list = funnel.parentElement?.querySelector('ol')
-    if (!list) throw new Error('daftar corong tidak ditemukan')
+    await user.click(screen.getByRole('tab', { name: 'Retensi' }))
+    // Daftarnya dicari lewat **namanya**, bukan lewat kekerabatan DOM: sejak
+    // R9a judul section-nya `SectionHeader` yang berdiri di luar daftar, dan
+    // menaiki pohon dari judul akan menjangkau "Titik berhenti" sekaligus.
+    const list = await screen.findByRole('list', { name: 'Corong pembaca' })
 
     // Persennya dibaca dari **sel angkanya**, bukan seluruh baris: label tahap
     // tengah menyebut nomor bab ("Bab 47"), dan regex atas `textContent` akan
@@ -120,7 +119,7 @@ describe('analitik penulis · FR-EARN-01..03', () => {
     renderAt('/penulis/analitik')
     await screen.findByText(/30 hari terakhir/)
 
-    await user.click(screen.getByRole('button', { name: 'Traffic' }))
+    await user.click(screen.getByRole('tab', { name: 'Traffic' }))
     const table = await screen.findByRole('table', { name: /peta panas/i })
 
     expect(within(table).getAllByRole('columnheader')).toHaveLength(8)
@@ -133,7 +132,7 @@ describe('analitik penulis · FR-EARN-01..03', () => {
     renderAt('/penulis/analitik')
     await screen.findByText(/30 hari terakhir/)
 
-    await user.click(screen.getByRole('button', { name: 'Traffic' }))
+    await user.click(screen.getByRole('tab', { name: 'Traffic' }))
     const link = await screen.findByRole('link', { name: /Buka penjadwal/ })
     expect(link).toHaveAttribute('href', expect.stringContaining('jadwalkan=terbaik'))
   })
@@ -157,7 +156,9 @@ describe('riwayat pencairan · FR-EARN-12', () => {
 
   it('pengajuan ditolak membawa alasannya dan tidak digambari lini masa', async () => {
     renderAt('/penulis/penarikan/riwayat')
-    const rejected = (await screen.findByText('Ditolak')).closest('div.nv-card')
+    // Barisnya `<li>` sejak R9a — daftar berpembatas menggantikan tumpukan
+    // kartu. Yang diuji tidak berubah: tidak ada lini masa di bawah yang ditolak.
+    const rejected = (await screen.findByText('Ditolak')).closest('li')
     if (!rejected) throw new Error('baris ditolak tidak ditemukan')
     // Lini masa di bawah pengajuan yang ditolak menyiratkan uangnya masih jalan.
     expect(within(rejected as HTMLElement).queryByText('Ditransfer')).not.toBeInTheDocument()

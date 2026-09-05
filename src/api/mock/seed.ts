@@ -162,7 +162,20 @@ function weeklyReadsOf(growth: string): number {
 }
 
 const CATALOG_FILLER: StorySeed[] = FILLER.map((seed, i) => {
-  const reads = 890_000 - i * 21_000
+  /*
+   * **Menurun sampai 60rb, bukan menurun 21rb per judul.**
+   *
+   * Rumus lamanya `890_000 - i * 21_000` benar selama `FILLER` berisi 32 judul:
+   * yang terakhir mendapat 239rb. Begitu R2b menumbuhkannya jadi 62,
+   * judul ke-43 dan seterusnya jatuh **di bawah nol** — dan `/cari` mencetaknya
+   * apa adanya sebagai `−160rb baca`. Sembilan belas cerita punya jumlah baca
+   * negatif selama dua fase tanpa satu pun test gagal.
+   *
+   * Sekarang jaraknya dibagi rata sepanjang daftar, jadi menambah judul tidak
+   * pernah bisa menembus dasar lagi. Urutannya tetap menurun — dan itulah yang
+   * dipakai section "Populer".
+   */
+  const reads = 890_000 - Math.round((i / Math.max(1, FILLER.length - 1)) * 830_000)
   const day = new Date(Date.parse('2026-08-23') - i * 3 * 86_400_000)
   return {
     id: `s${i + 9}`,
@@ -247,7 +260,9 @@ const catalogStories: Story[] = [...CATALOG, ...CATALOG_FILLER].map((s, i) => ({
     weeklyReads: weeklyReadsOf(s.growth),
     commentCount: Math.round(s.reads / 310),
     // Cerita gratis tidak punya bab yang dibuka pakai koin.
-    unlockCount: i % 5 === 3 ? 0 : Math.round(s.reads / 12) - i * 900,
+    // Dijepit nol: pengurangnya bisa melebihi jumlahnya pada judul di ekor
+    // daftar, dan "bab dibuka −4.200 kali" bukan angka yang bisa berarti apa pun.
+    unlockCount: i % 5 === 3 ? 0 : Math.max(0, Math.round(s.reads / 12) - i * 900),
     readers: Math.round(s.reads * 0.42),
     coinsEarned: i % 5 === 3 ? 0 : Math.round(s.reads / 11),
   },
@@ -399,6 +414,38 @@ function chaptersFor(story: Story): ChapterSummary[] {
 const chapters: ChapterSummary[] = catalogStories.flatMap(chaptersFor)
 
 /**
+ * Naskah contoh sepanjang kira-kira `target` kata, dirakit dari `PROSE`.
+ *
+ * Dipakai **hanya** untuk bab milik penulis contoh. Sampai R9b kesembilan bab
+ * itu tidak punya satu pun baris isi, sementara ringkasannya mengaku 620–2.040
+ * kata: `/karya/ms1/bab` menulis *"sekitar 620 kata · 41%"* dan editornya
+ * terbuka **kosong**. Sisi pembaca tidak terkena karena `getChapter` punya
+ * naskah cadangan; sisi penulis tidak punya, dan memang tidak boleh punya —
+ * naskah cadangan di editor berarti penulis menyunting tulisan yang bukan
+ * miliknya.
+ *
+ * Jumlah katanya lalu **dihitung dari naskah ini**, bukan dipatok: angka yang
+ * dipatok akan berselisih lagi pada perubahan berikutnya
+ * (`CLAUDE.md` §8, "seed harus rekonsiliasi").
+ */
+function naskahSepanjang(target: number): string[] {
+  const out: string[] = []
+  let kata = 0
+  for (let i = 0; kata < target && i < 400; i += 1) {
+    const paragraf = PROSE[i % PROSE.length]
+    if (!paragraf) break
+    out.push(paragraf)
+    kata += paragraf.split(/\s+/).length
+  }
+  return out
+}
+
+const hitungKata = (body: string[]): number => body.reduce((n, p) => n + p.split(/\s+/).length, 0)
+
+/** `ms1-c51` → naskahnya. Dibangun sekali, dipakai dua kali: ringkasan dan isi. */
+const authorBodies = new Map<string, string[]>()
+
+/**
  * Bab milik penulis (`AUTHOR_CHAPTERS`) — empat keadaan: draf, terjadwal,
  * terbit, privat. Bab 49 dan 50 sengaja berbagi slot Kamis 19.00 supaya
  * peringatan bentrok `SCHED-409` punya datanya.
@@ -522,33 +569,42 @@ const authorChapters: ChapterSummary[] = (
     comments: number
     review?: ChapterSummary['review']
   }>
-).map<ChapterSummary>((c) => ({
-  id: `ms1-c${c.n}`,
-  storyId: 'ms1',
-  number: c.n,
-  title: c.t,
-  access: c.state === 'private' ? 'private' : c.n % 2 === 1 ? 'paid' : 'free',
-  priceCoins: c.state === 'private' ? 0 : c.n % 2 === 1 ? 1_800 : 0,
-  readMinutes: Math.round(c.words / 200),
-  state: c.state,
-  // Bab **privat** pernah terbit lalu disembunyikan — ia sudah lolos tinjauan.
-  // Menandainya `draft` membuat "Tampilkan" mengirimnya ke antrean lagi.
-  review: c.review ?? (c.state === 'published' || c.state === 'private' ? 'published' : 'draft'),
-  publishAt: c.at,
-  publishTz: 'Asia/Jakarta',
-  wordCount: c.words,
-  previewPct: 20,
-  accessChangedAt: null,
-  privateReason: c.state === 'private' ? 'Sedang direvisi' : null,
-  privateUntil: null,
-  editedAt: iso(days(c.edited)),
-  views: c.views,
-  rating: c.rating,
-  commentCount: c.comments,
-  owned: true,
-  finished: false,
-  withdrawnAt: null,
-}))
+).map<ChapterSummary>((c) => {
+  const id = `ms1-c${c.n}`
+  const body = naskahSepanjang(c.words)
+  authorBodies.set(id, body)
+  // Jumlah kata **dihitung dari naskahnya**, bukan dari angka yang diketik di
+  // atas: angka yang dipatok akan berselisih lagi pada perubahan berikutnya.
+  const words = hitungKata(body)
+
+  return {
+    id,
+    storyId: 'ms1',
+    number: c.n,
+    title: c.t,
+    access: c.state === 'private' ? 'private' : c.n % 2 === 1 ? 'paid' : 'free',
+    priceCoins: c.state === 'private' ? 0 : c.n % 2 === 1 ? 1_800 : 0,
+    readMinutes: Math.round(words / 200),
+    state: c.state,
+    // Bab **privat** pernah terbit lalu disembunyikan — ia sudah lolos tinjauan.
+    // Menandainya `draft` membuat "Tampilkan" mengirimnya ke antrean lagi.
+    review: c.review ?? (c.state === 'published' || c.state === 'private' ? 'published' : 'draft'),
+    publishAt: c.at,
+    publishTz: 'Asia/Jakarta',
+    wordCount: words,
+    previewPct: 20,
+    accessChangedAt: null,
+    privateReason: c.state === 'private' ? 'Sedang direvisi' : null,
+    privateUntil: null,
+    editedAt: iso(days(c.edited)),
+    views: c.views,
+    rating: c.rating,
+    commentCount: c.comments,
+    owned: true,
+    finished: false,
+    withdrawnAt: null,
+  }
+})
 
 export const CHAPTER_PREVIEW = [
   'Arden akhirnya berbalik. Ada sesuatu di matanya yang tidak pernah muncul dalam rapat mana pun, sesuatu yang membuat Kaia lupa pada urutan kalimat yang sudah ia susun sepanjang malam.',
@@ -563,16 +619,28 @@ export const CHAPTER_PREVIEW = [
  * persis. `getChapter` memakai `PROSE` sebagai isi bawaan bila barisnya tidak
  * ada — hasilnya identik di layar, seeding-nya jauh lebih ringan.
  */
-const chapterContents: Array<ChapterContent & { id: string }> = chapters
-  .filter((c) => c.storyId === 's1')
-  .map((c) => ({
+const chapterContents: Array<ChapterContent & { id: string }> = [
+  ...chapters
+    .filter((c) => c.storyId === 's1')
+    .map<ChapterContent & { id: string }>((c) => ({
+      id: `${c.id}-id`,
+      chapterId: c.id,
+      lang: 'id',
+      title: c.title,
+      body: PROSE,
+      authorNote: c.number === 1 ? 'Terima kasih sudah memulai cerita ini.' : null,
+    })),
+  // Bab milik penulis contoh **wajib** punya isi: editornya tidak punya naskah
+  // cadangan, dan tidak boleh punya. Lihat `naskahSepanjang` di atas.
+  ...authorChapters.map<ChapterContent & { id: string }>((c) => ({
     id: `${c.id}-id`,
     chapterId: c.id,
     lang: 'id',
     title: c.title,
-    body: PROSE,
-    authorNote: c.number === 1 ? 'Terima kasih sudah memulai cerita ini.' : null,
-  }))
+    body: authorBodies.get(c.id) ?? PROSE,
+    authorNote: null,
+  })),
+]
 
 // ── dompet ──────────────────────────────────────────────────────────────────
 
@@ -1561,7 +1629,7 @@ const readerPrefs: ReaderPrefs = {
 }
 
 /** Dinaikkan bila bentuk seed berubah, supaya database lama ditulis ulang. */
-const SEED_VERSION = 14
+const SEED_VERSION = 16
 
 /**
  * Mengisi database bila kosong atau versinya usang.

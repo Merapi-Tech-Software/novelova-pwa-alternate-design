@@ -2,17 +2,24 @@ import { MoreHorizontal } from 'lucide-react'
 import { Link } from 'react-router'
 import type { AuthorChapter } from '@/api/contracts'
 import { Button, IconButton } from '@/components/ui/Button'
-import { Badge, type BadgeTone } from '@/components/ui/Chip'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { formatDateTime, formatRelative } from '@/lib/format'
 
-const STATUS: Record<AuthorChapter['authorStatus'], { label: string; tone: BadgeTone }> = {
-  draft: { label: t('chapters.stDraft'), tone: 'neutral' },
-  in_review: { label: t('chapters.stInReview'), tone: 'warning' },
-  rejected: { label: t('chapters.stRejected'), tone: 'danger' },
-  scheduled: { label: t('chapters.stScheduled'), tone: 'info' },
-  published: { label: t('chapters.stPublished'), tone: 'success' },
-  private: { label: t('chapters.stPrivate'), tone: 'neutral' },
+/**
+ * Enam status sebagai **kata berwarna status**, bukan lencana terisi (R9b).
+ *
+ * Enam lencana bertumpuk di satu daftar membuat tiap baris terbaca sebagai
+ * peringatan; yang dibutuhkan penulis cuma tahu di mana babnya berdiri. Warnanya
+ * tetap membedakan — yang hilang hanya bidangnya.
+ */
+const STATUS: Record<AuthorChapter['authorStatus'], { label: string; tone: string }> = {
+  draft: { label: t('chapters.stDraft'), tone: 'text-nv-muted' },
+  in_review: { label: t('chapters.stInReview'), tone: 'text-nv-warning' },
+  rejected: { label: t('chapters.stRejected'), tone: 'text-nv-danger' },
+  scheduled: { label: t('chapters.stScheduled'), tone: 'text-nv-info' },
+  published: { label: t('chapters.stPublished'), tone: 'text-nv-success' },
+  private: { label: t('chapters.stPrivate'), tone: 'text-nv-muted' },
 }
 
 export interface ChapterRowProps {
@@ -38,22 +45,21 @@ export function ChapterRow({ chapter, storyId, onPublish, onSchedule, onMenu }: 
   const status = STATUS[chapter.authorStatus]
 
   return (
-    <article
-      id={`bab-${chapter.number}`}
-      className="rounded-nv-lg border border-nv-line bg-nv-card p-3.5"
-    >
-      <div className="flex items-start justify-between gap-2">
+    <article id={`bab-${chapter.number}`} className="border-nv-line border-b py-3.5">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-caption text-nv-muted tabular-nums">Bab {chapter.number}</p>
-          <h3 className="truncate font-semibold text-body text-nv-text">{chapter.title}</h3>
+          <p className="nv-section-label tabular-nums">Bab {chapter.number}</p>
+          <h3 className="truncate pt-0.5 font-display text-card font-bold text-nv-text">
+            {chapter.title}
+          </h3>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-baseline gap-2 text-caption font-semibold">
           {chapter.authorStatus === 'published' && (
-            <Badge tone={chapter.access === 'paid' ? 'coin' : 'neutral'}>
+            <span className={chapter.access === 'paid' ? 'text-nv-gold' : 'text-nv-muted'}>
               {chapter.access === 'paid' ? t('chapters.accessPaid') : t('chapters.accessFree')}
-            </Badge>
+            </span>
           )}
-          <Badge tone={status.tone}>{status.label}</Badge>
+          <span className={cx(status.tone, 'whitespace-nowrap')}>{status.label}</span>
         </div>
       </div>
 
@@ -125,10 +131,10 @@ function Meta({ chapter }: { chapter: AuthorChapter }) {
         </p>
         <span
           aria-hidden
-          className="mt-1.5 block h-1.5 overflow-hidden rounded-nv-pill bg-nv-surface"
+          className="mt-1.5 block h-1.5 overflow-hidden rounded-nv-pill bg-nv-paper-2"
         >
           <span
-            className="block h-full rounded-nv-pill bg-nv-accent"
+            className="block h-full rounded-nv-pill bg-nv-gold-line"
             style={{ width: `${chapter.progressPct}%` }}
           />
         </span>
@@ -138,7 +144,7 @@ function Meta({ chapter }: { chapter: AuthorChapter }) {
 
   if (chapter.authorStatus === 'scheduled' && chapter.publishAt) {
     return (
-      <p className="pt-1.5 text-caption text-nv-accent">
+      <p className="pt-1.5 text-caption text-nv-text-2">
         {t('chapters.scheduledMeta')(formatDateTime(new Date(chapter.publishAt)))}
       </p>
     )
@@ -160,5 +166,21 @@ function Meta({ chapter }: { chapter: AuthorChapter }) {
     )
   }
 
-  return <p className="pt-1.5 text-caption text-nv-muted">{t('chapters.emptyTitle')}</p>
+  /*
+   * **Bab yang ditolak menyebut apa yang terjadi**, bukan "Belum ada bab di
+   * sini" — kalimat keadaan-kosong yang sampai R9b muncul di bawah bab yang
+   * jelas-jelas ada. `AuthorChapter` belum membawa alasan penolakannya, jadi
+   * yang ditulis di sini adalah langkah berikutnya, bukan alasan yang dikarang.
+   */
+  if (chapter.authorStatus === 'rejected') {
+    return <p className="pt-1.5 text-caption text-nv-danger">{t('chapters.rejectedMeta')}</p>
+  }
+
+  // Sisa keadaan apa pun tetap punya `editedAt`, jadi selalu ada yang benar
+  // untuk ditulis.
+  return (
+    <p className="pt-1.5 text-caption text-nv-muted">
+      {t('chapters.editedMeta')(formatRelative(new Date(chapter.editedAt)))}
+    </p>
+  )
 }

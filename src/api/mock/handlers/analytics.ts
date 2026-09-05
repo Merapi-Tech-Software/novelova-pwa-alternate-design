@@ -306,7 +306,10 @@ export const analyticsHandlers: Pick<NovelovaApi, 'getStoryAnalytics'> = {
       metrics,
       series,
       chapters: sorted,
-      sentiment: sentimentOf(reviews, commentsInRange),
+      // `total` = **jumlah ulasan yang menyusunnya**, bukan jumlah komentar:
+      // persentasenya diturunkan dari bintang ulasan, dan menamai sumber yang
+      // lain membuat panel ini menjelaskan angkanya dengan data yang salah.
+      sentiment: sentimentOf(reviews, reviews.length),
       origin: {
         sources: [
           { label: 'Beranda', pct: 48 },

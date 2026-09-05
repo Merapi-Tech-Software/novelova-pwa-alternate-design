@@ -2,16 +2,15 @@ import type { ReactElement } from 'react'
 import { lazy } from 'react'
 import {
   createBrowserRouter,
+  Link,
   Outlet,
   type RouteObject,
   ScrollRestoration,
-  useNavigate,
 } from 'react-router'
 import { AppShell } from '@/app/layouts/AppShell'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { ReaderLayout } from '@/app/layouts/ReaderLayout'
 import { TopBarLayout } from '@/app/layouts/TopBarLayout'
-import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { EmptyState } from '@/components/ui/EmptyState'
 import ProfilePage from '@/features/profile/pages/ProfilePage'
 import { RequireAuth, RequireAuthor, RequireGuest } from './guards'
@@ -363,22 +362,36 @@ function Placeholder({ title }: { title: string }) {
 }
 
 /**
- * 404 · `ROUTE-404`. Memakai router, bukan `window.location` — memuat ulang
- * seluruh aplikasi hanya untuk pindah ke beranda membuang sesi yang sudah
- * dihidrasi dan seluruh cache, demi satu tautan yang salah ketik.
+ * 404 · `ROUTE-404`.
+ *
+ * **Satu kalimat dan satu tombol, tanpa ilustrasi** (R9d). Sampai sekarang ia
+ * memakai `FailureNotice` tingkat layar penuh, lengkap dengan lencana ikon
+ * bulat dan panel "yang tetap aman" — dan menjanjikan bahwa koin pembaca aman
+ * karena ia salah mengetik alamat justru menyiratkan bahwa ada yang bisa
+ * hilang. Panel itu milik kegagalan yang menyentuh uang atau tulisan, bukan
+ * milik tautan yang salah.
+ *
+ * Memakai router, bukan `window.location` — memuat ulang seluruh aplikasi hanya
+ * untuk pindah ke beranda membuang sesi yang sudah dihidrasi dan seluruh cache,
+ * demi satu tautan yang salah ketik.
  */
 function NotFound() {
-  const navigate = useNavigate()
   return (
-    <FailureNotice
-      level="fullscreen"
-      title="Halaman tidak ditemukan"
-      body="Alamat yang kamu buka tidak ada di aplikasi ini."
-      safety="Akun dan koinmu tidak terpengaruh."
-      onRetry={() => navigate('/')}
-      retryLabel="Ke beranda"
-      code="ROUTE-404"
-    />
+    <div className="mx-auto grid min-h-dvh w-full max-w-sm grid-cols-1 place-items-center px-5 py-10 text-center">
+      <div>
+        <h1 className="font-display text-page font-bold text-nv-text">Halaman tidak ditemukan</h1>
+        <p className="pt-2 text-body text-nv-muted">
+          Alamat yang kamu buka tidak ada di aplikasi ini.
+        </p>
+        <Link
+          to="/"
+          className="mt-6 inline-flex h-11 items-center rounded-nv-pill bg-nv-accent px-5 font-bold text-body text-nv-card"
+        >
+          Ke beranda
+        </Link>
+        <p className="pt-4 text-caption text-nv-muted">ROUTE-404</p>
+      </div>
+    </div>
   )
 }
 

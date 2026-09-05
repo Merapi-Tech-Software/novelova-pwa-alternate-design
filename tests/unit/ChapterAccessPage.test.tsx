@@ -64,7 +64,13 @@ describe('konteks bab · FR-STUDIO-36', () => {
       'true',
     )
     expect(screen.getByText('7')).toBeInTheDocument()
-    expect(screen.getByText(/Pratinjau gratis · 35%/)).toBeInTheDocument()
+    // Penggeser primitif `Slider` sejak R9b: nilainya dibacakan lewat
+    // `aria-valuetext`, bukan ditempel ke judulnya. Ini pemeriksaan yang lebih
+    // kuat — ia menguji yang benar-benar didengar pembaca layar.
+    expect(screen.getByRole('slider', { name: 'Pratinjau gratis' })).toHaveAttribute(
+      'aria-valuetext',
+      '35%',
+    )
   })
 
   it('tombol kembali menuju daftar bab pada posisi bab itu', async () => {

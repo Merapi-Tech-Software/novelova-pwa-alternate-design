@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Minus, Plus } from 'lucide-react'
+import { Check, Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api } from '@/api/client'
@@ -9,6 +9,8 @@ import { Button, IconButton } from '@/components/ui/Button'
 import { Card, Skeleton } from '@/components/ui/Card'
 import { Input, Select } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Slider } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
 import { cx } from '@/lib/cx'
@@ -153,60 +155,70 @@ function AccessBody({ info }: { info: ChapterAccessInfo }) {
         {t('chapterAccess.forChapter')(info.number, info.title)}
       </p>
 
-      <div className="grid grid-cols-1 gap-2.5 pt-5">
+      {/* **Daftar pilihan berpembatas** (R9b), bukan tiga kotak. Tanda pilihnya
+          bulatan tercentang di kiri — bentuk yang sama dengan daftar paket koin
+          dan daftar metode pembayaran, jadi "pilih satu dari beberapa" selalu
+          terlihat sama di seluruh aplikasi. */}
+      <SectionHeader label={t('chapterAccess.typeLabel')} className="pt-6" />
+      <ul className="mt-2 border-nv-line border-t">
         {TYPES.map((type) => {
           const on = access === type.id
           const blocked =
             (type.id === 'paid' && paidBlocked) || (type.id === 'private' && !info.canBePrivate)
 
           return (
-            <button
-              key={type.id}
-              type="button"
-              aria-pressed={on}
-              disabled={blocked}
-              onClick={() => request(type.id)}
-              className={cx(
-                'rounded-nv-lg border p-3.5 text-left transition disabled:opacity-50',
-                on ? 'border-nv-accent bg-nv-accent-soft' : 'border-nv-line bg-nv-card',
-              )}
-            >
-              <span className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-body text-nv-text">{type.label}</span>
-                {on && (
-                  <span className="rounded-nv-pill bg-nv-accent px-2 py-0.5 text-caption text-nv-card">
-                    {t('chapterAccess.active')}
+            <li key={type.id}>
+              <button
+                type="button"
+                aria-pressed={on}
+                disabled={blocked}
+                onClick={() => request(type.id)}
+                className="flex w-full items-start gap-3 border-nv-line border-b py-3.5 text-left transition disabled:opacity-50"
+              >
+                <span
+                  aria-hidden
+                  className={cx(
+                    'mt-0.5 grid size-5 shrink-0 place-items-center rounded-nv-pill border',
+                    on ? 'border-nv-accent bg-nv-accent text-nv-card' : 'border-nv-line',
+                  )}
+                >
+                  {on && <Check size={12} strokeWidth={3} />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-body text-nv-text">{type.label}</span>
+                    {on && <span className="nv-section-label">{t('chapterAccess.active')}</span>}
                   </span>
-                )}
-              </span>
-              <span className="block pt-0.5 text-caption text-nv-muted">{type.desc}</span>
+                  <span className="block pt-0.5 text-caption text-nv-muted">{type.desc}</span>
 
-              {/* Opsi yang ditahan menyebut **alasannya**, bukan sekadar mati. */}
-              {type.id === 'private' && !info.canBePrivate && (
-                <span className="block pt-1.5 text-caption text-nv-danger">
-                  {t('chapterAccess.firstChapterLocked')}
+                  {/* Opsi yang ditahan menyebut **alasannya**, bukan sekadar mati. */}
+                  {type.id === 'private' && !info.canBePrivate && (
+                    <span className="block pt-1.5 text-caption text-nv-danger">
+                      {t('chapterAccess.firstChapterLocked')}
+                    </span>
+                  )}
+                  {type.id === 'paid' && info.freeLockDaysLeft > 0 && (
+                    <span className="block pt-1.5 text-caption text-nv-danger">
+                      {t('chapterAccess.freeLocked')(info.freeLockDaysLeft)}
+                    </span>
+                  )}
+                  {type.id === 'paid' && !info.authorVerified && (
+                    <span className="block pt-1.5 text-caption text-nv-danger">
+                      {t('chapterAccess.needVerified')}
+                    </span>
+                  )}
                 </span>
-              )}
-              {type.id === 'paid' && info.freeLockDaysLeft > 0 && (
-                <span className="block pt-1.5 text-caption text-nv-danger">
-                  {t('chapterAccess.freeLocked')(info.freeLockDaysLeft)}
-                </span>
-              )}
-              {type.id === 'paid' && !info.authorVerified && (
-                <span className="block pt-1.5 text-caption text-nv-danger">
-                  {t('chapterAccess.needVerified')}
-                </span>
-              )}
-            </button>
+              </button>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
       {!info.authorVerified && (
         <p className="pt-2">
           <Link
             to="/karya/daftar-penulis"
-            className="text-caption font-semibold text-nv-accent underline"
+            className="nv-tap text-caption font-semibold text-nv-text underline underline-offset-4"
           >
             {t('chapterAccess.verifyNow')}
           </Link>
@@ -245,7 +257,7 @@ function AccessBody({ info }: { info: ChapterAccessInfo }) {
           {/* Bagi hasilnya datang dari server (`authorSharePct`), bukan dari
               konstanta klien — `lib/coin.ts` melarang tegas memakai
               `AUTHOR_SHARE` untuk angka penghasilan yang ditampilkan. */}
-          <dl className="mt-3 rounded-nv-md bg-nv-surface p-3">
+          <dl className="mt-3 rounded-nv-md bg-nv-paper-2 p-3">
             <p className="pb-1 font-semibold text-caption text-nv-muted">
               {t('chapterAccess.earnTitle')}
             </p>
@@ -269,20 +281,19 @@ function AccessBody({ info }: { info: ChapterAccessInfo }) {
             ))}
           </dl>
 
-          <label className="mt-4 block">
-            <span className="font-semibold text-body text-nv-text">
-              {t('chapterAccess.preview')} · {previewPct}%
-            </span>
-            <input
-              type="range"
+          {/* `Slider` primitif, bukan `<input type="range">` telanjang: ia yang
+              memegang label, `aria-valuetext`, dan jalur berwarna token. */}
+          <div className="mt-4">
+            <Slider
+              label={t('chapterAccess.preview')}
+              value={previewPct}
               min={0}
               max={50}
               step={5}
-              value={previewPct}
-              onChange={(e) => setPreviewPct(Number(e.target.value))}
-              className="mt-2 w-full accent-[var(--nv-accent)]"
+              valueText={`${previewPct}%`}
+              onChange={setPreviewPct}
             />
-          </label>
+          </div>
           <p className="pt-1 text-caption text-nv-muted">{t('chapterAccess.previewHint')}</p>
         </Card>
       )}
@@ -336,7 +347,7 @@ function AccessBody({ info }: { info: ChapterAccessInfo }) {
       <p className="pt-4 text-center">
         <Link
           to={`/karya/${info.storyId}/bab#bab-${info.number}`}
-          className="text-body text-nv-accent underline"
+          className="nv-tap font-semibold text-body text-nv-muted underline underline-offset-4"
         >
           {t('chapterAccess.back')}
         </Link>

@@ -66,7 +66,7 @@ export function TagField({ value, onChange }: TagFieldProps) {
         <ul className="flex flex-wrap gap-2 pt-2">
           {value.map((tag) => (
             <li key={tag}>
-              <span className="inline-flex items-center gap-1 rounded-nv-pill bg-nv-surface py-1 pr-1 pl-3 text-caption text-nv-text">
+              <span className="inline-flex items-center gap-1 rounded-nv-pill bg-nv-paper-2 py-1 pr-1 pl-3 text-caption text-nv-text">
                 {tag}
                 <button
                   type="button"

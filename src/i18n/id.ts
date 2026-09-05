@@ -658,6 +658,26 @@ export const id = {
     spendMap: 'Peta pengeluaran',
     receiptStatus: 'Status kuitansi',
     noSpend: 'Belum ada pengeluaran koin.',
+
+    /*
+     * Label status baris — dipakai baris buku besar **dan** panel "Status
+     * kuitansi". Sampai R8 panel itu mencetak nilai enum apa adanya
+     * (`success`, `reversed`), jadi satu-satunya bahasa Inggris yang tersisa di
+     * layar pembaca justru ada di halaman uang.
+     */
+    rowSuccess: 'Berhasil',
+    rowPending: 'Menunggu',
+    rowFailed: 'Gagal',
+    rowReversed: 'Dikembalikan',
+
+    /** Jenis referensi baris — alasan koinnya bergerak. Alasan yang sama dipakai peta pengeluaran. */
+    refChapter: 'Buka bab',
+    refBundle: 'Bundel bab',
+    refStory: 'Satu cerita',
+    refTopup: 'Isi koin',
+    refMission: 'Misi',
+    refCheckin: 'Check-in',
+    refWithdrawal: 'Pencairan',
     export: 'Ekspor kuitansi',
     exportCsv: 'Unduh CSV',
     exportPdf: 'Cetak / simpan PDF',
@@ -690,6 +710,20 @@ export const id = {
     topupAgain: 'Top up lagi',
     payAgain: 'Bayar ulang',
     openRef: 'Buka',
+    /*
+     * Lini masa transaksi · pola pelacak `7o`–`7r`.
+     *
+     * Tiga tahap, dan hanya untuk transaksi yang **masih di jalurnya**. Yang
+     * gagal maupun yang dibalik tidak mendapat lini masa sama sekali: lini masa
+     * menyiratkan uangnya masih berjalan, dan itu kebalikan dari yang terjadi.
+     * Aturan yang sama sudah dipakai riwayat pencairan (FR-STUDIO-38).
+     */
+    trackOrdered: 'Dibuat',
+    trackPaid: 'Dibayar',
+    trackCredited: 'Koin masuk',
+    trackSpent: 'Koin dipotong',
+    timeline: 'Lini masa',
+
     notFoundTitle: 'Transaksi tidak ditemukan',
     notFoundBody: 'Tautannya mungkin sudah lama atau salah ketik. Buku besar dompetmu tetap utuh.',
     backToList: 'Kembali ke riwayat',
@@ -822,6 +856,7 @@ export const id = {
     signupTitle: 'Daftar sebagai penulis',
     signupBody:
       'Tiga hal di bawah menentukan sejauh mana kamu bisa melangkah. Hanya yang pertama dituntut sekarang.',
+    reqLabel: 'Prasyarat',
     reqTerms: 'Menyetujui ketentuan penulis',
     reqTermsBody:
       'Karya orisinal, mengikuti ketentuan tinjauan, hak cipta, dan moderasi. Wajib untuk mulai menulis.',
@@ -898,6 +933,7 @@ export const id = {
     cDraft: 'Draf',
     cScheduled: 'Jadwal',
     cPublished: 'Publish',
+    counterAria: (label: string, n: number) => `${label} · ${n} bab`,
     countersLabel: 'Pintasan saringan status',
 
     search: 'Cari judul bab',
@@ -917,6 +953,8 @@ export const id = {
     draftMeta: (edited: string, pct: number, words: number) =>
       `Draf · diedit ${edited} · ${pct}% · sekitar ${words.toLocaleString('id-ID')} kata`,
     scheduledMeta: (at: string) => `Terjadwal ${at}`,
+    rejectedMeta: 'Ditolak tinjauan. Perbaiki naskahnya lalu kirim ulang.',
+    editedMeta: (when: string) => `Diedit ${when}`,
     privateMeta: 'Tersembunyi — tidak tampil ke pembaca.',
     accessFree: 'Gratis',
     accessPaid: 'Berbayar',
@@ -1194,6 +1232,7 @@ export const id = {
     dFree: 'Semua pembaca bisa membacanya tanpa koin.',
     dPaid: 'Bab tampil di daftar, tetapi butuh koin untuk dibuka.',
     dPrivate: 'Bab disembunyikan sementara dari pembaca.',
+    typeLabel: 'Tipe akses',
     active: 'Aktif',
 
     ctxFree:
@@ -1354,6 +1393,14 @@ export const id = {
     neutral: 'Netral',
     negative: 'Negatif',
     fromComments: (n: number) => `Dari ${n} komentar`,
+    /*
+     * Sentimen diturunkan dari **bintang ulasan** (FR-SOCIAL-08), bukan dari
+     * komentar. Sampai R9b keterangannya menyebut komentar, dan pada cerita yang
+     * ulasannya nol layarnya berbunyi "0% · 0% · 0% · Dari 10 komentar" —
+     * angkanya benar, sumbernya salah.
+     */
+    fromReviews: (n: number) => `Dari ${n} ulasan`,
+    noReviews: 'Belum ada ulasan untuk cerita ini.',
     origin: 'Asal pembaca',
     peak: (hours: string) => `Paling aktif ${hours}`,
     calendar: 'Aktivitas publish',

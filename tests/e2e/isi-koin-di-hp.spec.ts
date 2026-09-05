@@ -77,6 +77,9 @@ for (const path of [
   // Halaman baru / ditata ulang di R5–R6.
   '/profil',
   '/cerita/s1/bab/s1-c5/komentar',
+  // R8c — detail transaksi. Statusnya `success`, yang membawa lini masa tiga
+  // tahap; `/koin` dan `/koin/transaksi` sudah ada di daftar sejak Fase 6.
+  '/koin/transaksi/tx1',
 ]) {
   test(`layar HP: ${path} tidak menggeser halaman ke samping`, async ({ page }) => {
     for (const width of LEBAR_HP) {
@@ -112,6 +115,93 @@ for (const path of [
     }
   })
 }
+
+/**
+ * Sapuan lima lebar untuk **empat halaman auth** · R8a.
+ *
+ * Terpisah dari sapuan di atas karena ketiganya dijaga `RequireGuest`:
+ * perangkat contoh memulai dalam keadaan sudah masuk, jadi `goto('/masuk')`
+ * akan mendarat di beranda dan sapuan itu diam-diam mengukur halaman yang salah.
+ * Keluar sekali di awal, lalu keempat halamannya disapu dalam satu test.
+ *
+ * `/mulai` menuntut sesi **yang belum melewati pengenalan**, dan akun contoh
+ * sudah melewatinya bertahun lalu — jadi satu-satunya jalan sah ke sana adalah
+ * mendaftar akun baru, persis seperti pengguna sungguhan.
+ */
+test('layar HP: empat halaman auth tidak menggeser halaman ke samping', async ({ page }) => {
+  // `/dev/kitchen-sink` mengimpor seluruh design system; transform pertamanya
+  // bisa kalah dari ambang bawaan.
+  test.setTimeout(180_000)
+
+  await page.goto('/dev/kitchen-sink')
+  await page.getByRole('button', { name: 'Keluar', exact: true }).click()
+  // Tombolnya tetap ada sesudah ditekan — `/dev/kitchen-sink` tidak dijaga —
+  // jadi yang ditunggu **profil yang benar-benar hilang** dari penyimpanan,
+  // bukan tombolnya. Menunggu tombolnya berarti tidak menunggu apa pun.
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('novelova:profile-v1') ?? ''))
+    .toContain('"profile":null')
+
+  const sapu = async (path: string) => {
+    for (const width of LEBAR_HP) {
+      await page.setViewportSize({ width, height: 844 })
+      await page.goto(path)
+      await page.waitForLoadState('networkidle')
+      await page.evaluate(() => document.fonts.ready)
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            ),
+          { message: `${path} meluber di lebar ${width}px`, timeout: 5_000 },
+        )
+        .toBeLessThanOrEqual(0)
+    }
+  }
+
+  await sapu('/masuk')
+  await sapu('/daftar')
+  await sapu('/lupa-sandi')
+
+  // Akun baru → pengenalan. Ini sekaligus regresi atas cacat R8: `RequireGuest`
+  // dulu melempar pendaftar baru ke beranda satu render sebelum
+  // `navigate('/mulai')` sempat jalan, sehingga **tidak ada satu pun akun baru
+  // yang pernah melihat `/mulai`**.
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/daftar')
+  await page.getByLabel('Nama tampilan').fill('Rani Sapuan')
+  await page.getByLabel('Email').fill(`rani${Date.now()}@contoh.com`)
+  await page.getByLabel('Kata sandi').fill('novelova123')
+  await page.getByRole('button', { name: /Saya menyetujui/ }).click()
+  await page.getByRole('button', { name: 'Buat akun' }).click()
+  await expect(page).toHaveURL(/\/mulai$/, { timeout: 20_000 })
+
+  // Tiga langkahnya disapu tanpa `goto` — memuat ulang akan mengembalikan
+  // langkahnya ke satu, dan langkah tiga (daftar sampul) yang paling berisiko.
+  for (const langkah of [1, 2, 3]) {
+    if (langkah === 2) {
+      await page.getByRole('button', { name: 'Romance', exact: true }).click()
+      await page.getByRole('button', { name: 'Fantasy', exact: true }).click()
+      await page.getByRole('button', { name: 'Lanjut' }).click()
+    }
+    if (langkah === 3) await page.getByRole('button', { name: 'Lanjut' }).click()
+
+    for (const width of LEBAR_HP) {
+      await page.setViewportSize({ width, height: 844 })
+      await page.evaluate(() => document.fonts.ready)
+      await expect
+        .poll(
+          () =>
+            page.evaluate(
+              () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            ),
+          { message: `/mulai langkah ${langkah} meluber di lebar ${width}px`, timeout: 5_000 },
+        )
+        .toBeLessThanOrEqual(0)
+    }
+  }
+})
 
 test('layar HP: aksi utama kartu perpustakaan bisa ditekan', async ({ page }) => {
   await page.goto('/pustaka')
@@ -353,6 +443,22 @@ for (const width of [390, 1280]) {
  * sama sekali, dan satu-satunya cara mengetahui ia hilang adalah mengukurnya.
  */
 const HITUNG_TARGET = `(() => {
+  /*
+   * **Kerangka menjawab "belum", bukan "kosong".**
+   *
+   * \`expect.poll(...).toEqual([])\` selesai pada sampel kosong yang **pertama** —
+   * dan halaman yang masih memuat memang belum punya satu pun tombol, jadi
+   * probe ini dulu bisa lulus tanpa pernah mengukur halaman yang sudah jadi.
+   * Gejalanya persis jebakan "menunggu hal yang sudah benar sejak awal"
+   * (\`CLAUDE.md\` §8): /pustaka lulus berkali-kali, lalu gagal sekali dengan
+   * tiga target sungguhan yang sudah ada sejak R5.
+   *
+   * Selama masih ada kerangka di layar, nilai baliknya **tidak pernah** \`[]\`.
+   */
+  if (document.getAnimations().some((a) => a.animationName === 'pulse')) {
+    return ['(masih memuat)']
+  }
+
   const kecil = []
   const kandidat = 'button, a[href], [role="button"], [role="switch"], [role="tab"]'
   for (const el of document.querySelectorAll(kandidat)) {
@@ -379,7 +485,25 @@ const HITUNG_TARGET = `(() => {
   return kecil
 })()`
 
-for (const path of ['/', '/pustaka', '/cari', '/jelajah/populer', '/cerita/s1', '/profil']) {
+for (const path of [
+  '/',
+  '/pustaka',
+  '/cari',
+  '/jelajah/populer',
+  '/cerita/s1',
+  '/profil',
+  // R8b–R8c. Ketiganya penuh kontrol kecil: baris paket, baris metode, tab
+  // saringan, dan baris aksi ekspor — tempat target ketuk paling gampang lolos
+  // dari mata karena kotaknya memang tidak terlihat.
+  '/koin',
+  '/koin/transaksi',
+  '/koin/transaksi/tx1',
+  // R9 — halaman penulis. Ketiganya penuh kontrol kecil: strip penghitung yang
+  // merangkap saringan, dua deret tab, baris ulasan, dan baris aksi ekspor.
+  '/penulis/analitik',
+  '/karya/ms1/bab',
+  '/cerita/s1/ulasan',
+]) {
   test(`target ketuk ≥44px di ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 900 })
     await page.goto(path)
@@ -494,27 +618,52 @@ test('baca menerus melewati tawaran bundel lalu saldo habis', async ({ page }) =
     .click({ timeout: 10_000 })
   await page.waitForTimeout(600)
 
-  const lihat = () =>
-    page.evaluate(() => {
+  /*
+    **Pengamatnya dipasang di dalam halaman, dan berjalan tiap frame.**
+
+    Versi sebelumnya memotret dari luar tiap 80 ms sesudah gulir 2000px. Itu
+    lulus saat dijalankan sendirian dan gagal saat suite penuh berjalan paralel:
+    pitanya cuma setinggi ~90px, jadi satu gulir 2000px bisa melewatinya utuh di
+    antara dua potret — dan yang gagal bukan produknya, melainkan lajunya
+    pengukur. Gejalanya persis keluarga flake yang sudah tercatat di `CLAUDE.md`
+    §8: lulus sendirian, gagal bersama-sama.
+
+    `requestAnimationFrame` memeriksa **tiap frame yang benar-benar dilukis**,
+    jadi tidak ada celah pengambilan sampel sama sekali — dan pemeriksaannya
+    tidak melemah: yang dituntut tetap pita yang sungguh-sungguh masuk layar.
+  */
+  await page.evaluate(() => {
+    const w = window as unknown as { __pitaPernahTerlihat?: boolean }
+    w.__pitaPernahTerlihat = false
+    const tick = () => {
       const pita = [...document.querySelectorAll('aside')].find((el) =>
         (el.textContent ?? '').includes('terbuka otomatis'),
       )
       const kotak = pita?.getBoundingClientRect()
-      return {
-        pitaTerlihat: kotak ? kotak.top < window.innerHeight && kotak.bottom > 0 : false,
-        lembar: document.querySelector('[role="dialog"]') !== null,
+      if (kotak && kotak.top < window.innerHeight && kotak.bottom > 0) {
+        w.__pitaPernahTerlihat = true
       }
-    })
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  })
 
-  let pitaPernahTerlihat = false
+  const lihat = () =>
+    page.evaluate(() => ({
+      pitaPernahTerlihat:
+        (window as unknown as { __pitaPernahTerlihat?: boolean }).__pitaPernahTerlihat === true,
+      lembar: document.querySelector('[role="dialog"]') !== null,
+    }))
+
   let keadaan = await lihat()
 
   for (let i = 0; i < 220 && !keadaan.lembar; i++) {
     await page.mouse.wheel(0, 2000)
     await page.waitForTimeout(80)
     keadaan = await lihat()
-    if (keadaan.pitaTerlihat) pitaPernahTerlihat = true
   }
+
+  const pitaPernahTerlihat = keadaan.pitaPernahTerlihat
 
   // 1. Pita **benar-benar masuk layar** — bukan sekadar ada di DOM. Ia pernah
   //    dirender di pembuka bacaan, dan di sana pembaca melewatinya tanpa pernah

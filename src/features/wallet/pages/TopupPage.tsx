@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react'
+import { Check, ChevronLeft } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import type { PayMethod, TopupOrder } from '@/api/contracts'
@@ -6,6 +6,7 @@ import { ApiError } from '@/api/errors'
 import { CoinChip } from '@/components/patterns/CoinChip'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Field'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { useToast } from '@/components/ui/Toast'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
@@ -250,12 +251,22 @@ export default function TopupPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl pb-28">
-      <header className="flex items-center gap-3 px-4 pt-4 pb-3">
+    /*
+      Ruang bawah menampung **dua** bilah yang sama-sama menempel di dasar layar:
+      bilah bayar dan bilah navigasi. `pb-28` hanya menampung yang pertama, jadi
+      baris terakhir halaman (keterangan kurs) tertutup bilah bayar. Di `lg`
+      bilah bayarnya ikut mengalir, jadi ruangnya kembali normal.
+    */
+    <div className="mx-auto w-full max-w-2xl pb-40 lg:pb-10">
+      {/* Membungkus di bawah 360px: chip saldo membawa saldo **dan** koin bonus,
+          jadi lebarnya ~140px — cukup untuk memeras judul "Isi Koin" jadi dua
+          baris dan `Rp 130 per koin` jadi tiga di layar 320px. Yang turun ke
+          baris sendiri chip-nya, bukan judulnya. */}
+      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-4 pb-3">
         <Link
           to={returnTo ?? '/'}
           aria-label={t('action.back')}
-          className="grid size-9 shrink-0 place-items-center rounded-nv-pill border border-nv-line text-nv-text"
+          className="relative grid size-9 shrink-0 place-items-center rounded-nv-pill border border-nv-line text-nv-text after:absolute after:-inset-1 after:content-['']"
         >
           <ChevronLeft size={18} aria-hidden />
         </Link>
@@ -263,56 +274,89 @@ export default function TopupPage() {
           <h1 className="font-display text-section font-bold text-nv-text">{t('wallet.title')}</h1>
           <p className="text-caption text-nv-muted">{t('wallet.rate')}</p>
         </div>
-        <CoinChip amount={balance} format="exact" />
+        {/* Chip saldo **sama persis dengan `7a` dan `7i`**: pil bergaris rambut,
+            glyph emas, saldo ringkas — dan koin bonus ditulis terpisah, karena
+            ia tidak pernah bisa dibelanjakan (FR-WALLET-17). */}
+        <CoinChip
+          amount={balance}
+          pill
+          bonus={wallet.data?.bonus ?? 0}
+          className="shrink-0 max-[359px]:order-last max-[359px]:basis-full max-[359px]:justify-center"
+        />
       </header>
 
-      <section className="mx-4 flex items-center justify-between gap-3 rounded-nv-lg bg-nv-surface px-4 py-3">
-        <div>
-          <p className="text-caption text-nv-muted">{t('wallet.promoTitle')}</p>
+      <section className="mx-4 flex items-center justify-between gap-3 rounded-nv-lg bg-nv-paper-2 px-4 py-3">
+        <div className="min-w-0">
+          <p className="nv-section-label">{t('wallet.promoTitle')}</p>
           <p className="pt-0.5 text-body font-semibold text-nv-text">{t('wallet.promoBody')}</p>
         </div>
-        <span className="rounded-nv-pill bg-nv-accent px-3 py-1 font-semibold text-caption text-nv-card">
+        <span className="shrink-0 rounded-nv-pill bg-nv-accent px-3 py-1 font-semibold text-caption text-nv-card tabular-nums">
           {t('wallet.promoBadge')}
         </span>
       </section>
 
       {need > 0 && (
-        <p className="mx-4 pt-3 text-body font-semibold text-nv-danger tabular-nums">
+        <p className="mx-4 pt-3 text-body font-semibold text-nv-text tabular-nums">
           {t('wallet.needMore')(need)}
         </p>
       )}
 
-      <h2 className="px-4 pt-5 pb-2 font-semibold text-body text-nv-muted">{t('wallet.step1')}</h2>
-      <div className="grid grid-cols-2 gap-2 px-4 sm:grid-cols-3">
+      <SectionHeader label={t('wallet.step1')} className="px-4 pt-5" />
+      {/*
+        **Daftar berpembatas, bukan ubin.** Brief §1 aturan 4: konten berulang
+        jadi daftar, dan kartu dijatah enam peran yang tidak memuat "paket koin".
+        Ubin dua kolom juga yang membuat `Rp 92,5/koin` pecah dua baris di 320px.
+
+        Barisnya `aria-pressed`, bukan radio: menekan paket yang sudah terpilih
+        **membatalkannya**, dan itulah jalan kembali dari kolom kustom yang
+        dinonaktifkan (`architecture.md` §1.8).
+      */}
+      <ul className="mx-4 mt-2 border-nv-line border-t">
         {COIN_PACKAGES.map((p) => {
           const active = pkgId === p.id
           return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => pickPackage(p.id)}
-              aria-pressed={active}
-              disabled={customTyped}
-              {...(active ? { 'aria-label': t('wallet.deselect')(formatNumber(p.coins)) } : {})}
-              className={cx(
-                'rounded-nv-lg border p-3 text-left transition disabled:opacity-50',
-                active ? 'border-nv-accent bg-nv-accent-soft' : 'border-nv-line bg-nv-card',
-              )}
-            >
-              <CoinChip amount={p.coins} format="exact" />
-              <span className="block pt-1 font-semibold text-body text-nv-text tabular-nums">
-                {formatRupiah(p.priceRupiah)}
-              </span>
-              <span className="block pt-0.5 text-caption text-nv-muted">{p.note}</span>
-              {suggested?.id === p.id && (
-                <span className="block pt-1 text-caption font-semibold text-nv-accent">
-                  {t('wallet.fitsChapter')}
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => pickPackage(p.id)}
+                aria-pressed={active}
+                disabled={customTyped}
+                {...(active ? { 'aria-label': t('wallet.deselect')(formatNumber(p.coins)) } : {})}
+                className="flex w-full items-center gap-3 border-nv-line border-b py-3 text-left transition disabled:opacity-40"
+              >
+                <span
+                  aria-hidden
+                  className={cx(
+                    'grid size-5 shrink-0 place-items-center rounded-nv-pill border',
+                    active ? 'border-nv-accent bg-nv-accent text-nv-card' : 'border-nv-line',
+                  )}
+                >
+                  {active && <Check size={12} strokeWidth={3} />}
                 </span>
-              )}
-            </button>
+                <span className="min-w-0 flex-1">
+                  <CoinChip amount={p.coins} format="exact" />
+                  <span className="block pt-0.5 text-caption text-nv-muted">{p.note}</span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span
+                    className={cx(
+                      'block text-body text-nv-text tabular-nums',
+                      active ? 'font-bold' : 'font-semibold',
+                    )}
+                  >
+                    {formatRupiah(p.priceRupiah)}
+                  </span>
+                  {suggested?.id === p.id && (
+                    <span className="block pt-0.5 text-caption font-semibold text-nv-text-2">
+                      {t('wallet.fitsChapter')}
+                    </span>
+                  )}
+                </span>
+              </button>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
       {customTyped && (
         <p className="px-4 pt-2 text-caption text-nv-muted">{t('wallet.packagesLocked')}</p>
@@ -342,33 +386,38 @@ export default function TopupPage() {
 
       {coins !== null && (
         <>
-          <h2 className="px-4 pt-6 pb-2 font-semibold text-body text-nv-muted">
-            {t('wallet.step2')}
-          </h2>
+          <SectionHeader label={t('wallet.step2')} className="px-4 pt-6" />
           {groups.map((group) => (
-            <div key={group.label} className="px-4 pb-3">
-              <p className="pb-1.5 text-caption text-nv-muted">{group.label}</p>
-              <div className="grid grid-cols-1 gap-2">
+            <div key={group.label} className="px-4">
+              <p className="nv-section-label pt-3 pb-1">{group.label}</p>
+              <ul className="border-nv-line border-t">
                 {group.methods.map((m) => (
-                  <button
-                    key={`${group.label}-${m.id}`}
-                    type="button"
-                    onClick={() => setMethodId(m.id)}
-                    aria-pressed={methodId === m.id}
-                    className={cx(
-                      'flex items-center justify-between rounded-nv-lg border px-3.5 py-3 text-left transition',
-                      methodId === m.id
-                        ? 'border-nv-accent bg-nv-accent-soft'
-                        : 'border-nv-line bg-nv-card',
-                    )}
-                  >
-                    <span className="text-body text-nv-text">{m.name}</span>
-                    <span className="text-caption text-nv-muted">
-                      {t('wallet.limitMinutes')(m.expiryMinutes)}
-                    </span>
-                  </button>
+                  <li key={`${group.label}-${m.id}`}>
+                    <button
+                      type="button"
+                      onClick={() => setMethodId(m.id)}
+                      aria-pressed={methodId === m.id}
+                      className="flex w-full items-center gap-3 border-nv-line border-b py-3 text-left transition"
+                    >
+                      <span
+                        aria-hidden
+                        className={cx(
+                          'grid size-5 shrink-0 place-items-center rounded-nv-pill border',
+                          methodId === m.id
+                            ? 'border-nv-accent bg-nv-accent text-nv-card'
+                            : 'border-nv-line',
+                        )}
+                      >
+                        {methodId === m.id && <Check size={12} strokeWidth={3} />}
+                      </span>
+                      <span className="min-w-0 flex-1 text-body text-nv-text">{m.name}</span>
+                      <span className="shrink-0 text-caption text-nv-muted tabular-nums">
+                        {t('wallet.limitMinutes')(m.expiryMinutes)}
+                      </span>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           ))}
         </>
@@ -376,10 +425,8 @@ export default function TopupPage() {
 
       {coins !== null && method && (
         <>
-          <h2 className="px-4 pt-3 pb-2 font-semibold text-body text-nv-muted">
-            {t('wallet.step3')}
-          </h2>
-          <dl className="mx-4 rounded-nv-lg border border-nv-line p-3.5">
+          <SectionHeader label={t('wallet.step3')} className="px-4 pt-5" />
+          <dl className="mx-4 mt-2 rounded-nv-lg border border-nv-line-soft p-3.5">
             <Row label={t('wallet.sumCoins')}>
               <CoinChip amount={coins} format="exact" />
             </Row>

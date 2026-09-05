@@ -5,6 +5,303 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-05 · Langkah 69 — Fase R9 selesai, dan Fase R tuntas
+
+> "oke sekarang lanjutkan redesign. Kerjakan semua Fase R9, dan jangan lupa untuk
+> selalu test di preview mobile dan website untuk memastikan semua func berjalan
+> dan tampilan clean di layar apapun"
+
+`npm run check` bersih · **588 test unit** (naik dari 586) · **83 e2e** (naik dari
+80). Diperiksa di peramban sungguhan pada **320 · 360 · 390 · 412 · 430** dan
+**1280**.
+
+**23 kotak R9 selesai** — R9a tiga halaman penghasilan, R9b enam rute studio,
+R9c halaman ulasan, R9d penutup. Di `todo-redesign.md`: 79 kotak, dan dengan itu
+**ketiga puluh rute `ADA` tercentang**. **Fase R tuntas.**
+
+Yang **tidak** dicentang: 13 kotak milik rute `PENAMPUNG` (`/profil/ubah`,
+`/notifikasi`, `/hadiah`, `/bantuan`, `/legal/*`, dua halaman pengaturan). Isinya
+masih `<Placeholder>`, dan halaman yang belum ada tidak bisa "sudah diredesign".
+Ketiganya menunggu Fase 11–13.
+
+### Nol komponen baru
+
+Aturan R8–R9 sama: rute tanpa mockup diturunkan dari `prd_01` §0, dan pola yang
+belum ada harus ditanyakan dulu. Yang dipakai semuanya sudah berdiri — `Tabs`,
+`SectionHeader`, `StageTrack`, `Slider`, `SettingRow`, `Input`/`TextArea`, dan
+`Cover`. Tidak ada berkas komponen baru sama sekali di R9, dan **`lib/payout.ts`
+tidak disentuh satu baris pun** — tangga validasi lima tingkatnya tetap
+ditegakkan dua kali dari satu berkas.
+
+### R9a — tiga halaman penghasilan
+
+- `/penulis/analitik`: empat rentang dan tiga sudut pandang jadi **tab teks**;
+  tiga KPI jadi strip sel `7j` di atas satu panel putih — `Rp 293.485` sebelumnya
+  **terpotong** di dalam kartunya sendiri.
+- Kurva pendapatan, batang corong, batang sumber, dan sel terpanas heatmap semua
+  pindah ke **emas garis**: batang progres memang salah satu dari enam peran
+  emas, dan tinta membuat grafiknya terbaca sebagai deretan tombol.
+- Aksi uang jadi tombol utama; sebelumnya ketiga aksinya bergaris rambut, jadi
+  tidak ada yang menunjukkan ke mana halaman itu menuju.
+- `/penulis/penarikan`: brankas panel putih angka serif, kolom jumlah jadi input
+  **garis bawah serif** lewat `Input` yang sudah ada, tiga tujuan jadi daftar
+  berpembatas, ringkasan jadi baris berpembatas. Tangga validasinya tidak
+  disentuh.
+- `/penulis/penarikan/riwayat`: kartu → daftar berpembatas; alasan penolakan jadi
+  garis di tepi, bukan kotak merah.
+
+### R9b — enam rute studio
+
+- `/karya/daftar-penulis`: tiga prasyarat → `SettingRow`, daftar berpembatas.
+- `/karya/:id/bab`: tiga penghitung jadi strip sel di satu panel putih dan tetap
+  merangkap pintasan saringan — penandanya kini **garis bawah**, bukan latar.
+  Daftar bab jadi baris berpembatas dengan **kata status berwarna status**, bukan
+  enam lencana terisi.
+- `/karya/:id/bab/:id/ubah`: area tulis dapat jarak baris prosa dan lebar ukur
+  ~70 karakter. **Tanpa token ukuran baru** — `TextArea` sudah Lora 16px.
+- `/karya/:id/bab/:id/akses`: tiga tipe akses jadi daftar pilihan berpembatas
+  dengan bulatan tercentang — bentuk yang sama dengan paket koin dan metode
+  bayar. Penggeser pratinjau naik ke primitif `Slider`, jadi nilainya akhirnya
+  dibacakan lewat `aria-valuetext`.
+- `/karya/:id/analitik`: lima rentang jadi tab teks, empat metrik jadi strip sel,
+  garis grafik jadi emas garis, dan pengurut bab turun ke barisnya sendiri —
+  di slot aksi kepala section ia mendorong halaman **21px keluar layar di
+  320px**. Terukur, bukan ditebak.
+- Kedua ekspor diperiksa ulang setelah warnanya berganti dan tetap menghasilkan
+  berkas nyata.
+
+### R9c — halaman ulasan
+
+Sebaran 5★…1★ jadi batang garis rambut berangka emas dan tetap **tidak ikut
+tersaring**. Baris ulasan memakai anatomi `7t`: nama, waktu, **isi serif**, lalu
+baris aksi, dipisah garis rambut — enam kartu putih beruntun membuat halaman ini
+terbaca sebagai enam pengumuman, bukan satu percakapan. Tanggapan penulis dapat
+garis emas di tepi dan lencana pil garis rambut. Tujuh saringan dan empat urutan
+jadi dua deret tab teks, keduanya tetap menyaring **di server**.
+
+Satu perubahan perilaku yang disengaja: saringan jadi **satu pilihan aktif** —
+"Ada teksnya" dan sebuah bintang tidak lagi bisa menyala bersamaan. Itu memang
+yang sudah disiratkan tombol "Semua" sejak awal.
+
+### Empat cacat data & isi — diperbaiki di penyebabnya
+
+Rincian di `architecture.md` **§1.30**.
+
+1. **Sembilan bab milik penulis contoh tidak punya naskah sama sekali.** Sisi
+   pembaca punya naskah cadangan; sisi penulis tidak — dan tidak boleh punya.
+   Jadi `/karya/ms1/bab` menulis *"sekitar 620 kata · 41%"* sementara editornya
+   **terbuka kosong**, dan autosave, hitungan kata, serta mode fokus mustahil
+   dicoba dengan tangan. Naskahnya kini di-seed, dan `wordCount`-nya dihitung
+   dari naskah itu.
+2. **Sembilan belas cerita punya jumlah baca negatif.** `890_000 - i * 21_000`
+   benar untuk 32 judul; R2b menumbuhkan katalog jadi 62, dan sejak judul ke-43
+   angkanya menembus nol — `/cari` mencetaknya sebagai **`−160rb baca`**. Kelas
+   cacat yang sama dengan `IntersectionObserver`: muncul karena **datanya**
+   bertambah, bukan karena kodenya berubah.
+3. **"0% · naik 4%".** Tingkat buka diturunkan, perubahannya dipatok konstanta —
+   jadi layar penghasilan bisa menyatakan angka nol yang naik empat persen.
+   Keduanya kini lewat satu `pct()` yang mengembalikan nol untuk nol lawan nol.
+4. **Panel sentimen menyebut sumber yang salah.** Persentasenya dari bintang
+   ulasan, keterangannya berbunyi "Dari 10 komentar" — dan pada cerita tanpa
+   ulasan layarnya membaca "0% · 0% · 0% · Dari 10 komentar".
+
+### Dua penyempurnaan kecil (§1.31)
+
+**404** berhenti memakai `FailureNotice` layar penuh: kotak R9d menuntut satu
+kalimat dan satu tombol **tanpa ilustrasi**, dan panel "koinmu aman" di bawah
+tautan yang salah ketik justru menyiratkan ada yang bisa hilang. **Bab yang
+ditolak** berhenti berkata "Belum ada bab di sini" — kalimat keadaan-kosong yang
+muncul di bawah bab yang jelas-jelas ada.
+
+### Test
+
+- Sepuluh rute R9 **sudah ada** di sapuan lima lebar sejak fase-fase sebelumnya;
+  diperiksa ulang dengan menghitungnya, bukan diasumsikan. Sapuan target ketuk
+  bertambah `/penulis/analitik`, `/karya/ms1/bab`, dan `/cerita/s1/ulasan`.
+- Dua test unit baru untuk **pemulihan posisi baca per bab** — sisi server sudah
+  diuji sejak R7, sisi yang dilihat pembaca belum. Keduanya bisa benar di
+  database dan tetap salah di layar.
+- Empat belas test yang aturannya sengaja berubah **dibalik, bukan dilonggarkan**:
+  pil → tab (`role="tab"`), kartu → `<li>`, `progressPct` 41 → 43 karena kini
+  diturunkan, dan penyebut sentimen yang berpindah dari komentar ke ulasan.
+- Penghitung `/karya/:id/bab` mendapat `aria-label` eksplisit: angkanya kini di
+  atas labelnya, dan nama yang dirakit dari urutan DOM ("2 Draf") berubah arti
+  tiap kali susunannya digeser — sekaligus ambigu bagi pembaca layar.
+
+### Yang tidak dikerjakan
+
+- **`AuthorChapter` tidak diberi kolom alasan penolakan.** Baris bab yang ditolak
+  kini menyebut langkah berikutnya, bukan alasannya, karena alasannya memang
+  belum ada di kontrak. Menambah kolomnya pekerjaan tersendiri, bukan pekerjaan
+  ganti kulit.
+- **`Button` tidak dijadikan polimorfik.** Tiga tautan yang berperan sebagai
+  tombol memakai kelas yang ditulis sekali di berkasnya — sama seperti yang sudah
+  dilakukan `ProfilePage` dan detail transaksi. Menyentuh primitif yang dipakai
+  ~190 tempat demi tiga tautan bukan tukaran yang masuk akal.
+
+---
+
+## 2026-09-05 · Langkah 68 — Fase R8 selesai: auth & dompet
+
+> "oke sekarang lanjutkan redesign. Kerjakan semua Fase R8, dan jangan lupa untuk
+> selalu test di preview mobile dan website untuk memastikan semua func berjalan
+> dan tampilan clean di layar apapun"
+
+`npm run check` bersih · **586 test unit** (naik dari 583) · **80 e2e** (naik
+dari 75). Diperiksa di peramban sungguhan pada **320 · 360 · 390 · 412 · 430**
+dan **1280**.
+
+**24 kotak R8 selesai seluruhnya** — R8a empat halaman auth, R8b `/koin`, R8c
+buku besar dan detail transaksi. Di `todo-redesign.md`: grup **A** 15 kotak,
+grup **E** 22 kotak.
+
+### Tidak ada komponen baru yang dikarang
+
+Aturannya eksplisit di R8: tujuh rute ini tanpa mockup, dan pola yang belum ada
+harus ditanyakan dulu. Yang dipakai semuanya sudah berdiri — `Field` (garis bawah
+serif), `Button`, `Tabs`, `SectionHeader`, `StageTrack`, `Cover`, `CoinChip`.
+Dua primitif bertambah **prop**, bukan varian: `CoinChip` mendapat `pill` (bentuk
+`7a`, yang sebelumnya ditempel lewat kelas di beranda saja) dan `bonus`. Satu
+berkas baru, `PasswordToggle`, dan itu penggabungan kontrol yang sudah ditulis
+dua kali — bukan pola baru.
+
+### R8a — empat halaman auth
+
+- `/masuk` akhirnya punya `<h1>`. `AuthLayout` merender nama aplikasi sebagai
+  `<p>`, jadi selama ini halaman itu **tidak punya judul sama sekali** bagi
+  pembaca layar; `/daftar` dan `/lupa-sandi` sudah punya.
+- Tombol OAuth jadi **pil bergaris rambut**; warna merek Google/Facebook tetap.
+- Sakelar "Lihat / Sembunyikan" kata sandi pindah ke slot `counter` milik
+  `Field` — sejajar label, teks tebal tinta redup. Sebelumnya kotak setinggi
+  44px di samping kolom, yang memotong garis bawah kolom di tengah baris.
+- `/lupa-sandi`: tiga kotak bernomor → **garis bersegmen `7k`** + keterangan
+  `LANGKAH 1 DARI 3 · IDENTIFIKASI`. Catatan keamanan berhenti jadi kartu.
+- `/mulai`: segmen langkah jadi **emas garis**, dan langkah tiga berhenti jadi
+  tumpukan kartu — kini daftar berpembatas yang **benar-benar menampilkan
+  sampulnya**. Sampai R8 baris rekomendasi itu cuma judul dan nama pena.
+- Ketiga kegagalan sesi diperiksa satu per satu di peramban dan tetap tiga
+  tingkat berbeda: lembar `AUTH-401`, layar penuh `AUTH-429`, layar `APP-426`.
+
+### R8b — `/koin`
+
+- Enam paket: ubin dua kolom → **daftar berpembatas** (brief §1 aturan 4). Ubin
+  itu juga yang memecah `Rp 92,5/koin` jadi dua baris di 320px.
+- Metode pembayaran ikut jadi daftar berpembatas dengan kepala section per grup.
+- Chip saldo di kepala halaman **sama persis dengan `7a`**, dan koin bonus
+  ditulis terpisah (`+23 bonus`) karena ia tidak pernah bisa dibelanjakan.
+- Ruang bawah halaman dinaikkan: `pb-28` hanya menampung bilah bayar, sehingga
+  baris kurs terakhir tertutup olehnya.
+- Empat overlay, hitung mundur, layar sukses, dan **ketiga jalan gagal** dibuka
+  satu per satu di peramban. `PAY-402` menawarkan ganti metode atau ulangi;
+  `PAY-504` hanya "Periksa status" — tidak pernah "coba lagi"; `PAY-410` menuntut
+  pesanan baru. Confetti tetap ada, tanpa emoji dan tanpa warna di luar token.
+
+### R8c — buku besar & detail transaksi
+
+- Brankas saldo jadi **panel putih dengan angka serif** (`7i`), lengkap dengan
+  koin bonus terpisah.
+- Empat saringan: pil → **tab teks bergaris bawah 2px**. Yang tidak berubah:
+  menekannya tetap meminta ulang barisnya ke server.
+- Nominal baris jadi **tinta**, bukan hijau/merah penuh. Yang membedakan masuk
+  dari keluar adalah tandanya; merah tinggal di lencana status yang memang gagal.
+- Panel "Status kuitansi" berhenti mencetak nilai enum (`success`, `reversed`) —
+  satu-satunya bahasa Inggris yang tersisa di layar pembaca, dan itu ada di
+  halaman uang. Peta pengeluaran ikut memakai label yang sama.
+- **Detail transaksi mendapat lini masanya** — `StageTrack`, komponen yang sama
+  dengan riwayat cetak `7o`–`7r`. Tahap selesai tinta, tahap kini **emas**, dan
+  tahap terakhir tidak menumbuhkan garis penghubung.
+- Lini masa **hanya untuk yang masih di jalurnya**: `failed` dan `reversed`
+  tidak mendapat satu pun tahap. Aturan yang sama sudah dipegang riwayat
+  pencairan sejak Fase 9.
+
+### Empat cacat yang bukan soal kulit — diperbaiki di penyebabnya
+
+Rincian di `architecture.md` **§1.27**.
+
+1. **`bg-nv-surface` sudah mati sejak R1.** Putaran 7 mengganti nama tokennya;
+   16 tempat masih memakai kelas lama, dan Tailwind tidak mengeluh untuk kelas
+   yang tidak dikenal. Terukur di peramban: `backgroundColor: rgba(0, 0, 0, 0)`.
+   Enam belas panel dirender **transparan** selama tiga fase — brankas saldo,
+   panel status transaksi, kotak hitung mundur, batang progres perpustakaan.
+   Diganti sekali ke `--nv-paper-2`.
+2. **`formatCompactCoin` memakai titik sebagai desimal.** Di Indonesia titik
+   adalah pemisah ribuan, jadi `15.3rb` terbaca sebagai lima belas ribu tiga
+   ratus **ribu**. Mockup `7a` dan `7i` mencetak `15,3rb`; kodenya yang meleset.
+3. **Tidak ada satu pun akun baru yang pernah melihat `/mulai`.** React Query
+   menunggu `onSuccess` milik mutasinya — tempat `setSession` dipanggil —
+   sebelum `onSuccess` milik halaman, jadi `RequireGuest` menyala satu render
+   sebelum `navigate('/mulai')` sempat jalan dan melempar pendaftar ke beranda.
+   Onboarding tiga langkah **tidak pernah tampil kepada siapa pun**. Diperbaiki
+   di guard-nya, bukan di halaman daftar: yang memutuskan ke mana pengguna yang
+   sudah masuk pergi memang `RequireGuest`.
+4. **`AuthLayout` memakai `grid` tanpa kolom eksplisit.** Track `auto` tidak
+   pernah turun di bawah min-content anaknya, jadi satu baris `truncate` di
+   langkah tiga `/mulai` melebarkan wadahnya jadi **343px di dalam layar 320px** —
+   dan luberannya muncul di header, jauh dari penyebabnya. Jebakan yang sama
+   sudah menyentuh 13 tempat di v1; `AuthLayout` luput karena keempat halamannya
+   belum pernah disapu lima lebar sampai R8 memasukkannya.
+
+### Pelacak tahap diseragamkan (§1.28)
+
+`StageTrack` dipakai empat tempat. Tahap kini jadi **emas** — brief §1 menjatah
+emas enam peran dan "tahap aktif pelacak" salah satunya, dan `7o`–`7r`
+menggambarnya begitu. Sampai R8 tahap kini memakai tinta juga, sehingga satu-
+satunya beda dari tahap selesai adalah centangnya. Berlaku sekaligus untuk
+riwayat cetak, riwayat pencairan, dan pengajuan pencairan.
+
+### Test
+
+- **Sapuan lima lebar** bertambah `/koin/transaksi/tx1` dan satu test baru untuk
+  keempat halaman auth. Halaman auth harus terpisah: perangkat contoh memulai
+  dalam keadaan sudah masuk, jadi `goto('/masuk')` mendarat di beranda dan
+  sapuan itu akan diam-diam mengukur halaman yang salah.
+- Test auth itu **mendaftar akun baru** untuk sampai ke `/mulai`, jadi ia
+  sekaligus regresi atas cacat nomor 3 di atas.
+- **Sapuan target ketuk** bertambah `/koin`, `/koin/transaksi`, dan
+  `/koin/transaksi/tx1`. Ia langsung menangkap tombol kembali `/koin` yang
+  36×36; kotak sentuhnya diperluas lewat `::after`, ukuran yang terlihat tidak
+  berubah. Tombol kembar di `/karya/:id/bab` ikut diperbaiki.
+- Dua test unit baru untuk lini masa transaksi: kapan ia ada, dan **kapan ia
+  tidak boleh ada**.
+
+### Probe target ketuk yang lulus di atas kerangka
+
+`expect.poll(...).toEqual([])` selesai pada sampel kosong yang **pertama** — dan
+halaman yang masih memuat memang belum punya satu pun tombol. Jadi probe itu bisa
+lulus tanpa pernah mengukur halaman yang sudah jadi, persis jebakan "menunggu hal
+yang sudah benar sejak awal" (`CLAUDE.md` §8). Ketahuan karena `/pustaka` — yang
+lulus berkali-kali — gagal sekali dengan **tiga target sungguhan**: judul cerita
+(140×17), `Lanjut Baca` (95×36), dan sakelar notifikasi (44×26). Ketiganya ada
+sejak R5.
+
+Probe-nya kini menjawab `['(masih memuat)']` selama masih ada kerangka di layar,
+jadi ia tidak pernah bisa lulus terlalu dini. Ketiga targetnya diperbaiki lewat
+`::after` — sakelarnya di **primitifnya**, jadi seluruh `Switch` di aplikasi ikut
+benar, dan jalurnya tetap 26px seperti yang brief minta.
+
+### Satu flake e2e ditutup, bukan dilonggarkan
+
+`baca menerus melewati tawaran bundel` lulus sendirian dan gagal di suite penuh.
+Sebabnya pengukur, bukan produk: pitanya setinggi ~90px sementara pemeriksanya
+memotret dari luar tiap 80 ms sesudah gulir 2000px — satu gulir bisa melewatinya
+utuh di antara dua potret. Pengamatnya dipindah **ke dalam halaman** dan berjalan
+tiap `requestAnimationFrame`, jadi tidak ada celah pengambilan sampel sama
+sekali. Tuntutannya tidak dilemahkan: pita tetap harus benar-benar masuk layar.
+
+### Yang tidak dikerjakan
+
+- **`/dev/kitchen-sink` tidak ikut ditata ulang.** Ia halaman dev, dan tiga
+  kotaknya bukan bagian R8. Yang disentuh hanya satu kalimat yang menyesatkan:
+  sakelar hasil pembayaran hidup di memori modul, jadi memuat ulang `/koin`
+  mengembalikannya ke `Lunas` — teksnya dulu menyuruh "buka `/koin`", yang persis
+  cara kehilangan sakelarnya.
+- **Kotak `Pemeriksaan baku` halaman lain tidak ikut dicentang.** R8 menyentuh
+  primitif bersama (`StageTrack`, `CoinChip`, `bg-nv-surface`), tetapi mencentang
+  kotak halaman yang belum diperiksa satu per satu akan membuat berkas rencana
+  berbohong.
+
+---
+
 ## 2026-09-05 · Langkah 67 — saldo contoh 20.000, dan tiga cacat rantai baca
 
 > "saya tidak suka ini, mengapa koinya anda lebihkan saja hingga bisa buka lebih

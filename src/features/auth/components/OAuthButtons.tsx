@@ -9,6 +9,9 @@ const PROVIDERS = [
 /**
  * Masuk lewat penyedia pihak ketiga · FR-AUTH-04.
  *
+ * **Pil bergaris rambut** sejak R8, bukan kotak radius sedang: brief §1 hanya
+ * mengenal dua bentuk tombol, dan yang bergaris rambut adalah pil.
+ *
  * **Aksinya stub**, dan itu dinyatakan apa adanya di layar alih-alih membuka
  * jendela yang tidak akan pernah kembali. Warna merek dipertahankan (token
  * `--nv-brand-*`): tombol ini dikenali dari warnanya, bukan dari tulisannya.
@@ -28,7 +31,7 @@ export function OAuthButtons({ onStub }: { onStub: (message: string) => void }) 
             key={id}
             type="button"
             onClick={() => onStub(t('auth.oauthStub')(id))}
-            className="flex items-center justify-center gap-2 rounded-nv-md border border-nv-line px-3 py-3 text-body font-semibold"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-nv-pill border border-nv-line-soft px-3 py-3 text-body font-semibold transition hover:bg-nv-accent-soft"
           >
             <Icon size={16} className={className} aria-hidden />
             {id}

@@ -5,7 +5,6 @@ import { ModerationActions } from '@/components/patterns/ModerationActions'
 import { SpoilerVeil } from '@/components/patterns/SpoilerVeil'
 import { StarRating } from '@/components/patterns/StarRating'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
 import { formatDate } from '@/lib/format'
@@ -23,9 +22,14 @@ export interface ReviewCardProps {
 /**
  * Satu kartu ulasan · FR-SOCIAL-03 & FR-SOCIAL-04.
  *
- * Rating tanpa teks **tetap dirender sebagai kartu**, bukan disembunyikan: ia
- * ikut membentuk rata-rata, dan menghilangkannya membuat jumlah penilai tidak
- * cocok dengan jumlah kartu yang terlihat.
+ * Rating tanpa teks **tetap dirender**, bukan disembunyikan: ia ikut membentuk
+ * rata-rata, dan menghilangkannya membuat jumlah penilai tidak cocok dengan
+ * jumlah baris yang terlihat.
+ *
+ * **Anatominya `7t`** sejak R9c — nama, waktu, isi **serif**, lalu baris aksi,
+ * dipisah garis rambut. Sebelumnya tiap ulasan sebuah kartu putih, dan enam
+ * kartu beruntun membuat halaman ini terbaca sebagai enam pengumuman alih-alih
+ * satu percakapan.
  */
 export function ReviewCard({ review, isMine, canReply, onEdit }: ReviewCardProps) {
   const toast = useToast()
@@ -43,9 +47,9 @@ export function ReviewCard({ review, isMine, canReply, onEdit }: ReviewCardProps
   }
 
   return (
-    <Card className="mt-3">
+    <article className="border-nv-line border-b py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-medium text-body">{review.userName}</p>
+        <p className="font-semibold text-body text-nv-text">{review.userName}</p>
         <p className="text-caption text-nv-muted tabular-nums">
           {formatDate(new Date(review.createdAt))}
           {review.editedAt ? ` · ${t('social.edited')}` : ''}
@@ -53,13 +57,15 @@ export function ReviewCard({ review, isMine, canReply, onEdit }: ReviewCardProps
       </div>
       <StarRating value={review.stars} size={14} className="pt-1" />
 
+      {/* **Isi ulasan serif**: ia tulisan pembaca tentang cerita, bukan
+          keterangan aplikasi tentang dirinya sendiri (brief §1 aturan 2). */}
       {review.text !== '' &&
         (review.spoiler ? (
           <SpoilerVeil className="mt-2">
-            <p className="text-body">{review.text}</p>
+            <p className="font-display text-card leading-relaxed">{review.text}</p>
           </SpoilerVeil>
         ) : (
-          <p className="pt-2 text-body">{review.text}</p>
+          <p className="pt-2 font-display text-card leading-relaxed">{review.text}</p>
         ))}
 
       {review.tags.length > 0 && (
@@ -100,15 +106,18 @@ export function ReviewCard({ review, isMine, canReply, onEdit }: ReviewCardProps
         )}
       </div>
 
+      {/* Tanggapan penulis menjorok dengan garis di tepi, dan lencananya **pil
+          garis rambut kecil** — bukan pil terisi yang berteriak lebih keras
+          daripada ulasannya sendiri. */}
       {review.reply && (
-        <div className="mt-3 rounded-nv-md bg-nv-paper p-3">
+        <div className="mt-3 border-nv-gold-line border-l-2 pl-3">
           <p className="flex flex-wrap items-center gap-2 text-caption">
-            <span className="rounded-nv-pill bg-nv-accent px-2 py-0.5 text-nv-card">
+            <span className="rounded-nv-pill border border-nv-line-soft px-2 py-0.5 font-semibold text-nv-gold">
               {t('social.authorBadge')}
             </span>
-            <span className="font-medium">{review.reply.authorName}</span>
+            <span className="font-semibold">{review.reply.authorName}</span>
           </p>
-          <p className="pt-1 text-body">{review.reply.text}</p>
+          <p className="pt-1 font-display text-card leading-relaxed">{review.reply.text}</p>
         </div>
       )}
 
@@ -127,7 +136,7 @@ export function ReviewCard({ review, isMine, canReply, onEdit }: ReviewCardProps
               value={replyText}
               placeholder={t('social.replyPlaceholder')}
               onChange={(e) => setReplyText(e.target.value)}
-              className="w-full rounded-nv-md border border-nv-line bg-nv-card p-3 text-body text-nv-text"
+              className="w-full rounded-nv-md border border-nv-line-soft bg-nv-card p-3 font-display text-card text-nv-text"
             />
           </label>
           <Button
@@ -146,6 +155,6 @@ export function ReviewCard({ review, isMine, canReply, onEdit }: ReviewCardProps
           </Button>
         </div>
       )}
-    </Card>
+    </article>
   )
 }

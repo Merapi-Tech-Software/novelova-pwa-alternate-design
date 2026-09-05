@@ -47,8 +47,12 @@ export function Switch({
         // Garis 1px memakan tepi di keempat sisi, jadi kotak dalamnya 42×24 dan
         // paddingnya jadi 2, bukan 3 seperti angka brief — yang harus tetap
         // persis adalah **jarak tempuhnya**: 42 − 20 − 2 − 2 = 18.
+        //
+        // Kotak sentuhnya 44×44 lewat `::after` transparan (`prd_01` §0.9):
+        // jalurnya harus tetap 26px tinggi — itu bentuknya — sementara jarinya
+        // butuh 44. Yang diperluas kotak sentuhnya, bukan yang terlihat.
         className={cx(
-          'relative h-[26px] w-11 shrink-0 rounded-nv-pill border transition',
+          "relative h-[26px] w-11 shrink-0 rounded-nv-pill border transition after:absolute after:inset-x-0 after:-inset-y-[9px] after:content-['']",
           on ? 'border-nv-accent bg-nv-accent' : 'border-nv-line-soft bg-nv-paper-2',
           locked ? 'cursor-not-allowed' : 'cursor-pointer',
         )}

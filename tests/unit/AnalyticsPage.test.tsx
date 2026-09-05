@@ -58,7 +58,7 @@ describe('analitik cerita · FR-STUDIO-27..31', () => {
     renderAt('/karya/ms1/analitik')
 
     expect(await screen.findByText(/7 hari terakhir/)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '30H' }))
+    await user.click(screen.getByRole('tab', { name: '30H' }))
     expect(await screen.findByText(/30 hari terakhir/)).toBeInTheDocument()
   })
 
@@ -68,7 +68,7 @@ describe('analitik cerita · FR-STUDIO-27..31', () => {
     await screen.findByText(/7 hari terakhir/)
 
     expect(screen.queryByLabelText('Mulai')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Custom' }))
+    await user.click(screen.getByRole('tab', { name: 'Custom' }))
 
     // `toISOString().slice(0,10)` adalah bug tanggal (CLAUDE.md §8): di WIB
     // pagi, UTC masih hari kemarin dan `max` halaman tidak akan cocok. Test ini

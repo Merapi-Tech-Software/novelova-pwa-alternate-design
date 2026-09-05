@@ -327,7 +327,7 @@ function EditorBody({
 
       {lang === 'en' && !enOpen ? (
         <Card className="mt-4 p-4">
-          <h2 className="font-semibold text-body text-nv-text">
+          <h2 className="font-display text-card font-bold text-nv-text">
             {t('chapterEditor.enInviteTitle')}
           </h2>
           <p className="pt-1 text-caption text-nv-muted">{t('chapterEditor.enInviteBody')}</p>
@@ -354,11 +354,18 @@ function EditorBody({
                 : patchEn({ title: e.target.value })
             }
           />
+          {/* **Area tulis serif, nyaman baca, lebar terkendali** (R9b).
+              `TextArea` sudah memakai Lora 16px, jadi tidak ada token ukuran
+              baru di sini — yang salah cuma dua hal: barisnya terlalu rapat
+              untuk prosa, dan terlalu panjang. `max-w-[38rem]` menahannya di
+              ~70 karakter; tanpa itu satu baris jadi ~95 karakter di desktop,
+              dan mata kehilangan barisnya saat kembali ke kiri. */}
           <TextArea
             ref={bodyRef}
             label={lang === 'id' ? t('chapterEditor.fBodyId') : t('chapterEditor.fBodyEn')}
             value={active.body}
             rows={focus ? 22 : 14}
+            className="max-w-[38rem] leading-loose"
             placeholder={t('chapterEditor.bodyPlaceholder')}
             // Mengetuk area konten mematikan mode fokus, jadi penulis tidak
             // pernah terjebak di dalamnya (FR-STUDIO-20).

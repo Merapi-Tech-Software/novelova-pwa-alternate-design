@@ -64,6 +64,25 @@ const HOT_PCT = 80
 const MID_PCT = 55
 
 /**
+ * Perubahan terhadap periode sebelumnya, dalam persen.
+ *
+ * **Diturunkan, bukan dipatok.** Sampai R9a kedua angka perubahan di sudut
+ * pandang Pendapatan adalah konstanta (`4` dan `18`), sementara nilainya sendiri
+ * dihitung dari data — sehingga layarnya bisa berbunyi *"0% · naik 4%"*, yang
+ * mustahil: tidak ada yang bisa naik dari nol ke nol. Bentuknya sama dengan
+ * `pct()` di analitik cerita, dan aturan pentingnya sama: nol lawan nol adalah
+ * **tetap**, bukan seratus persen.
+ *
+ * ponytail: pembandingnya masih pecahan dari nilai sekarang, bukan periode
+ * sebelumnya yang sungguhan — server tiruan tidak menyimpan agregat harian.
+ * Jalur peningkatannya satu kueri rentang kedua; bentuk jawabannya tidak berubah.
+ */
+function pct(now: number, before: number): number {
+  if (before === 0) return now === 0 ? 0 : 100
+  return Math.round(((now - before) / before) * 100)
+}
+
+/**
  * Corong pembaca · FR-EARN-04.
  *
  * Empat tahap dari data nyata: pembaca yang membuka bab pertama, yang masih ada
@@ -273,6 +292,8 @@ export const earningsHandlers: Pick<
      * Cerita ini menentukan **empat hal sekaligus**: corong, tingkat buka,
      * heatmap, dan tautan penjadwal. Satu cerita, bukan empat pilihan berbeda.
      */
+    const newFans = Math.round(stories.reduce((n, s) => n + s.stats.saves, 0) * share)
+
     const withPaid = new Set(paid.map((c) => c.storyId))
     const ranked = [...stories].sort((a, b) => b.stats.reads - a.stats.reads)
     const focus = ranked.find((s) => withPaid.has(s.id)) ?? ranked[0] ?? null
@@ -347,9 +368,9 @@ export const earningsHandlers: Pick<
       authorSharePct: SERVER_CONFIG.authorSharePct,
       revenue: {
         openRatePct,
-        openRateChangePct: 4,
-        newFans: Math.round(stories.reduce((n, s) => n + s.stats.saves, 0) * share),
-        newFansChangePct: 18,
+        openRateChangePct: pct(openRatePct, Math.round(openRatePct * 0.96)),
+        newFans,
+        newFansChangePct: pct(newFans, Math.round(newFans * 0.85)),
         bars,
         note: `Puncak jatuh pada ${best.day} di ${best.pct}% konversi. Akhir pekan menyumbang porsi terbesar periode ini.`,
       },

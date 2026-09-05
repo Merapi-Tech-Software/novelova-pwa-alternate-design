@@ -3,8 +3,9 @@ import type { Withdrawal } from '@/api/contracts'
 import { StageTrack } from '@/components/patterns/StageTrack'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { formatDate, formatRupiah } from '@/lib/format'
 import { usePayoutRate, useWithdrawals } from '../hooks/useEarnings'
 
@@ -74,16 +75,19 @@ export default function PayoutHistoryPage() {
           title: t('payout.emptyTitle'),
           description: t('payout.emptyBody'),
           secondary: (
-            <Link to="/penulis/penarikan" className="text-body text-nv-accent underline">
+            <Link
+              to="/penulis/penarikan"
+              className="nv-tap font-semibold text-body text-nv-text underline underline-offset-4"
+            >
               {t('payout.toWithdraw')}
             </Link>
           ),
         }}
       >
         {(items) => (
-          <ol className="pt-2">
+          <ol className="mt-4 border-nv-line border-t">
             {items.map((row) => (
-              <li key={row.id}>
+              <li key={row.id} className="border-nv-line border-b py-4">
                 <PayoutRow row={row} onProof={() => downloadProof(row)} />
               </li>
             ))}
@@ -95,9 +99,9 @@ export default function PayoutHistoryPage() {
           atasnya: pertanyaan "kenapa angkanya segini" muncul setelah penulis
           melihat angkanya, bukan sebelum. */}
       {rate.data && (
-        <Card className="mt-6">
-          <h2 className="font-display text-section">{t('payout.convTitle')}</h2>
-          <p className="pt-1 text-body text-nv-muted tabular-nums">
+        <>
+          <SectionHeader label={t('payout.convTitle')} className="pt-8" />
+          <p className="pt-2 text-body text-nv-text-2 tabular-nums">
             {t('payout.rate')(formatRupiah(rate.data.coinRateRupiah))}
           </p>
           <p className="pt-1 text-caption text-nv-muted">{t('payout.chain')}</p>
@@ -117,7 +121,7 @@ export default function PayoutHistoryPage() {
               formatRupiah(rate.data.feeRupiah),
             )}
           </p>
-        </Card>
+        </>
       )}
     </div>
   )
@@ -126,15 +130,20 @@ export default function PayoutHistoryPage() {
 /** Satu pengajuan: angka, lini masa, dan — bila ditolak — alasannya. */
 function PayoutRow({ row, onProof }: { row: Withdrawal; onProof: () => void }) {
   return (
-    <Card className="mt-3">
+    <>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-display text-section tabular-nums">{formatRupiah(row.amount)}</p>
+        <p className="font-display text-section font-bold tabular-nums">
+          {formatRupiah(row.amount)}
+        </p>
+        {/* Kata status, bukan lencana terisi: status yang ditolak tetap dibedakan
+            lewat warna teks dan garisnya, tidak pernah lewat bidang merah. */}
         <span
-          className={
+          className={cx(
+            'rounded-nv-pill border px-2.5 py-0.5 font-semibold text-caption',
             row.status === 'rejected'
-              ? 'rounded-nv-pill border border-nv-danger px-2 py-0.5 text-caption text-nv-danger'
-              : 'rounded-nv-pill border border-nv-line px-2 py-0.5 text-caption text-nv-muted'
-          }
+              ? 'border-nv-danger text-nv-danger'
+              : 'border-nv-line-soft text-nv-text-2',
+          )}
         >
           {row.status === 'rejected' ? t('payout.sRejected') : STAGES[STAGE_INDEX[row.status]]}
         </span>
@@ -149,23 +158,25 @@ function PayoutRow({ row, onProof }: { row: Withdrawal; onProof: () => void }) {
         <StageTrack stages={STAGES} current={STAGE_INDEX[row.status]} className="pt-3" />
       )}
 
-      <dl className="grid grid-cols-3 gap-2 pt-3 text-caption tabular-nums">
-        <div>
-          <dt className="text-nv-muted">{t('payout.requested')}</dt>
-          <dd>{formatRupiah(row.amount)}</dd>
-        </div>
-        <div>
-          <dt className="text-nv-muted">{t('payout.fee')}</dt>
-          <dd>{formatRupiah(row.fee)}</dd>
-        </div>
-        <div>
-          <dt className="text-nv-muted">{t('payout.net')}</dt>
-          <dd>{formatRupiah(row.net)}</dd>
-        </div>
+      <dl className="grid grid-cols-3 gap-2 pt-3 tabular-nums">
+        {(
+          [
+            [t('payout.requested'), formatRupiah(row.amount)],
+            [t('payout.fee'), formatRupiah(row.fee)],
+            [t('payout.net'), formatRupiah(row.net)],
+          ] as const
+        ).map(([label, value]) => (
+          <div key={label} className="min-w-0">
+            <dd className="font-display text-body font-bold tabular-nums">{value}</dd>
+            <dt className="nv-section-label pt-0.5">{label}</dt>
+          </div>
+        ))}
       </dl>
 
+      {/* Alasan penolakan: garis di tepi, bukan kotak merah. Yang membedakannya
+          warna teksnya — brief §1 tidak pernah mengizinkan bidang merah. */}
       {row.reason && (
-        <p className="mt-3 rounded-nv-md border border-nv-danger p-3 text-body text-nv-danger">
+        <p className="mt-3 border-nv-danger border-l-2 pl-3 text-body font-semibold text-nv-danger">
           {row.reason}
         </p>
       )}
@@ -175,6 +186,6 @@ function PayoutRow({ row, onProof }: { row: Withdrawal; onProof: () => void }) {
           {t('payout.proof')}
         </Button>
       )}
-    </Card>
+    </>
   )
 }

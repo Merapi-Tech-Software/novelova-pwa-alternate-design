@@ -10,10 +10,14 @@ import { api } from '@/api/client'
  * bersama naik ke atas — persis seperti komponen bersama naik ke
  * `components/patterns/`.
  */
-export function useReaderPrefs() {
+export function useReaderPrefs(enabled = true) {
   return useQuery({
     queryKey: ['reader', 'prefs'],
     queryFn: () => api.getReaderPrefs(),
     staleTime: 5 * 60_000,
+    // `enabled` hanya dipakai penjaga rute `RequireGuest`, yang ikut hidup saat
+    // belum ada sesi — dan tanpa sesi permintaan ini dijawab `AUTH-401`, yang
+    // akan memunculkan lembar masuk ulang tepat di atas halaman `/masuk`.
+    enabled,
   })
 }

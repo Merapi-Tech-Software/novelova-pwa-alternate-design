@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { api } from '@/api/client'
+import { Cover } from '@/components/patterns/Cover'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { Button } from '@/components/ui/Button'
-import { Card, Skeleton } from '@/components/ui/Card'
+import { Skeleton } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
 import { GENRE_TABS, ONBOARDING_LANGUAGES, ONBOARDING_REGIONS } from '@/i18n/content'
 import { t } from '@/i18n/t'
@@ -134,9 +135,7 @@ export default function OnboardingPage() {
           <h1 className="font-display text-page font-bold">{t('auth.localeTitle')}</h1>
           <p className="pt-2 pb-4 text-body text-nv-muted">{t('auth.localeLead')}</p>
 
-          <p className="pb-2 text-caption tracking-wide text-nv-muted uppercase">
-            {t('auth.uiLanguage')}
-          </p>
+          <p className="nv-section-label pb-2">{t('auth.uiLanguage')}</p>
           <div className="flex gap-2">
             {ONBOARDING_LANGUAGES.map((option) => (
               <Chip
@@ -149,9 +148,7 @@ export default function OnboardingPage() {
             ))}
           </div>
 
-          <p className="pt-5 pb-2 text-caption tracking-wide text-nv-muted uppercase">
-            {t('auth.regionTimezone')}
-          </p>
+          <p className="nv-section-label pt-5 pb-2">{t('auth.regionTimezone')}</p>
           <div className="flex flex-wrap gap-2">
             {ONBOARDING_REGIONS.map((option) => (
               <Chip
@@ -172,31 +169,43 @@ export default function OnboardingPage() {
           <p className="pt-2 pb-4 text-body text-nv-muted">{t('auth.picksLead')}</p>
 
           {picks.isPending && <Skeleton lines={4} />}
-          {picks.data?.map((story) => {
-            const inLibrary = saved.includes(story.id)
-            return (
-              <Card key={story.id} className="mb-2 flex items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-card font-semibold">{story.title}</p>
-                  <p className="truncate text-caption text-nv-muted">{story.penName}</p>
-                  <p className="text-caption text-nv-muted tabular-nums">
-                    {story.genres.join(' · ')} · {formatCompactCoin(story.stats.reads)} pembaca
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant={inLibrary ? 'secondary' : 'primary'}
-                  disabled={inLibrary}
-                  onClick={() => {
-                    setSaved((current) => [...current, story.id])
-                    void api.toggleLibrary(story.id)
-                  }}
-                >
-                  {inLibrary ? t('auth.saved') : t('auth.save')}
-                </Button>
-              </Card>
-            )
-          })}
+          {/*
+            **Daftar berpembatas, bukan tumpukan kartu** (brief §1 aturan 4), dan
+            sampulnya benar-benar dirender. Sampai R8 baris ini hanya judul dan
+            nama pena — memilih cerita dari daftar tanpa sampul adalah memilih
+            dari daftar nama, dan itu bukan cara siapa pun memilih buku.
+
+            Barisnya **bukan tautan**: menekan judulnya di tengah pengenalan akan
+            meninggalkan halaman ini beserta genre yang baru dipilih.
+          */}
+          <ul className="border-nv-line border-t">
+            {picks.data?.map((story) => {
+              const inLibrary = saved.includes(story.id)
+              return (
+                <li key={story.id} className="flex items-center gap-3 border-nv-line border-b py-3">
+                  <Cover src={story.coverUrl} title={story.title} className="w-12 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-card font-semibold">{story.title}</p>
+                    <p className="truncate text-caption text-nv-muted">{story.penName}</p>
+                    <p className="truncate text-caption text-nv-muted tabular-nums">
+                      {story.genres.join(' · ')} · {formatCompactCoin(story.stats.reads)} pembaca
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={inLibrary ? 'secondary' : 'primary'}
+                    disabled={inLibrary}
+                    onClick={() => {
+                      setSaved((current) => [...current, story.id])
+                      void api.toggleLibrary(story.id)
+                    }}
+                  >
+                    {inLibrary ? t('auth.saved') : t('auth.save')}
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
         </section>
       )}
 

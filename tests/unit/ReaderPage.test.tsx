@@ -423,3 +423,34 @@ describe('gerbang Type B · mockup `7x` · R4c', () => {
     await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
   })
 })
+
+/**
+ * Posisi baca dipulihkan **per bab** · FR-READ-16 · R7.
+ *
+ * Sisi servernya sudah diuji di `auto-unlock.test.ts`; yang belum adalah sisi
+ * yang dilihat pembaca — apakah ruang baca benar-benar menawarkan posisi **bab
+ * yang sedang dibuka**, bukan posisi bab terakhir yang dibaca. Keduanya bisa
+ * benar di database dan tetap salah di layar.
+ */
+describe('posisi baca dipulihkan per bab · FR-READ-16', () => {
+  it('menawarkan posisi bab ini, dan tidak menawarkan apa pun untuk bab lain', async () => {
+    // Bab 1 ditinggalkan di 45%, lalu bab 2 dibaca sampai 80%. `scrollPct`
+    // milik cerita karena itu menunjuk bab 2 — dan bab 1 tetap harus ditawari
+    // 45%, bukan 80% dan bukan nol.
+    await api.saveProgress({ storyId: 's1', chapterId: 's1-c1', scrollPct: 0.45 })
+    await api.saveProgress({ storyId: 's1', chapterId: 's1-c2', scrollPct: 0.8 })
+
+    renderReader('s1-c1')
+    expect(await screen.findByText('Kamu berhenti di sekitar 45% bab ini.')).toBeInTheDocument()
+  })
+
+  it('bab yang belum pernah dibuka mulai dari atas, tanpa tawaran', async () => {
+    await api.saveProgress({ storyId: 's1', chapterId: 's1-c2', scrollPct: 0.8 })
+
+    renderReader('s1-c3')
+    // Ditunggu lewat isinya, bukan lewat ketiadaan tawarannya: memeriksa yang
+    // memang belum ada sejak awal berarti tidak menunggu apa pun.
+    await screen.findByRole('article')
+    expect(screen.queryByText(/Kamu berhenti di sekitar/)).not.toBeInTheDocument()
+  })
+})

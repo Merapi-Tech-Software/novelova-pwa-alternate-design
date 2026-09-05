@@ -13,8 +13,14 @@ export interface StageTrackProps {
  *
  * Enam tahap untuk pesanan hardcopy — **PRD, bukan empat langkah yang digambar
  * kanvas** (FR-STUDIO-32, arch §1.5). Dipakai ulang untuk tangga verifikasi
- * penulis (FR-STUDIO-33), karena bentuk masalahnya sama: urutan yang harus
- * dilalui, dengan satu posisi sekarang.
+ * penulis (FR-STUDIO-33) dan lini masa transaksi dompet (FR-WALLET-14), karena
+ * bentuk masalahnya sama: urutan yang harus dilalui, dengan satu posisi sekarang.
+ *
+ * **Tahap kini emas, tahap selesai tinta** — `7o`–`7r`. Emas dijatah enam peran
+ * (brief §1), dan "tahap aktif pelacak" salah satunya; sebelum R8 tahap kini
+ * memakai tinta juga, sehingga satu-satunya beda dari tahap selesai adalah
+ * centangnya. Titik terakhir **tidak** menumbuhkan garis penghubung: garis yang
+ * keluar dari tahap penutup menjanjikan tahap yang tidak ada.
  */
 export function StageTrack({ stages, current, className }: StageTrackProps) {
   return (
@@ -37,7 +43,7 @@ export function StageTrack({ stages, current, className }: StageTrackProps) {
                 className={cx(
                   'grid size-5 shrink-0 place-items-center rounded-nv-pill border text-[10px]',
                   done && 'border-nv-accent bg-nv-accent text-nv-card',
-                  now && 'border-nv-accent bg-nv-accent-soft text-nv-accent',
+                  now && 'border-nv-gold-line bg-nv-gold-line text-nv-card',
                   !done && !now && 'border-nv-line bg-nv-card text-nv-muted',
                 )}
               >
@@ -54,7 +60,7 @@ export function StageTrack({ stages, current, className }: StageTrackProps) {
             <span
               className={cx(
                 'text-center text-[11px] leading-tight',
-                now ? 'font-semibold text-nv-accent' : 'text-nv-muted',
+                now ? 'font-semibold text-nv-gold' : 'text-nv-muted',
               )}
             >
               {stage}

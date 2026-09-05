@@ -5,8 +5,9 @@ import { ReviewParamsSchema } from '@/api/contracts'
 import { StarRating } from '@/components/patterns/StarRating'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Tabs } from '@/components/ui/Tabs'
 import { t } from '@/i18n/t'
 import { RateSheet } from '../components/RateSheet'
 import { ReviewCard } from '../components/ReviewCard'
@@ -66,9 +67,9 @@ export default function ReviewsPage() {
       >
         {(page) => (
           <>
-            <Card>
+            <section className="rounded-nv-lg bg-nv-card p-4">
               <div className="flex flex-wrap items-center gap-3">
-                <p className="font-display text-stat tabular-nums">
+                <p className="font-display text-stat font-bold text-nv-gold tabular-nums">
                   {page.breakdown.average.toLocaleString('id-ID')}
                 </p>
                 <div>
@@ -93,18 +94,21 @@ export default function ReviewsPage() {
                       ? 0
                       : Math.round((count / page.breakdown.total) * 100)
                   return (
-                    <li key={star} className="flex items-center gap-2 py-0.5">
+                    <li key={star} className="flex items-center gap-2 py-1">
                       <span className="w-6 text-caption text-nv-muted tabular-nums">{star}★</span>
-                      <span className="h-1.5 flex-1 rounded-nv-pill bg-nv-line">
+                      {/* Batang garis rambut dengan **angka emas** (R9c): emas
+                          dijatah untuk rating, dan sebaran bintang adalah
+                          rating. Jalurnya kertas, bukan garis penuh. */}
+                      <span className="h-1.5 flex-1 overflow-hidden rounded-nv-pill bg-nv-paper-2">
                         <span
-                          className="block h-1.5 rounded-nv-pill bg-nv-accent"
+                          className="block h-full rounded-nv-pill bg-nv-gold-line"
                           style={{ width: `${pct}%` }}
                         />
                       </span>
                       <span className="sr-only">{t('social.starRow')(star, count)}</span>
                       <span
                         aria-hidden
-                        className="w-8 text-right text-caption text-nv-muted tabular-nums"
+                        className="w-8 text-right font-semibold text-caption text-nv-gold tabular-nums"
                       >
                         {count}
                       </span>
@@ -112,7 +116,7 @@ export default function ReviewsPage() {
                   )
                 })}
               </ol>
-            </Card>
+            </section>
 
             {page.topTags.length > 0 && (
               <fieldset className="flex flex-wrap gap-2 pt-4">
@@ -129,58 +133,55 @@ export default function ReviewsPage() {
               </fieldset>
             )}
 
-            <fieldset className="flex flex-wrap gap-2 pt-3">
-              <legend className="sr-only">{t('social.filterLabel')}</legend>
-              <Chip
-                selected={params.stars === null && !params.withText}
-                onClick={() => patch({ bintang: null, teks: null })}
-              >
-                {t('social.fAll')}
-              </Chip>
-              <Chip
-                selected={params.withText}
-                onClick={() => patch({ teks: params.withText ? null : '1' })}
-              >
-                {t('social.fText')}
-              </Chip>
-              {[5, 4, 3, 2, 1].map((star) => (
-                <Chip
-                  key={star}
-                  selected={params.stars === star}
-                  onClick={() => patch({ bintang: params.stars === star ? null : String(star) })}
-                >
-                  {t('social.fStars')(star)}
-                </Chip>
-              ))}
-            </fieldset>
+            {/*
+              Saringan dan urutan jadi **dua deret tab teks** (R9c). Keduanya
+              tetap menyaring **di server** dan tetap hidup di URL — yang
+              berganti bentuknya, bukan jalurnya.
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-4">
-              <p className="text-body text-nv-muted tabular-nums">
-                {t('social.count')(page.total)}
-              </p>
-              <label className="text-caption text-nv-muted">
-                <span className="sr-only">{t('social.sortLabel')}</span>
-                <select
-                  className="h-11 rounded-nv-pill border border-nv-line bg-nv-card px-3 text-body text-nv-text"
-                  value={params.sort}
-                  onChange={(e) => patch({ urut: e.target.value })}
-                >
-                  {SORTS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+              Saringannya jadi satu pilihan aktif: "Ada teksnya" dan sebuah
+              bintang tidak lagi bisa menyala bersamaan. Itu memang yang sudah
+              disiratkan tombol "Semua" sejak awal, dan gabungan "ada teksnya +
+              bintang 4" tidak pernah punya jalan masuk yang jelas.
+            */}
+            <Tabs
+              items={[
+                { value: 'semua', label: t('social.fAll') },
+                { value: 'teks', label: t('social.fText') },
+                ...[5, 4, 3, 2, 1].map((star) => ({
+                  value: String(star),
+                  label: t('social.fStars')(star),
+                })),
+              ]}
+              value={
+                params.withText ? 'teks' : params.stars === null ? 'semua' : String(params.stars)
+              }
+              onChange={(next) =>
+                patch({
+                  teks: next === 'teks' ? '1' : null,
+                  bintang: next === 'semua' || next === 'teks' ? null : next,
+                })
+              }
+              label={t('social.filterLabel')}
+              className="mt-4"
+            />
+
+            <Tabs
+              items={SORTS.map((o) => ({ value: o.value, label: o.label }))}
+              value={params.sort}
+              onChange={(next) => patch({ urut: next })}
+              label={t('social.sortLabel')}
+              className="mt-3"
+            />
+
+            <p className="pt-3 text-caption text-nv-muted tabular-nums">
+              {t('social.count')(page.total)}
+            </p>
 
             {/* Ulasan sendiri **selalu paling atas dan tidak pernah tersaring**:
                 penulisnya harus selalu bisa menemukan miliknya untuk disunting. */}
             {page.myReview && (
-              <section className="pt-4">
-                <h2 className="text-caption tracking-widest text-nv-muted uppercase">
-                  {t('social.mine')}
-                </h2>
+              <section className="pt-5">
+                <SectionHeader label={t('social.mine')} />
                 <ReviewCard review={page.myReview} isMine onEdit={() => setRating(true)} />
               </section>
             )}
@@ -192,7 +193,7 @@ export default function ReviewsPage() {
                   : t('social.emptyBody')}
               </p>
             ) : (
-              <ol className="pt-4">
+              <ol className="mt-5 border-nv-line border-t">
                 {page.items.map((review: Review) => (
                   <li key={review.id}>
                     <ReviewCard review={review} canReply={page.canReply} />

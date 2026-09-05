@@ -25,7 +25,7 @@ async function alurUlasan(page: Page) {
   // Saringan menyaring di server: penghitungnya ikut berubah.
   const jumlah = page.getByText(/^\d+ ulasan$/)
   const sebelum = Number(((await jumlah.textContent()) ?? '').split(' ')[0])
-  await page.getByRole('button', { name: 'Ada teksnya' }).click({ timeout: 5_000 })
+  await page.getByRole('tab', { name: 'Ada teksnya' }).click({ timeout: 5_000 })
   await expect
     .poll(async () => Number(((await jumlah.textContent()) ?? '').split(' ')[0]))
     .toBeLessThan(sebelum)

@@ -445,7 +445,9 @@ export default function KitchenSink() {
         <p className="text-body text-nv-muted">
           Jawaban penyedia tiruan untuk pembayaran berikutnya. Ketiga jalan gagalnya hanya terjadi
           berbulan-bulan sekali di dunia nyata — tanpa sakelar ini tidak satu pun layarnya pernah
-          sempat diperiksa. Setelah memilih, buka <code>/koin</code> dan bayar.
+          sempat diperiksa. Setelah memilih, pergi ke <code>Isi Koin</code>{' '}
+          <strong>lewat bilah navigasi</strong>, jangan mengetik alamatnya: pilihan ini hidup di
+          memori modul, dan memuat ulang halaman mengembalikannya ke <code>Lunas</code>.
         </p>
         <div className="flex flex-wrap gap-2">
           {(['paid', 'declined', 'unconfirmed'] as const).map((outcome) => (

@@ -79,7 +79,7 @@ async function alurKelolaBab(page: Page) {
   await page.goto('/karya/ms1/bab')
 
   // Penghitung adalah pintasan saringan, dan tabnya ikut menyorot.
-  await page.getByRole('button', { name: /^Draf/ }).click({ timeout: 5_000 })
+  await page.getByRole('button', { name: /^Draf · / }).click({ timeout: 5_000 })
   await expect(page.getByRole('tab', { name: 'Draf' })).toHaveAttribute('aria-selected', 'true')
 
   // Menu aksi: dibangun per status, dan "Hapus" ada di ujungnya.
@@ -348,7 +348,7 @@ async function alurAnalitikDanCetak(page: Page) {
   await expect(page.getByText(/7 hari terakhir/)).toBeVisible({ timeout: 15_000 })
 
   // Rentang menyaring di server: labelnya ikut berubah, bukan hanya chipnya.
-  await page.getByRole('button', { name: '30H', exact: true }).click({ timeout: 5_000 })
+  await page.getByRole('tab', { name: '30H', exact: true }).click({ timeout: 5_000 })
   await expect(page.getByText(/30 hari terakhir/)).toBeVisible({ timeout: 15_000 })
 
   // Lapisan terakhir ditahan — grafiknya tidak pernah jadi kotak kosong.
@@ -410,7 +410,7 @@ async function alurPenghasilan(page: Page) {
   await expect(page.getByText(/1 koin = Rp/)).toBeVisible()
 
   // Rentang menyaring di server.
-  await page.getByRole('button', { name: '7H', exact: true }).click({ timeout: 5_000 })
+  await page.getByRole('tab', { name: '7H', exact: true }).click({ timeout: 5_000 })
   await expect(page.getByText(/7 hari terakhir/)).toBeVisible({ timeout: 15_000 })
 
   // Sudut pandang benar-benar mengganti isi. Dicari sebagai **judul**, bukan
@@ -420,19 +420,19 @@ async function alurPenghasilan(page: Page) {
   const judul = (name: string) => page.getByRole('heading', { name, exact: true })
 
   await expect(judul('Kurva pendapatan')).toBeVisible()
-  await page.getByRole('button', { name: 'Retensi', exact: true }).click({ timeout: 5_000 })
+  await page.getByRole('tab', { name: 'Retensi', exact: true }).click({ timeout: 5_000 })
   await expect(judul('Titik berhenti')).toBeVisible({ timeout: 15_000 })
   await expect(judul('Kurva pendapatan')).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Traffic', exact: true }).click({ timeout: 5_000 })
+  await page.getByRole('tab', { name: 'Traffic', exact: true }).click({ timeout: 5_000 })
   await expect(judul('Sumber pembaca')).toBeVisible({ timeout: 15_000 })
 
   // Corong pembaca menyebut ceritanya, dan heatmap punya sel terpanas yang
   // konsisten dengan rekomendasinya.
-  await page.getByRole('button', { name: 'Retensi', exact: true }).click({ timeout: 5_000 })
+  await page.getByRole('tab', { name: 'Retensi', exact: true }).click({ timeout: 5_000 })
   await expect(judul('Corong pembaca')).toBeVisible({ timeout: 15_000 })
 
-  await page.getByRole('button', { name: 'Traffic', exact: true }).click({ timeout: 5_000 })
+  await page.getByRole('tab', { name: 'Traffic', exact: true }).click({ timeout: 5_000 })
   const heat = page.getByRole('table', { name: /peta panas/i })
   await expect(heat).toBeVisible({ timeout: 15_000 })
   // Tabel lebar di 390px harus menggulir **di dalam wadahnya**, bukan menggeser

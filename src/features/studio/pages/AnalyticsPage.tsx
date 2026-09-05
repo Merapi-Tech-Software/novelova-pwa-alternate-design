@@ -4,12 +4,13 @@ import type { AnalyticsPoint, ChapterPerf, PerfSort, StoryAnalytics } from '@/ap
 import { AnalyticsRangeSchema, PerfSortSchema } from '@/api/contracts'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { Chip } from '@/components/ui/Chip'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Sheet } from '@/components/ui/Modal'
+import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Tabs } from '@/components/ui/Tabs'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { todayLocalISO } from '@/lib/date'
 import { formatNumber } from '@/lib/format'
 import { useStoryAnalytics } from '../hooks/useAnalytics'
@@ -150,18 +151,17 @@ export default function AnalyticsPage() {
         {data ? t('analytics.subtitle')(data.storyTitle, data.rangeLabel) : ''}
       </p>
 
-      <fieldset className="flex gap-2 overflow-x-auto pt-3">
-        <legend className="sr-only">{t('analytics.rangeLabel')}</legend>
-        {RANGES.map((option) => (
-          <Chip
-            key={option.value}
-            selected={range === option.value}
-            onClick={() => patch({ rentang: option.value })}
-          >
-            {option.label}
-          </Chip>
-        ))}
-      </fieldset>
+      {/* Lima rentang jadi **tab teks** (R9b): saringan adalah tab teks di
+          seluruh aplikasi ini, dan halaman ini punya dua deret saringan —
+          rentang dan lapisan grafik — yang dulu sama-sama pil dan karena itu
+          tidak bisa dibedakan perannya. */}
+      <Tabs
+        items={RANGES.map((r) => ({ value: r.value, label: r.label }))}
+        value={range}
+        onChange={(next) => patch({ rentang: next })}
+        label={t('analytics.rangeLabel')}
+        className="mt-3"
+      />
 
       {range === 'custom' && (
         <div className="pt-3">
@@ -200,32 +200,32 @@ export default function AnalyticsPage() {
       >
         {(report) => (
           <>
-            <dl className="grid grid-cols-2 gap-2 pt-4">
+            {/* Strip empat sel di atas **satu panel putih** (`7j`), bukan empat
+                kartu. `grid-cols-2` tetap: empat sel di satu baris membuat
+                `PEMBACA BARU` pecah tiga baris di 320px. */}
+            <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 rounded-nv-lg bg-nv-card p-4">
               {report.metrics.map((metric) => (
-                <Card key={metric.key} padded={false}>
+                <div key={metric.key} className="min-w-0">
                   <button
                     type="button"
-                    className="w-full rounded-nv-md p-3 text-left"
+                    className="w-full text-left"
                     onClick={() => jumpTo(metric.target)}
                   >
-                    <dt className="text-caption tracking-widest text-nv-muted uppercase">
-                      {METRIC_LABEL[metric.key]}
-                    </dt>
-                    <dd className="pt-0.5 font-display text-page tabular-nums">
+                    <dd className="font-display text-section leading-tight font-bold tabular-nums">
                       {formatNumber(metric.value)}
                     </dd>
+                    <dt className="nv-section-label pt-1">{METRIC_LABEL[metric.key]}</dt>
                     <dd
-                      className={
-                        metric.changePct < 0
-                          ? 'text-caption text-nv-danger'
-                          : 'text-caption text-nv-accent'
-                      }
+                      className={cx(
+                        'pt-0.5 text-caption font-semibold',
+                        metric.changePct < 0 ? 'text-nv-danger' : 'text-nv-text-2',
+                      )}
                     >
                       {t('analytics.change')(metric.changePct)}
                     </dd>
                     <span className="sr-only">{t('analytics.jump')(METRIC_LABEL[metric.key])}</span>
                   </button>
-                </Card>
+                </div>
               ))}
             </dl>
 
@@ -235,20 +235,40 @@ export default function AnalyticsPage() {
               }}
               className="scroll-mt-20 pt-5"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-display text-section">{t('analytics.trend')}</h2>
-                <fieldset className="flex gap-2">
-                  <legend className="sr-only">{t('analytics.layersLabel')}</legend>
-                  <Chip selected={layers.views} onClick={() => toggleLayer('views')}>
-                    {t('analytics.layerViews')}
-                  </Chip>
-                  <Chip selected={layers.readers} onClick={() => toggleLayer('readers')}>
-                    {t('analytics.layerReaders')}
-                  </Chip>
-                </fieldset>
-              </div>
+              <SectionHeader label={t('analytics.trend')} />
+              {/*
+                Dua lapisan grafik **tetap sakelar**, bukan tab: keduanya bisa
+                menyala bersamaan, dan tab hanya bisa memilih satu. Bentuknya
+                turun jadi teks tebal bergaris bawah — sama seperti tab — supaya
+                ia tidak lagi terbaca sebagai dua tombol pil di sebelah judul.
+                Mematikan keduanya tetap ditolak beserta alasannya.
+              */}
+              <fieldset className="flex gap-4 pt-2">
+                <legend className="sr-only">{t('analytics.layersLabel')}</legend>
+                {(
+                  [
+                    ['views', t('analytics.layerViews')],
+                    ['readers', t('analytics.layerReaders')],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={layers[key]}
+                    onClick={() => toggleLayer(key)}
+                    className={cx(
+                      "relative border-b-2 pb-1 text-body transition after:absolute after:inset-x-0 after:-inset-y-2 after:content-['']",
+                      layers[key]
+                        ? 'border-nv-accent font-bold text-nv-text'
+                        : 'border-transparent font-medium text-nv-muted',
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </fieldset>
 
-              <Card className="mt-2 p-3">
+              <div className="mt-3 rounded-nv-lg bg-nv-card p-3">
                 <svg
                   viewBox="0 0 300 120"
                   className="h-32 w-full overflow-visible"
@@ -264,12 +284,15 @@ export default function AnalyticsPage() {
                     className="stroke-nv-line"
                     strokeDasharray="3 4"
                   />
+                  {/* **Emas dekoratif**, bukan emas teks: garis grafik bukan
+                      huruf, jadi ia memakai `--nv-gold-line` seperti batang
+                      progres dan titik tab aktif. */}
                   {layers.views && (
                     <polyline
                       points={polyline(report.series, 'views', maxViews)}
                       fill="none"
-                      className="stroke-nv-accent"
-                      strokeWidth="1.6"
+                      className="stroke-nv-gold-line"
+                      strokeWidth="1.8"
                     />
                   )}
                   {layers.readers && (
@@ -286,27 +309,29 @@ export default function AnalyticsPage() {
                   <span>{report.from}</span>
                   <span>{report.to}</span>
                 </div>
-              </Card>
+              </div>
             </section>
 
             <section className="pt-6">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-display text-section">{t('analytics.perf')}</h2>
-                <label className="text-caption text-nv-muted">
-                  <span className="sr-only">{t('analytics.sortLabel')}</span>
-                  <select
-                    className="h-11 rounded-nv-pill border border-nv-line bg-nv-card px-3 text-body text-nv-text"
-                    value={chapterSort}
-                    onChange={(e) => patch({ urut: e.target.value as PerfSort })}
-                  >
-                    {SORTS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <SectionHeader label={t('analytics.perf')} />
+              {/* Pengurut **di barisnya sendiri**, bukan di slot aksi kepala
+                  section: slot itu untuk aksi sependek `See all`, dan sebuah
+                  `<select>` selebar 165px di sana mendorong halaman 21px keluar
+                  layar di 320px. Terukur, bukan ditebak. */}
+              <label className="mt-2 flex items-baseline justify-end gap-2 text-caption text-nv-muted">
+                <span className="sr-only">{t('analytics.sortLabel')}</span>
+                <select
+                  className="h-11 min-w-0 max-w-full border-nv-line-input border-b-[1.5px] bg-transparent font-display text-body text-nv-text"
+                  value={chapterSort}
+                  onChange={(e) => patch({ urut: e.target.value as PerfSort })}
+                >
+                  {SORTS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               {report.chapters.length === 0 ? (
                 <EmptyState
@@ -328,11 +353,10 @@ export default function AnalyticsPage() {
                             {t('analytics.rank')(i + 1)}
                           </span>
                           <span
-                            className={
-                              chapter.badge === 'drop'
-                                ? 'rounded-nv-pill border border-nv-danger px-2 py-0.5 text-caption text-nv-danger'
-                                : 'rounded-nv-pill border border-nv-line px-2 py-0.5 text-caption text-nv-muted tabular-nums'
-                            }
+                            className={cx(
+                              'font-semibold text-caption tabular-nums',
+                              chapter.badge === 'drop' ? 'text-nv-danger' : 'text-nv-gold',
+                            )}
                           >
                             {chapter.badge === 'drop'
                               ? t('analytics.badgeDrop')
@@ -341,7 +365,7 @@ export default function AnalyticsPage() {
                                 : t('analytics.badgePrice')(chapter.priceCoins)}
                           </span>
                         </span>
-                        <span className="block pt-1 font-medium text-body">
+                        <span className="block pt-1 font-display text-card font-bold">
                           {chapter.number}. {chapter.title}
                         </span>
                         <span className="block pt-0.5 text-caption text-nv-muted tabular-nums">
@@ -351,13 +375,13 @@ export default function AnalyticsPage() {
                             chapter.purchases,
                           )}
                         </span>
-                        <span className="block pt-0.5 text-caption text-nv-accent">
+                        <span className="block pt-0.5 text-caption text-nv-text-2">
                           {chapter.note}
                         </span>
-                        {/* Batang skor relatif · FR-STUDIO-29. */}
-                        <span className="mt-2 block h-1 rounded-nv-pill bg-nv-line">
+                        {/* Batang skor relatif · FR-STUDIO-29. Emas garis. */}
+                        <span className="mt-2 block h-1 overflow-hidden rounded-nv-pill bg-nv-paper-2">
                           <span
-                            className="block h-1 rounded-nv-pill bg-nv-accent"
+                            className="block h-1 rounded-nv-pill bg-nv-gold-line"
                             style={{ width: `${chapter.score}%` }}
                           />
                         </span>
@@ -375,10 +399,8 @@ export default function AnalyticsPage() {
                 }}
                 className="scroll-mt-20"
               >
-                <Card className="h-full p-3">
-                  <h2 className="text-caption tracking-widest text-nv-muted uppercase">
-                    {t('analytics.sentiment')}
-                  </h2>
+                <div className="h-full">
+                  <SectionHeader label={t('analytics.sentiment')} />
                   {(
                     [
                       [t('analytics.positive'), report.sentiment.positive],
@@ -386,34 +408,44 @@ export default function AnalyticsPage() {
                       [t('analytics.negative'), report.sentiment.negative],
                     ] as const
                   ).map(([label, value]) => (
-                    <p key={label} className="flex justify-between pt-1 text-body tabular-nums">
-                      <span>{label}</span>
-                      <span>{value}%</span>
+                    <p
+                      key={label}
+                      className="flex justify-between border-nv-line border-b py-2 text-body tabular-nums last:border-0"
+                    >
+                      <span className="text-nv-text-2">{label}</span>
+                      <span className="font-semibold">{value}%</span>
                     </p>
                   ))}
+                  {/*
+                    Keterangan menyebut **ulasan**, bukan komentar. Persentasenya
+                    diturunkan dari bintang ulasan (FR-SOCIAL-08); sampai R9b
+                    keterangannya berbunyi "Dari 10 komentar" pada cerita yang
+                    ulasannya nol — angka yang benar, sumber yang salah, dan
+                    itulah bentuk paling halus dari berbohong di layar analitik.
+                  */}
                   <p className="pt-2 text-caption text-nv-muted">
-                    {t('analytics.fromComments')(report.sentiment.total)}
+                    {report.sentiment.total === 0
+                      ? t('analytics.noReviews')
+                      : t('analytics.fromReviews')(report.sentiment.total)}
                   </p>
-                </Card>
+                </div>
               </section>
 
-              <Card className="h-full p-3">
-                <h2 className="text-caption tracking-widest text-nv-muted uppercase">
-                  {t('analytics.origin')}
-                </h2>
+              <div className="h-full">
+                <SectionHeader label={t('analytics.origin')} />
                 {report.origin.sources.map((source) => (
                   <p
                     key={source.label}
-                    className="flex justify-between pt-1 text-body tabular-nums"
+                    className="flex justify-between border-nv-line border-b py-2 text-body tabular-nums last:border-0"
                   >
-                    <span>{source.label}</span>
-                    <span>{source.pct}%</span>
+                    <span className="text-nv-text-2">{source.label}</span>
+                    <span className="font-semibold">{source.pct}%</span>
                   </p>
                 ))}
                 <p className="pt-2 text-caption text-nv-muted">
                   {t('analytics.peak')(report.origin.peakHours)}
                 </p>
-              </Card>
+              </div>
             </div>
 
             <section
@@ -422,14 +454,14 @@ export default function AnalyticsPage() {
               }}
               className="scroll-mt-20 pt-6"
             >
-              <h2 className="font-display text-section">{t('analytics.calendar')}</h2>
-              <Card className="mt-2 p-3">
+              <SectionHeader label={t('analytics.calendar')} />
+              <div className="mt-3">
                 <PublishCalendar days={report.publishDays} />
                 <p className="pt-2 text-caption text-nv-muted">
                   {t('analytics.calendarNote')(report.publishDays.length)}
                 </p>
-              </Card>
-              <p className="pt-3 text-body text-nv-muted">
+              </div>
+              <p className="pt-3 text-body text-nv-text-2">
                 {t('analytics.bestTime')(report.bestTime.label)}
               </p>
             </section>

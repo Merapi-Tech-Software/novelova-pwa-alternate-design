@@ -8,6 +8,7 @@ import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { formatDateTime } from '@/lib/format'
 import { ChapterActionSheet } from '../components/ChapterActionSheet'
 import { ChapterRow } from '../components/ChapterRow'
@@ -185,7 +186,7 @@ export default function ManageChaptersPage() {
         <Link
           to="/karya"
           aria-label={t('chapters.backToStudio')}
-          className="grid size-9 shrink-0 place-items-center rounded-nv-pill border border-nv-line text-nv-text"
+          className="relative grid size-9 shrink-0 place-items-center rounded-nv-pill border border-nv-line text-nv-text after:absolute after:-inset-1 after:content-['']"
         >
           <ChevronLeft size={18} aria-hidden />
         </Link>
@@ -203,39 +204,46 @@ export default function ManageChaptersPage() {
       {/* Penghitung **adalah** pintasan saringan (FR-STUDIO-07): menekannya
           menerapkan saringan yang sama dengan tab, dan tabnya ikut menyorot
           karena keduanya membaca `?tab=` yang sama. */}
-      <fieldset className="grid grid-cols-3 gap-2 border-0 pt-4">
+      {/* Strip tiga sel di atas **satu panel putih** (`7j`) — bukan tiga kotak
+          terpisah. Yang menandai sel aktif garis bawah 2px, bukan latar: pola
+          yang sama dengan tab saringan tepat di bawahnya, dan latar berwarna
+          membuat penghitung terbaca sebagai tiga tombol. */}
+      <fieldset className="mt-4 grid grid-cols-3 gap-x-2 rounded-nv-lg border-0 bg-nv-card p-4">
         <legend className="sr-only">{t('chapters.countersLabel')}</legend>
         {counters.map((counter) => (
           <button
             key={counter.id}
             type="button"
             aria-pressed={status === counter.id}
+            // Namanya ditulis eksplisit: angkanya kini di atas labelnya, dan
+            // nama yang dirakit dari urutan DOM ("2 Draf") berubah arti setiap
+            // kali susunannya digeser — sekaligus ambigu bagi pembaca layar.
+            aria-label={t('chapters.counterAria')(counter.label, counter.value)}
             onClick={() => patch({ tab: counter.id, page: null })}
-            className={
-              status === counter.id
-                ? 'rounded-nv-lg border border-nv-accent bg-nv-accent-soft px-3 py-2.5 text-center'
-                : 'rounded-nv-lg border border-nv-line bg-nv-surface px-3 py-2.5 text-center'
-            }
+            className={cx(
+              'border-b-2 pb-1 text-left transition',
+              status === counter.id ? 'border-nv-accent' : 'border-transparent',
+            )}
           >
-            <span className="block text-caption text-nv-muted">{counter.label}</span>
-            <span className="block pt-0.5 font-display font-bold text-section text-nv-text tabular-nums">
+            <span className="block font-display font-bold text-section text-nv-text tabular-nums">
               {counter.value}
             </span>
+            <span className="nv-section-label block pt-1">{counter.label}</span>
           </button>
         ))}
       </fieldset>
 
       {board.data && board.data.notices.length > 0 && (
-        <ul className="grid grid-cols-1 gap-2 pt-3">
+        <ul className="mt-4 border-nv-line border-t">
           {board.data.notices.map((notice) => (
             <li
               key={notice.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-nv-lg bg-nv-surface px-3.5 py-2.5"
+              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-nv-line border-b py-2.5"
             >
-              <span className="min-w-0 text-caption text-nv-text">{notice.text}</span>
+              <span className="min-w-0 text-caption text-nv-text-2">{notice.text}</span>
               <Link
                 to={notice.href}
-                className="shrink-0 text-caption font-semibold text-nv-accent underline"
+                className="nv-tap shrink-0 text-caption font-semibold text-nv-text underline underline-offset-4"
               >
                 {notice.actionLabel}
               </Link>
@@ -272,7 +280,7 @@ export default function ManageChaptersPage() {
           >
             {(data) => (
               <>
-                <div className="grid grid-cols-1 gap-2.5">
+                <div className="border-nv-line border-t">
                   {data.items.map((chapter) => (
                     <ChapterRow
                       key={chapter.id}

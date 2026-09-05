@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -91,7 +91,10 @@ describe('buku besar dompet · FR-WALLET-15', () => {
     renderAt('/koin/transaksi')
     await screen.findByText('Isi 500 koin + 50 bonus')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Keluar' }))
+    // `role="tab"`, bukan `button`: saringan buku besar jadi **tab teks** di R8c
+    // (brief §1 aturan 5). Yang diuji tetap sama — barisnya diminta ulang ke
+    // server, bukan disembunyikan.
+    await userEvent.click(screen.getByRole('tab', { name: 'Keluar' }))
 
     expect(await screen.findByText('Buka bab 8')).toBeInTheDocument()
     expect(screen.queryByText('Isi 500 koin + 50 bonus')).not.toBeInTheDocument()
@@ -140,5 +143,33 @@ describe('detail transaksi · FR-WALLET-14 · FR-WALLET-19', () => {
     expect(await screen.findByText('Menunggu konfirmasi')).toBeInTheDocument()
     const saldo = screen.getAllByText('2.000')
     expect(saldo.length).toBeGreaterThanOrEqual(2)
+  })
+
+  /*
+   * Lini masa · R8c.
+   *
+   * Yang diuji bukan bentuknya, melainkan **kapan ia tidak boleh ada**: deretan
+   * tahap menyiratkan uangnya masih berjalan, dan pada transaksi gagal atau
+   * dibalik itu kebalikan dari yang terjadi. Aturan yang sama sudah dipegang
+   * riwayat pencairan; kalau salah satunya bergeser, yang ini ikut jatuh.
+   */
+  it('lini masa hanya untuk yang masih di jalurnya', async () => {
+    renderAt('/koin/transaksi/tx-uji-topup')
+    expect(await screen.findByText('Koin masuk')).toBeInTheDocument()
+    expect(screen.getByText('Dibayar')).toBeInTheDocument()
+
+    await db.transactions.update('tx-uji-topup', { status: 'failed' })
+    cleanup()
+    renderAt('/koin/transaksi/tx-uji-topup')
+
+    expect(await screen.findByText('Pembayaran gagal')).toBeInTheDocument()
+    expect(screen.queryByText('Koin masuk')).not.toBeInTheDocument()
+  })
+
+  it('tahap terakhir menyebut arah koinnya, bukan selalu "masuk"', async () => {
+    renderAt('/koin/transaksi/tx-uji-spend')
+
+    expect(await screen.findByText('Koin dipotong')).toBeInTheDocument()
+    expect(screen.queryByText('Koin masuk')).not.toBeInTheDocument()
   })
 })

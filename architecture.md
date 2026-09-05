@@ -1134,6 +1134,147 @@ Ia "didapat" setelah sepuluh bab terbuka otomatis — dan pada saat itu pembaca
 sudah sepuluh bab di bawah titik masuknya. Terukur: menembus bab 8 sampai 18
 tanpa melihatnya sekali pun. Sekarang ia dirender di **ujung rantai**.
 
+### 1.27 Empat cacat yang R8 temukan di luar tampilan
+
+R8 menukar kulit tujuh halaman auth & dompet. Empat hal yang ikut ketahuan
+**bukan** soal kulit, dan ketiganya sudah ada jauh sebelum R8.
+
+**1. `bg-nv-surface` sudah mati sejak R1, dan tidak ada yang memberi tahu.**
+Putaran 7 mengganti nama tokennya; enam belas tempat masih memanggil kelas lama.
+Tailwind tidak menghasilkan apa pun untuk kelas yang tidak dikenal dan **tidak
+mengeluh** — jadi keenam belas panel itu dirender **transparan** selama tiga
+fase: brankas saldo, panel status transaksi, kotak hitung mundur, batang progres
+perpustakaan, dan sembilan lainnya. Terukur di peramban:
+`getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)'`. Diganti sekali ke
+`--nv-paper-2`, yang memang token untuk isian di dalam panel.
+
+> Pelajarannya bukan "periksa lebih teliti". Yang menangkapnya adalah
+> **membaca warna terpakainya di peramban**, bukan membaca kelasnya di berkas.
+> `scripts/check-tokens.mjs` menjaga arah sebaliknya (hex di luar `tokens.css`);
+> ia tidak bisa melihat nama token yang tidak ada.
+
+**2. `formatCompactCoin` memakai titik sebagai pemisah desimal.** Di Indonesia
+titik adalah pemisah **ribuan**, jadi `15.3rb` terbaca sebagai lima belas ribu
+tiga ratus ribu. Mockup `7a` dan `7i` sama-sama mencetak `15,3rb` — kode yang
+meleset, bukan mockup-nya. Satu fungsi, dan sesudahnya seluruh chip koin, jumlah
+baca, dan angka rating ikut benar.
+
+**3. Tidak ada satu pun akun baru yang pernah melihat `/mulai`.** `RegisterPage`
+memanggil `navigate('/mulai')` di `onSuccess` miliknya, tetapi React Query
+**menunggu** `onSuccess` milik mutasinya lebih dulu — dan di sanalah
+`setSession` dipanggil. Jadi sesi sudah `authenticated` satu render sebelum
+navigasinya jalan, `RequireGuest` menyala, dan pendaftar baru dilempar ke
+beranda. Onboarding tiga langkah lengkap dengan pemilihan genre, bahasa, dan
+tiga cerita pembuka **tidak pernah tampil kepada siapa pun** kecuali lewat
+alamat yang diketik tangan.
+
+> Perbaikannya di guard-nya, bukan di halaman daftar: yang memutuskan ke mana
+> pengguna yang sudah masuk pergi adalah `RequireGuest`, dan aturan
+> "yang belum melewati pengenalan mendarat di `/mulai`" (FR-AUTH-11) memang
+> aturannya. Menambal `RegisterPage` hanya menutup satu dari dua pintu — yang
+> meninggalkan pengenalan di tengah lalu membuka `/masuk` lagi tetap terlempar
+> ke beranda.
+
+**4. `AuthLayout` memakai `grid` tanpa kolom eksplisit.** Track `auto` tidak
+pernah turun di bawah min-content anaknya, jadi satu baris `truncate` — yang
+`white-space: nowrap` — melebarkan wadah melewati layar. Terukur 343px di dalam
+layar 320px, dan luberannya muncul di **header**, jauh dari penyebabnya. Ini
+jebakan yang sama yang sudah menyentuh tiga belas tempat di `novelova/` v1
+(`CLAUDE.md` §8); `AuthLayout` luput karena keempat halamannya belum pernah
+disapu lima lebar sampai R8 memasukkannya.
+
+### 1.28 Pelacak tahap: tahap kini emas, dan hanya untuk yang masih di jalurnya
+
+`StageTrack` dipakai tiga tempat sebelum R8 (riwayat cetak, riwayat pencairan,
+pengajuan pencairan) dan satu lagi sesudahnya (detail transaksi). Dua aturan
+diseragamkan di primitifnya:
+
+**Tahap kini emas, tahap selesai tinta.** Brief §1 menjatah emas enam peran, dan
+"tahap aktif pelacak cetak" salah satunya — `7o`–`7r` menggambarnya begitu.
+Sampai R8 tahap kini memakai tinta juga, sehingga satu-satunya beda dari tahap
+selesai adalah centangnya. Diubah sekali di `StageTrack`, bukan empat kali.
+
+**Lini masa hanya untuk yang masih di jalurnya.** Deretan tahap menyiratkan
+uangnya masih berjalan; pada transaksi `failed` dan `reversed` itu kebalikan
+dari yang terjadi, jadi keduanya tidak mendapat lini masa sama sekali — mereka
+mendapat keterangan statusnya. Aturannya bukan baru: riwayat pencairan sudah
+memegangnya sejak Fase 9 (pengajuan ditolak membawa alasannya, bukan lini masa),
+dan detail transaksi kini mengikutinya.
+
+### 1.29 Dua baris PRD yang R8 timpa
+
+Keduanya **tidak** disunting di berkas PRD-nya: pengguna tidak memintanya kali
+ini, dan bawaannya tetap — PRD adalah catatan jujur tentang apa yang semula
+diminta, penimpaannya dicatat di sini. Ditulis dengan nomor barisnya supaya sesi
+berikutnya tidak "memperbaikinya" balik.
+
+| Berkas | Yang tertulis | Yang berlaku | Kenapa |
+|---|---|---|---|
+| `prd_05` FR-READ-05 (§ tabel format ringkas) | `15300` → **`15.3rb`** | **`15,3rb`** | Di Indonesia titik adalah pemisah **ribuan**, jadi `15.3rb` terbaca sebagai lima belas ribu tiga ratus ribu. Mockup `7a` dan `7i` sendiri mencetak `15,3rb`. Baris `12000` → `12rb` tetap benar dan tidak berubah. |
+| `prd_09` § tabel baris buku besar | Isi ulang `+` **hijau**, keluar `−` **merah** | keduanya **tinta** | Brief §1: destruktif tidak pernah memakai isi berwarna, dan buku besar penuh baris hijau-merah terbaca sebagai daftar peringatan — padahal tidak ada satu baris pun di sana yang berbahaya. Yang membedakan masuk dari keluar tetap tandanya (`+` / `−`). Merah tinggal di lencana status transaksi yang memang gagal, dan di sana ia berarti sesuatu. |
+
+Keduanya berlaku **di `novelova-v2/` saja**; `novelova/` v1 beku dengan perilaku
+PRD-nya.
+
+### 1.30 Empat cacat data & isi yang R9 temukan
+
+Fase R9 menukar kulit sepuluh rute terakhir. Empat hal yang ikut ketahuan
+**bukan soal kulit** — keempatnya sudah ada sebelum R9, dan keempatnya lolos
+`npm run check`, 586 test unit, dan seluruh e2e.
+
+**1. Sembilan bab milik penulis contoh tidak punya naskah sama sekali.**
+`chapterContents` hanya di-seed untuk bab `s1`. Sisi pembaca tidak terkena karena
+`getChapter` punya naskah cadangan; sisi penulis tidak punya — dan **tidak boleh
+punya**, karena naskah cadangan di editor berarti penulis menyunting tulisan yang
+bukan miliknya. Akibatnya `/karya/ms1/bab` menulis *"sekitar 620 kata · 41%"*
+sementara editornya terbuka **kosong**, dan tidak ada satu pun cara mencoba
+autosave, hitungan kata, atau mode fokus dengan tangan.
+
+Diperbaiki dengan menyeed naskahnya dari `PROSE`, dan `wordCount`-nya
+**dihitung dari naskah itu** — bukan dipatok. Angka yang dipatok akan berselisih
+lagi pada perubahan berikutnya (`CLAUDE.md` §8, "seed harus rekonsiliasi").
+
+**2. Sembilan belas cerita punya jumlah baca negatif.** `reads = 890_000 - i *
+21_000` benar selama `FILLER` berisi 32 judul. R2b menumbuhkannya jadi 62, dan
+sejak judul ke-43 angkanya menembus nol — `/cari` mencetaknya apa adanya sebagai
+`−160rb baca`. Rumusnya kini membagi jaraknya sepanjang daftar (890rb → 60rb),
+jadi menambah judul tidak pernah bisa menembus dasar lagi. `unlockCount` ikut
+dijepit nol.
+
+> Ini kelas cacat yang sama dengan `IntersectionObserver` di §8: **muncul karena
+> datanya bertambah, bukan karena kodenya berubah.** Menambah cerita contoh bukan
+> perubahan yang aman secara otomatis.
+
+**3. "0% · naik 4%".** `openRatePct` diturunkan dari corong pembaca, tetapi
+`openRateChangePct` dipatok konstanta `4` — jadi layar penghasilan bisa menyatakan
+tingkat buka nol yang **naik empat persen**. Keduanya kini lewat satu `pct(now,
+before)` yang mengembalikan nol untuk nol lawan nol, bentuk yang sama dengan
+analitik cerita. Batas atasnya jujur: pembandingnya masih pecahan dari nilai
+sekarang, bukan periode sebelumnya yang sungguhan.
+
+**4. Panel sentimen menyebut sumber yang salah.** Persentasenya diturunkan dari
+**bintang ulasan** (FR-SOCIAL-08), sementara keterangannya berbunyi *"Dari 10
+komentar"* — dan pada cerita tanpa ulasan layarnya membaca "0% · 0% · 0% · Dari
+10 komentar". Angkanya benar, sumbernya salah, dan itu bentuk paling halus dari
+berbohong di layar analitik. `total` kini jumlah **ulasan** yang menyusunnya, dan
+nol ulasan mendapat kalimatnya sendiri — kosong ≠ nol (FR-CORE-03).
+
+### 1.31 Dua penyempurnaan kecil di luar daftar R9
+
+Ditulis di sini supaya tidak terbaca sebagai perubahan liar.
+
+**404 berhenti memakai `FailureNotice`.** Kotak R9d menuntut *"satu kalimat polos
++ satu tombol kembali, tanpa ilustrasi"*, dan `FailureNotice` tingkat layar penuh
+membawa lencana ikon bulat **dan** panel "yang tetap aman". Menjanjikan bahwa koin
+pembaca aman karena ia salah mengetik alamat justru menyiratkan ada yang bisa
+hilang; panel itu milik kegagalan yang menyentuh uang atau tulisan.
+
+**Bab yang ditolak berhenti berkata "Belum ada bab di sini".** Baris keterangan
+`ChapterRow` jatuh ke kalimat keadaan-kosong untuk status yang tidak ia kenali —
+termasuk `rejected`, yang jelas-jelas punya babnya. `AuthorChapter` belum membawa
+alasan penolakan, jadi yang ditulis langkah berikutnya, bukan alasan yang
+dikarang.
+
 > **Catatan cara mengukur.** Percobaan pertama memakai pemilih `article aside`
 > dan menyatakan pitanya ada di −6.828px. Itu **salah**: `AdSlot` juga sebuah
 > `<aside>`, jadi yang terukur slot iklan. Kesimpulannya kebetulan benar,

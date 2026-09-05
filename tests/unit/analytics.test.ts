@@ -137,7 +137,12 @@ describe('bagian pendukung · FR-STUDIO-30 · FR-STUDIO-37', () => {
     if (positive + neutral + negative !== 0) {
       expect(positive + neutral + negative).toBe(100)
     }
-    expect(total).toBe(report.metrics.find((m) => m.key === 'comments')?.value)
+    // `total` = **jumlah ulasan yang menyusun persentasenya**, bukan jumlah
+    // komentar. Sampai R9b ia komentar, sehingga panelnya bisa berbunyi
+    // "0% · 0% · 0% · Dari 10 komentar" pada cerita tanpa ulasan — angka yang
+    // benar dengan sumber yang salah. Yang diuji sekarang **konsistensinya**:
+    // penyebut nol dan persentase nol harus datang bersamaan.
+    expect(total === 0).toBe(positive + neutral + negative === 0)
   })
 
   it('rekomendasi waktu terbit membawa slot yang belum lewat', async () => {

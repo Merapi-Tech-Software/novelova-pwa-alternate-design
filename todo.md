@@ -1040,41 +1040,54 @@ ada, **tanyakan dulu** — jangan mengarang komponen baru.
 Anatomi per halaman ada di [`todo-redesign.md`](todo-redesign.md) grup **A** dan
 **E**. Yang di bawah urutan kerjanya.
 
+> **Selesai 5 September 2026.** Tidak ada komponen baru yang dikarang: yang
+> dipakai `Field`, `Button`, `Tabs`, `SectionHeader`, `StageTrack`, `Cover`, dan
+> `CoinChip` — dua yang terakhir bertambah satu-dua prop, bukan bertambah varian.
+> Satu berkas baru, `PasswordToggle`, dan itu **penggabungan** kontrol yang sudah
+> ditulis dua kali, bukan pola baru.
+>
+> **Empat cacat yang bukan soal kulit ikut ketahuan** dan diperbaiki di
+> penyebabnya, bukan di halamannya — `architecture.md` §1.27:
+> `bg-nv-surface` yang mati sejak R1 (16 panel dirender transparan),
+> `formatCompactCoin` yang memakai titik alih-alih koma,
+> **`/mulai` yang tidak pernah tampil kepada akun baru mana pun**, dan
+> `AuthLayout` yang memakai `grid` tanpa kolom eksplisit.
+
 #### R8a — Empat halaman auth
 
-- [ ] Input email, sandi, dan nama jadi **garis bawah 1,5px teks serif** lewat `Field` yang sudah berganti bentuk di R1 — tidak ada gaya baru yang perlu ditulis · `P0`
-- [ ] Tombol utama jadi pill isi `#1c1a18`; tautan sekunder jadi teks tebal tinta redup · `P0`
-- [ ] Tombol OAuth jadi pill garis rambut — **warna merek Google/Facebook tetap**, satu-satunya pengecualian palet dan alasannya tidak berubah · `P0`
-- [ ] Meter kekuatan kata sandi tetap lima token kekuatan, **bukan emas** — emas sudah punya enam peran dan ini bukan salah satunya · `P1`
-- [ ] `/mulai`: indikator langkah jadi **garis bersegmen** seperti `7k`/`7l`, bukan titik; pilihan genre tetap pil · `P1`
-- [ ] Tiga kegagalan sesi ikut kulit baru dan tetap tiga tingkat berbeda: lembar masuk ulang (`AUTH-401`) · penahanan lima percobaan (`AUTH-429`) · layar versi kedaluwarsa (`APP-426`) · `P0`
-- [ ] Validasi berurutan **tetap satu area pesan** — jangan dipecah jadi pesan per kolom saat menata ulang · `P0`
+- [x] Input email, sandi, dan nama jadi **garis bawah 1,5px teks serif** lewat `Field` yang sudah berganti bentuk di R1 — tidak ada gaya baru yang perlu ditulis · `P0`
+- [x] Tombol utama jadi pill isi `#1c1a18`; tautan sekunder jadi teks tebal tinta redup · `P0`
+- [x] Tombol OAuth jadi pill garis rambut — **warna merek Google/Facebook tetap**, satu-satunya pengecualian palet dan alasannya tidak berubah · `P0`
+- [x] Meter kekuatan kata sandi tetap lima token kekuatan, **bukan emas** — emas sudah punya enam peran dan ini bukan salah satunya · `P1`
+- [x] `/mulai`: indikator langkah jadi **garis bersegmen** seperti `7k`/`7l`, bukan titik; pilihan genre tetap pil · `P1`
+- [x] Tiga kegagalan sesi ikut kulit baru dan tetap tiga tingkat berbeda: lembar masuk ulang (`AUTH-401`) · penahanan lima percobaan (`AUTH-429`) · layar versi kedaluwarsa (`APP-426`) · `P0`
+- [x] Validasi berurutan **tetap satu area pesan** — jangan dipecah jadi pesan per kolom saat menata ulang · `P0`
 
 #### R8b — Isi koin `/koin`
 
 > **Layar uang.** Alur, timer kedaluwarsa, idempotency, dan ledger tidak boleh
 > disederhanakan demi tampilan — keputusan terkunci #4.
 
-- [ ] Enam paket jadi **daftar berpembatas atau kartu garis rambut**, bukan ubin bergradien · `P0`
-- [ ] Kolom kustom tiga keadaan jadi input garis bawah teks serif · `P0`
-- [ ] Paket & kustom **tetap saling menonaktifkan**, dan jalan kembalinya tetap ada (`architecture.md` §1.8) · `P0`
-- [ ] Empat grup metode + "Terakhir digunakan" dari buku besar ikut kulit baru · `P0`
-- [ ] Empat overlay pembayaran, hitung mundur bersama, layar sukses, dan layar gagal berkode teknis · `P0`
-- [ ] Confetti dipertahankan tetapi **tanpa emoji dan tanpa warna aksen baru** (brief §14) · `P1`
-- [ ] Chip koin, format saldo ringkas, dan **koin bonus terpisah** identik dengan seluruh aplikasi · `P0`
-- [ ] Datang dari gerbang bab tetap menyorot paket terkecil yang mencukupi, dan tombol sukses tetap "Lanjutkan membaca" ke bab yang sama · `P0`
-- [ ] Tiga jalan gagal bayar tetap berbeda aksinya: `PAY-402` · `PAY-504` · `PAY-410` · `P0`
+- [x] Enam paket jadi **daftar berpembatas atau kartu garis rambut**, bukan ubin bergradien · `P0`
+- [x] Kolom kustom tiga keadaan jadi input garis bawah teks serif · `P0`
+- [x] Paket & kustom **tetap saling menonaktifkan**, dan jalan kembalinya tetap ada (`architecture.md` §1.8) · `P0`
+- [x] Empat grup metode + "Terakhir digunakan" dari buku besar ikut kulit baru · `P0`
+- [x] Empat overlay pembayaran, hitung mundur bersama, layar sukses, dan layar gagal berkode teknis · `P0`
+- [x] Confetti dipertahankan tetapi **tanpa emoji dan tanpa warna aksen baru** (brief §14) · `P1`
+- [x] Chip koin, format saldo ringkas, dan **koin bonus terpisah** identik dengan seluruh aplikasi · `P0`
+- [x] Datang dari gerbang bab tetap menyorot paket terkecil yang mencukupi, dan tombol sukses tetap "Lanjutkan membaca" ke bab yang sama · `P0`
+- [x] Tiga jalan gagal bayar tetap berbeda aksinya: `PAY-402` · `PAY-504` · `PAY-410` · `P0`
 
 #### R8c — Buku besar `/koin/transaksi` + `/koin/transaksi/:txId`
 
-- [ ] Brankas saldo jadi panel putih dengan angka **serif** · `P0`
-- [ ] Empat saringan jadi **tab teks**; tetap meminta ulang barisnya ke server · `P0`
-- [ ] Daftar transaksi jadi baris berpembatas; nominal masuk/keluar memakai **tinta, bukan hijau/merah penuh** · `P0`
-- [ ] Dua panel analitik ikut kulit baru; ekspor CSV tetap menghasilkan berkas nyata · `P1`
-- [ ] Detail transaksi: empat status tetap dibaca **dari data**, bukan dari `?status=` · `P0`
-- [ ] Lini masanya memakai pola pelacak `7o`–`7r`: tahap selesai terisi gelap, tahap kini emas, **tanpa garis penghubung setelah tahap terakhir** · `P0`
-- [ ] Nomor VA tetap `--nv-font-mono` · `P1`
-- [ ] Ketujuh rute masuk daftar sapuan lima lebar di `tests/e2e/isi-koin-di-hp.spec.ts` · `P0`
+- [x] Brankas saldo jadi panel putih dengan angka **serif** · `P0`
+- [x] Empat saringan jadi **tab teks**; tetap meminta ulang barisnya ke server · `P0`
+- [x] Daftar transaksi jadi baris berpembatas; nominal masuk/keluar memakai **tinta, bukan hijau/merah penuh** · `P0`
+- [x] Dua panel analitik ikut kulit baru; ekspor CSV tetap menghasilkan berkas nyata · `P1`
+- [x] Detail transaksi: empat status tetap dibaca **dari data**, bukan dari `?status=` · `P0`
+- [x] Lini masanya memakai pola pelacak `7o`–`7r`: tahap selesai terisi gelap, tahap kini emas, **tanpa garis penghubung setelah tahap terakhir** · `P0`
+- [x] Nomor VA tetap `--nv-font-mono` · `P1`
+- [x] Ketujuh rute masuk daftar sapuan lima lebar di `tests/e2e/isi-koin-di-hp.spec.ts` · `P0`
 
 ---
 
@@ -1083,45 +1096,55 @@ Anatomi per halaman ada di [`todo-redesign.md`](todo-redesign.md) grup **A** dan
 Sepuluh rute sisanya. Anatomi per halaman di [`todo-redesign.md`](todo-redesign.md)
 grup **C** (ulasan), **F** (studio), dan **G** (penghasilan).
 
+> **Selesai 5 September 2026 — Fase R tuntas.** Nol komponen baru dikarang:
+> yang dipakai `Tabs`, `SectionHeader`, `StageTrack`, `Slider`, `SettingRow`,
+> `Input`/`TextArea`, dan `Cover`. `lib/payout.ts` tidak disentuh satu baris pun.
+>
+> **Empat cacat data & isi ikut ketahuan** dan diperbaiki di penyebabnya
+> (`architecture.md` §1.30): sembilan bab milik penulis contoh yang **tidak punya
+> naskah sama sekali**, jumlah baca **negatif** pada sembilan belas cerita,
+> persentase perubahan yang dipatok sehingga layarnya bisa berbunyi
+> "0% · naik 4%", dan panel sentimen yang menyebut sumber yang salah.
+
 #### R9a — Tiga halaman penghasilan
 
 > **Uang lagi, dan kali ini uang penulis.** Tangga validasi pencairan lima
 > tingkat ditegakkan **dua kali dari satu berkas** (`architecture.md` §1.15) —
 > menata ulang layarnya tidak boleh menyentuh `lib/payout.ts`.
 
-- [ ] `/penulis/analitik`: tiga KPI jadi strip sel dengan angka **serif**; empat rentang waktu dan tiga sudut pandang jadi **tab teks**, keduanya tetap menyaring di server · `P0`
-- [ ] Kurva pendapatan tujuh batang memakai **emas dekoratif**, dan **angka per batang tetap ada untuk pembaca layar** · `P0`
-- [ ] Kurs koin → rupiah dan bagi hasil 80/20 tetap **dinyatakan terang**, keduanya dari `api/mock/config.ts` · `P0`
-- [ ] Saldo tersedia tetap **sudah dikurangi** pengajuan yang masih diproses · `P0`
-- [ ] Corong pembaca empat tahap tetap dijepit monoton; heatmap rilis tetap **tabel yang terbaca pembaca layar**, bukan grid warna saja · `P0`
-- [ ] `/penulis/penarikan`: saldo, batas minimum, dan estimasi tetap tampil **sebelum** formulir; kolom jumlah jadi input garis bawah serif · `P0`
-- [ ] Ringkasan tiga baris tetap dihitung tiap ketikan, bersih tetap **dijepit ≥ 0**, dan tombol tetap mati sebelum ditekan bila tidak sah · `P0`
-- [ ] `/penulis/penarikan/riwayat`: daftar berpembatas; lini masa tiga tahap **hanya untuk yang masih di jalurnya** — pengajuan ditolak membawa alasannya, bukan lini masa yang menyiratkan uangnya masih jalan · `P0`
-- [ ] Rekening tetap tersamar dan **tidak pernah dikirim penuh** · `P0`
+- [x] `/penulis/analitik`: tiga KPI jadi strip sel dengan angka **serif**; empat rentang waktu dan tiga sudut pandang jadi **tab teks**, keduanya tetap menyaring di server · `P0`
+- [x] Kurva pendapatan tujuh batang memakai **emas dekoratif**, dan **angka per batang tetap ada untuk pembaca layar** · `P0`
+- [x] Kurs koin → rupiah dan bagi hasil 80/20 tetap **dinyatakan terang**, keduanya dari `api/mock/config.ts` · `P0`
+- [x] Saldo tersedia tetap **sudah dikurangi** pengajuan yang masih diproses · `P0`
+- [x] Corong pembaca empat tahap tetap dijepit monoton; heatmap rilis tetap **tabel yang terbaca pembaca layar**, bukan grid warna saja · `P0`
+- [x] `/penulis/penarikan`: saldo, batas minimum, dan estimasi tetap tampil **sebelum** formulir; kolom jumlah jadi input garis bawah serif · `P0`
+- [x] Ringkasan tiga baris tetap dihitung tiap ketikan, bersih tetap **dijepit ≥ 0**, dan tombol tetap mati sebelum ditekan bila tidak sah · `P0`
+- [x] `/penulis/penarikan/riwayat`: daftar berpembatas; lini masa tiga tahap **hanya untuk yang masih di jalurnya** — pengajuan ditolak membawa alasannya, bukan lini masa yang menyiratkan uangnya masih jalan · `P0`
+- [x] Rekening tetap tersamar dan **tidak pernah dikirim penuh** · `P0`
 
 #### R9b — Enam rute studio yang tidak tergambar
 
-- [ ] `/karya/daftar-penulis`: input garis bawah; tiga tingkat penulis tetap ditegakkan **server** · `P1`
-- [ ] `/karya/:id/bab`: tiga penghitung jadi strip sel dan **tetap merangkap pintasan saringan**; daftar bab enam status jadi daftar berpembatas dengan kata status berwarna status · `P0`
-- [ ] Empat pemberitahuan tindak lanjut dan menu aksi tetap **dihitung dari keadaan bab**, bukan didaftar manual · `P0`
-- [ ] `/karya/:id/bab/baru` · `/ubah`: area tulis jadi **serif**, lebar terkendali; bilah alat markdown dan mode fokus ikut kulit baru · `P0`
-- [ ] **Autosave dua lapis tidak disentuh sama sekali** — lokal 3 detik, server 30 detik + sekali lagi saat halaman ditinggalkan · `P0`
+- [x] `/karya/daftar-penulis`: input garis bawah; tiga tingkat penulis tetap ditegakkan **server** · `P1`
+- [x] `/karya/:id/bab`: tiga penghitung jadi strip sel dan **tetap merangkap pintasan saringan**; daftar bab enam status jadi daftar berpembatas dengan kata status berwarna status · `P0`
+- [x] Empat pemberitahuan tindak lanjut dan menu aksi tetap **dihitung dari keadaan bab**, bukan didaftar manual · `P0`
+- [x] `/karya/:id/bab/baru` · `/ubah`: area tulis jadi **serif**, lebar terkendali; bilah alat markdown dan mode fokus ikut kulit baru · `P0`
+- [x] **Autosave dua lapis tidak disentuh sama sekali** — lokal 3 detik, server 30 detik + sekali lagi saat halaman ditinggalkan · `P0`
   ↳ Halaman ini memegang naskah yang belum tersimpan. `DRAFT-409` tetap **tidak membekukan editor**, dan pesan gagalnya tetap menyatakan **tulisanmu aman** (`architecture.md` §1.4).
-- [ ] `/karya/:id/bab/:id/akses`: tiga tipe akses jadi daftar pilihan berpembatas; tombol simpan tetap **membandingkan nilai awal**; tiga dialog konfirmasi **tanpa isi merah** · `P0`
-- [ ] `/karya/:id/analitik`: lima rentang jadi tab teks; empat kartu metrik jadi strip sel angka serif; grafik SVG memakai emas dekoratif dan **tetap menolak dimatikan seluruhnya beserta alasannya** · `P0`
-- [ ] Dua ekspor tetap menghasilkan berkas nyata (`window.print()` · `<canvas>` → PNG) — **diperiksa ulang setelah warna berganti**, karena keduanya merender warna sendiri · `P0`
+- [x] `/karya/:id/bab/:id/akses`: tiga tipe akses jadi daftar pilihan berpembatas; tombol simpan tetap **membandingkan nilai awal**; tiga dialog konfirmasi **tanpa isi merah** · `P0`
+- [x] `/karya/:id/analitik`: lima rentang jadi tab teks; empat kartu metrik jadi strip sel angka serif; grafik SVG memakai emas dekoratif dan **tetap menolak dimatikan seluruhnya beserta alasannya** · `P0`
+- [x] Dua ekspor tetap menghasilkan berkas nyata (`window.print()` · `<canvas>` → PNG) — **diperiksa ulang setelah warna berganti**, karena keduanya merender warna sendiri · `P0`
 
 #### R9c — Halaman ulasan
 
-- [ ] `/cerita/:id/ulasan`: sebaran 5★…1★ jadi batang garis rambut dengan angka emas, dan **tetap tidak ikut tersaring** · `P0`
-- [ ] Baris ulasan memakai anatomi `7t`: nama, waktu, **isi ulasan serif**, lalu baris aksi · `P0`
-- [ ] Tiga saringan + empat urutan jadi tab teks, tetap menyaring di server · `P0`
-- [ ] Tombol "Membantu" tetap tidak berlaku untuk ulasan sendiri; tanggapan penulis tetap berlencana; tirai spoiler tetap `aria-hidden` selama tertutup · `P1`
+- [x] `/cerita/:id/ulasan`: sebaran 5★…1★ jadi batang garis rambut dengan angka emas, dan **tetap tidak ikut tersaring** · `P0`
+- [x] Baris ulasan memakai anatomi `7t`: nama, waktu, **isi ulasan serif**, lalu baris aksi · `P0`
+- [x] Tiga saringan + empat urutan jadi tab teks, tetap menyaring di server · `P0`
+- [x] Tombol "Membantu" tetap tidak berlaku untuk ulasan sendiri; tanggapan penulis tetap berlencana; tirai spoiler tetap `aria-hidden` selama tertutup · `P1`
 
 #### R9d — Penutup
 
-- [ ] Sepuluh rute R9 masuk daftar sapuan lima lebar di `tests/e2e/isi-koin-di-hp.spec.ts` · `P0`
-- [ ] **Nol halaman v1 tersisa tanpa kulit putaran 7** — diperiksa dengan menghitung ulang `todo-redesign.md`: ketiga puluh rute `ADA` tercentang
+- [x] Sepuluh rute R9 masuk daftar sapuan lima lebar di `tests/e2e/isi-koin-di-hp.spec.ts` · `P0`
+- [x] **Nol halaman v1 tersisa tanpa kulit putaran 7** — diperiksa dengan menghitung ulang `todo-redesign.md`: ketiga puluh rute `ADA` tercentang
 
 
 ---

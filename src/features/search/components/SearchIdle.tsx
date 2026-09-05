@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { Chip } from '@/components/ui/Chip'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { t } from '@/i18n/t'
 import { useSearchHistory } from '@/stores/searchHistory'
 
@@ -30,16 +31,21 @@ export function SearchIdle({ typed, trending, onPick }: SearchIdleProps) {
     <div>
       {entries.length > 0 && (
         <section className="mb-6">
-          <div className="mb-2 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-section font-semibold">{t('search.recent')}</h2>
-            <button
-              type="button"
-              onClick={clear}
-              className="text-caption font-semibold text-nv-muted underline underline-offset-4"
-            >
-              {t('search.clearAll')}
-            </button>
-          </div>
+          {/* Kepala section putaran 7, bukan judul serif: keduanya di sini judul
+           **tentang aplikasi**, bukan tentang cerita (brief §1 aturan 2–3). */}
+          <SectionHeader
+            label={t('search.recent')}
+            className="mb-2"
+            action={
+              <button
+                type="button"
+                onClick={clear}
+                className="nv-tap shrink-0 text-caption font-semibold text-nv-muted underline underline-offset-4"
+              >
+                {t('search.clearAll')}
+              </button>
+            }
+          />
 
           <ul className="divide-y divide-nv-line-soft">
             {entries.map((entry) => (
@@ -67,7 +73,7 @@ export function SearchIdle({ typed, trending, onPick }: SearchIdleProps) {
 
       {trending.length > 0 && (
         <section className="mb-6">
-          <h2 className="mb-2 font-display text-section font-semibold">{t('search.trending')}</h2>
+          <SectionHeader label={t('search.trending')} className="mb-2" />
           <div className="flex flex-wrap gap-2">
             {trending.map((query) => (
               <Chip key={query} onClick={() => onPick(query)}>

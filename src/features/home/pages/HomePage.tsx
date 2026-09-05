@@ -131,11 +131,7 @@ export default function HomePage() {
               memindahkannya dari FAB ke kepala. Angkanya dari `useWallet` yang
               sama dengan ruang baca dan halaman isi koin. */}
             {wallet.data && (
-              <CoinChip
-                amount={wallet.data.balance}
-                size="sm"
-                className="mr-1 rounded-nv-pill border border-nv-line-soft px-2.5 py-1.5"
-              />
+              <CoinChip amount={wallet.data.balance} size="sm" pill className="mr-1" />
             )}
             <Link
               to="/cari"

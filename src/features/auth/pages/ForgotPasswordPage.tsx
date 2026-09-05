@@ -33,23 +33,30 @@ export default function ForgotPasswordPage() {
     <form noValidate onSubmit={submit}>
       <h1 className="mb-4 font-display text-page font-bold">{t('auth.recoverTitle')}</h1>
 
-      <ol className="flex gap-2">
+      {/*
+        **Garis bersegmen, bukan tiga kotak** (`7k`). Kotak bernomor terbaca
+        sebagai tiga tombol yang bisa dipilih, padahal halaman ini menjalankan
+        langkah pertama saja — dua sisanya terjadi di email, bukan di sini.
+        Bentuknya sama persis dengan `/mulai` dan formulir cerita: satu pola,
+        tiga tempat.
+      */}
+      <ol className="flex gap-1.5" aria-label={t('auth.recoverTitle')}>
         {RESET_STEPS.map((label, index) => (
           <li
             key={label}
             aria-current={index === 0 ? 'step' : undefined}
             className={cx(
-              'flex-1 rounded-nv-md border px-2 py-2 text-center',
-              index === 0 ? 'border-nv-accent text-nv-accent' : 'border-nv-line text-nv-muted',
+              'h-0.5 flex-1 rounded-nv-pill',
+              index === 0 ? 'bg-nv-gold-line' : 'bg-nv-line',
             )}
           >
-            <span className="block font-display text-card font-semibold tabular-nums">
-              {index + 1}
-            </span>
-            <span className="block text-caption tracking-wide uppercase">{label}</span>
+            <span className="sr-only">{`${t('auth.stepOf')(index + 1, RESET_STEPS.length)} · ${label}`}</span>
           </li>
         ))}
       </ol>
+      <p className="pt-2.5 nv-section-label">
+        {t('auth.stepOf')(1, RESET_STEPS.length)} · {RESET_STEPS[0]}
+      </p>
 
       <p className="py-4 text-body text-nv-muted">{t('auth.recoverLead')}</p>
 
@@ -76,15 +83,20 @@ export default function ForgotPasswordPage() {
         {request.data ? t('auth.resetSent')(request.data.sentTo) : t('auth.resetNotSent')}
       </p>
 
-      <div className="rounded-nv-md border border-nv-line p-4">
-        <p className="text-caption tracking-wide text-nv-muted uppercase">
-          {t('auth.securityNote')}
+      {/* Bukan kartu: kartu dijatah enam peran (brief §1) dan "catatan" bukan
+          salah satunya. Yang memisahkannya dari isi halaman cukup garis. */}
+      <div className="border-nv-line border-t pt-4">
+        <p className="nv-section-label">{t('auth.securityNote')}</p>
+        <p className="pt-2 text-body text-nv-text-2">
+          {t('auth.securityNoteBody')(RESET_LINK_MIN)}
         </p>
-        <p className="pt-2 text-body">{t('auth.securityNoteBody')(RESET_LINK_MIN)}</p>
       </div>
 
       <p className="mt-6 text-center text-caption text-nv-muted">
-        <Link to="/masuk" className="font-semibold text-nv-accent underline underline-offset-2">
+        <Link
+          to="/masuk"
+          className="nv-tap font-semibold text-nv-text underline underline-offset-4"
+        >
           {t('auth.signIn')}
         </Link>
       </p>

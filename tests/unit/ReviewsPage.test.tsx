@@ -72,7 +72,7 @@ describe('ringkasan & saringan · FR-SOCIAL-03', () => {
     renderAt('/cerita/s1/ulasan')
     await screen.findByText(/dari \d+ penilai/)
 
-    await user.click(screen.getByRole('button', { name: 'Ada teksnya' }))
+    await user.click(screen.getByRole('tab', { name: 'Ada teksnya' }))
     await screen.findByText(/^\d+ ulasan$/)
 
     const page = await api.listReviews('s1', {
@@ -92,7 +92,7 @@ describe('ringkasan & saringan · FR-SOCIAL-03', () => {
     renderAt('/cerita/s1/ulasan')
     await screen.findByText(/dari \d+ penilai/)
 
-    await user.click(screen.getByRole('button', { name: '1★' }))
+    await user.click(screen.getByRole('tab', { name: '1★' }))
     expect(await screen.findByText(/Tidak ada ulasan yang cocok/)).toBeInTheDocument()
   })
 })

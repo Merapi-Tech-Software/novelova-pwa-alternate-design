@@ -58,7 +58,7 @@ export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps
             className="h-28 w-[74px] rounded-nv-md object-cover"
           />
         ) : (
-          <span className="block h-28 w-[74px] rounded-nv-md bg-nv-surface" />
+          <span className="block h-28 w-[74px] rounded-nv-md bg-nv-paper-2" />
         )}
         {/* Titik merah hanya bila memang ada bab yang belum dibaca. */}
         {item.hasNewChapter && (
@@ -74,9 +74,14 @@ export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
+          {/* Kotak sentuh judul diperluas `::after`, bukan dengan menaikkan
+              tingginya: judul setinggi 44px akan menggemukkan tiap baris
+              perpustakaan 27px, dan yang perlu 44px jarinya, bukan hurufnya.
+              `inset-x-0` menahannya di lebar judul sendiri, jadi ia tidak
+              pernah menutupi lencana status di sebelahnya. */}
           <Link
             to={`/cerita/${story.id}`}
-            className="min-w-0 font-semibold text-body text-nv-text hover:underline"
+            className="relative min-w-0 font-semibold text-body text-nv-text after:absolute after:inset-x-0 after:-inset-y-3.5 after:content-[''] hover:underline"
           >
             <h3 className="truncate">{story.title}</h3>
           </Link>
@@ -92,7 +97,7 @@ export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps
         <div className="flex items-center gap-2 pt-2.5">
           <span
             aria-hidden
-            className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-nv-pill bg-nv-surface"
+            className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-nv-pill bg-nv-paper-2"
           >
             <span
               className={cx('block h-full rounded-nv-pill', item.pct > 0 && 'bg-nv-accent')}
@@ -111,9 +116,11 @@ export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps
         </p>
 
         <div className="flex items-center gap-2 pt-2.5">
+          {/* `h-9` sama seperti tombol `sm`, dan kotak sentuhnya diperluas
+              dengan cara yang sama (`Button.tsx` `TAP_44`). */}
           <Link
             to={readTo}
-            className="inline-flex h-9 items-center rounded-nv-pill bg-nv-accent px-3.5 font-semibold text-caption text-nv-card"
+            className="relative inline-flex h-9 items-center rounded-nv-pill bg-nv-accent px-3.5 font-semibold text-caption text-nv-card after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']"
           >
             {READ_LABEL[item.state]}
           </Link>

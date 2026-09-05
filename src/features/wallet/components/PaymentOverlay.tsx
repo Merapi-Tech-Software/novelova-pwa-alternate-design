@@ -87,7 +87,7 @@ function Countdown({ until, onEnd }: { until: string; onEnd: () => void }) {
   }, [until, onEnd])
 
   return (
-    <div className="mt-4 flex items-center justify-between rounded-nv-lg bg-nv-surface px-3.5 py-2.5">
+    <div className="mt-4 flex items-center justify-between rounded-nv-lg bg-nv-paper-2 px-3.5 py-2.5">
       <span className="text-caption text-nv-muted">{t('wallet.timeLeft')}</span>
       <span className="font-semibold text-body text-nv-text tabular-nums">
         {formatCountdown(left)}
@@ -294,7 +294,7 @@ export function PaymentOverlay({
       )}
 
       {phase === 'success' && (
-        <dl className="mt-4 rounded-nv-lg bg-nv-surface p-3.5">
+        <dl className="mt-4 rounded-nv-lg bg-nv-paper-2 p-3.5">
           <div className="flex items-center justify-between">
             <dt className="text-body text-nv-muted">{t('wallet.successCoins')}</dt>
             <dd>

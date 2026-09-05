@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { PAYOUT_PURPOSES } from '@/api/contracts'
@@ -5,10 +6,11 @@ import { isApiError } from '@/api/errors'
 import { StageTrack } from '@/components/patterns/StageTrack'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { Chip } from '@/components/ui/Chip'
+import { Input } from '@/components/ui/Field'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 import { useToast } from '@/components/ui/Toast'
 import { t } from '@/i18n/t'
+import { cx } from '@/lib/cx'
 import { formatRupiah } from '@/lib/format'
 import { netAfterFee, parseAmountInput, refusePayout } from '@/lib/payout'
 import {
@@ -28,6 +30,10 @@ const STAGES = [t('withdraw.s1'), t('withdraw.s2'), t('withdraw.s3')] as const
  * lima tingkat menegakkannya — dan menegakkannya **dua kali**, di layar untuk
  * mematikan tombol lebih dulu, di server untuk menolak layar yang dilewati.
  * Aturannya satu berkas, `lib/payout.ts`, supaya keduanya tidak pernah berbeda.
+ *
+ * **R9a mengganti kulitnya saja.** `lib/payout.ts` tidak disentuh satu baris pun,
+ * dan urutan layarnya tidak berubah: saldo dan kedua syaratnya tetap tampil
+ * **sebelum** formulir.
  */
 export default function WithdrawPage() {
   const toast = useToast()
@@ -91,25 +97,31 @@ export default function WithdrawPage() {
             {/* Saldo dan **kedua syaratnya** tampil sebelum formulir · FR-EARN-06:
                 penulis tidak boleh mengisi lalu ditolak karena aturan yang baru
                 ia baca sesudahnya. */}
-            <Card>
-              <p className="text-caption tracking-widest text-nv-muted uppercase">
-                {t('withdraw.balance')}
-              </p>
-              <p className="pt-0.5 font-display text-stat tabular-nums">
+            {/* Brankas: panel putih, angka serif — pola yang sama dengan
+                `7i` dan buku besar dompet. Ia satu-satunya blok putih di
+                halaman ini, dan itu disengaja: ia satu-satunya yang menyatakan
+                berapa uang yang benar-benar ada. */}
+            <section className="rounded-nv-lg bg-nv-card p-4">
+              <p className="nv-section-label">{t('withdraw.balance')}</p>
+              <p className="pt-1 font-display text-stat font-bold text-nv-gold tabular-nums">
                 {formatRupiah(available)}
               </p>
-              <dl className="mt-3 grid grid-cols-2 gap-3 border-nv-line border-t pt-3 text-caption">
+              <dl className="mt-3 grid grid-cols-2 gap-3 border-nv-line border-t pt-3">
                 <div>
-                  <dt className="tracking-widest text-nv-muted uppercase">{t('withdraw.min')}</dt>
-                  <dd className="pt-0.5 tabular-nums">{formatRupiah(min)}</dd>
+                  <dt className="nv-section-label">{t('withdraw.min')}</dt>
+                  <dd className="pt-1 font-display text-card font-bold tabular-nums">
+                    {formatRupiah(min)}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="tracking-widest text-nv-muted uppercase">{t('withdraw.eta')}</dt>
-                  <dd className="pt-0.5">{t('withdraw.etaValue')}</dd>
+                  <dt className="nv-section-label">{t('withdraw.eta')}</dt>
+                  <dd className="pt-1 font-display text-card font-bold">
+                    {t('withdraw.etaValue')}
+                  </dd>
                 </div>
               </dl>
-              <p className="pt-2 text-caption text-nv-muted">{t('withdraw.beforeForm')}</p>
-            </Card>
+              <p className="pt-3 text-caption text-nv-muted">{t('withdraw.beforeForm')}</p>
+            </section>
 
             {balance.data && balance.data.pending > 0 && (
               <p className="pt-3 text-caption text-nv-muted tabular-nums">
@@ -122,97 +134,108 @@ export default function WithdrawPage() {
 
             {/* Rekening tujuan · FR-EARN-07. Nomornya **sudah tersamar dari
                 server** — yang tidak pernah dikirim penuh tidak bisa bocor. */}
-            <Card className="mt-4">
+            <div className="mt-5 border-nv-line border-y py-3.5">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="font-display text-section">{account.data?.bankName}</h2>
+                <h2 className="font-display text-section font-bold">{account.data?.bankName}</h2>
                 <span
-                  className={
+                  className={cx(
+                    'rounded-nv-pill border px-2.5 py-0.5 font-semibold text-caption',
                     account.data?.payoutVerified
-                      ? 'rounded-nv-pill border border-nv-accent px-2 py-0.5 text-caption text-nv-accent uppercase'
-                      : 'rounded-nv-pill border border-nv-danger px-2 py-0.5 text-caption text-nv-danger uppercase'
-                  }
+                      ? 'border-nv-line-soft text-nv-text-2'
+                      : 'border-nv-danger text-nv-danger',
+                  )}
                 >
                   {account.data?.payoutVerified ? t('withdraw.verified') : t('withdraw.unverified')}
                 </span>
               </div>
               <p className="pt-1 text-body">{account.data?.ownerName}</p>
               <p className="text-body text-nv-muted tabular-nums">{account.data?.masked}</p>
-            </Card>
+            </div>
 
-            <fieldset className="pt-4">
-              <legend className="text-caption tracking-widest text-nv-muted uppercase">
-                {t('withdraw.purpose')}
-              </legend>
-              <div className="grid grid-cols-1 gap-2 pt-2">
-                {PAYOUT_PURPOSES.map((option) => (
-                  <Chip
-                    key={option}
-                    selected={purpose === option}
+            {/* Tiga pilihan → daftar berpembatas, bentuk yang sama dengan
+                daftar metode pembayaran di `/koin`. Pil dipakai hanya di tempat
+                mockup menggambar pil (brief §1 aturan 5). */}
+            <SectionHeader label={t('withdraw.purpose')} className="pt-6" />
+            <ul className="mt-2 border-nv-line border-t">
+              {PAYOUT_PURPOSES.map((option) => (
+                <li key={option}>
+                  <button
+                    type="button"
                     onClick={() => setPurpose(option)}
+                    aria-pressed={purpose === option}
+                    className="flex w-full items-center gap-3 border-nv-line border-b py-3 text-left"
                   >
-                    {option}
-                  </Chip>
-                ))}
-              </div>
-            </fieldset>
+                    <span
+                      aria-hidden
+                      className={cx(
+                        'grid size-5 shrink-0 place-items-center rounded-nv-pill border',
+                        purpose === option
+                          ? 'border-nv-accent bg-nv-accent text-nv-card'
+                          : 'border-nv-line',
+                      )}
+                    >
+                      {purpose === option && <Check size={12} strokeWidth={3} />}
+                    </span>
+                    <span className="min-w-0 flex-1 text-body text-nv-text">{option}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
 
-            <label className="block pt-4" htmlFor="jumlah">
-              <span className="text-caption tracking-widest text-nv-muted uppercase">
-                {t('withdraw.amount')}
-              </span>
-              {/* `inputMode="numeric"` dengan `type="text"`: papan ketik angka di
-                  HP, tetapi titik dan spasi tetap boleh diketik dan dibuang
-                  `parseAmountInput` — `type="number"` menolaknya mentah-mentah. */}
-              <input
-                id="jumlah"
+            {/* Kolom garis bawah serif lewat `Input` yang sudah ada — nol gaya
+                baru. `inputMode="numeric"` dengan `type="text"`: papan ketik
+                angka di HP, tetapi titik dan spasi tetap boleh diketik dan
+                dibuang `parseAmountInput` — `type="number"` menolaknya
+                mentah-mentah. */}
+            <div className="pt-6">
+              <Input
+                label={t('withdraw.amount')}
                 type="text"
                 inputMode="numeric"
                 value={raw}
                 placeholder="0"
                 onChange={(e) => setRaw(e.target.value)}
-                className="mt-1 h-14 w-full rounded-nv-md border border-nv-line bg-nv-card px-3 font-display text-page text-nv-text tabular-nums"
+                hint={t('withdraw.amountHint')}
+                className="text-page tabular-nums"
+                counter={
+                  <button
+                    type="button"
+                    disabled={available <= 0}
+                    onClick={() => setRaw(String(available))}
+                    className="nv-tap text-caption font-semibold text-nv-muted disabled:opacity-50 hover:text-nv-text"
+                  >
+                    {t('withdraw.all')}
+                  </button>
+                }
               />
-            </label>
-            <p className="pt-1 text-caption text-nv-muted">{t('withdraw.amountHint')}</p>
+            </div>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              className="mt-2"
-              disabled={available <= 0}
-              onClick={() => setRaw(String(available))}
-            >
-              {t('withdraw.all')}
-            </Button>
-
-            <Card className="mt-4">
-              <dl className="text-body tabular-nums">
-                <div className="flex justify-between py-0.5">
-                  <dt>{t('withdraw.requested')}</dt>
-                  <dd>{formatRupiah(amount)}</dd>
-                </div>
-                <div className="flex justify-between py-0.5">
-                  <dt>{t('withdraw.fee')}</dt>
-                  <dd>{formatRupiah(fee)}</dd>
-                </div>
-                <div className="mt-2 flex justify-between border-nv-line border-t pt-2 text-nv-accent">
-                  <dt>{t('withdraw.net')}</dt>
-                  <dd>{formatRupiah(net)}</dd>
-                </div>
-              </dl>
-            </Card>
+            <dl className="mt-6 border-nv-line border-y text-body tabular-nums">
+              <div className="flex justify-between border-nv-line border-b py-2.5">
+                <dt className="text-nv-muted">{t('withdraw.requested')}</dt>
+                <dd>{formatRupiah(amount)}</dd>
+              </div>
+              <div className="flex justify-between border-nv-line border-b py-2.5">
+                <dt className="text-nv-muted">{t('withdraw.fee')}</dt>
+                <dd>{formatRupiah(fee)}</dd>
+              </div>
+              <div className="flex justify-between py-2.5 font-bold">
+                <dt>{t('withdraw.net')}</dt>
+                <dd className="text-nv-gold">{formatRupiah(net)}</dd>
+              </div>
+            </dl>
 
             {/* Satu pesan, kesalahan pertama saja · FR-EARN-11. Lima keluhan
                 sekaligus membuat penulis memperbaiki lima hal padahal satu pun
                 belum tentu benar. Kolom kosong tidak dianggap kesalahan. */}
             {refusal && amount > 0 && (
-              <p
-                role="alert"
-                className="mt-3 rounded-nv-md border border-nv-danger p-3 text-body text-nv-danger"
-              >
-                {refusal.message}
+              <p role="alert" className="mt-4 border-nv-danger border-l-2 pl-3 text-body">
+                <span className="font-semibold text-nv-danger">{refusal.message}</span>
                 {refusal.link && (
-                  <Link to={refusal.link} className="block pt-1 underline">
+                  <Link
+                    to={refusal.link}
+                    className="nv-tap block pt-1 font-semibold text-nv-text underline underline-offset-4"
+                  >
                     {t('withdraw.fixIt')}
                   </Link>
                 )}
@@ -225,15 +248,18 @@ export default function WithdrawPage() {
 
             <Link
               to="/penulis/penarikan/riwayat"
-              className="mt-3 inline-block text-body text-nv-accent underline"
+              className="nv-tap mt-3 inline-block font-semibold text-body text-nv-muted underline underline-offset-4"
             >
               {t('withdraw.history')}
             </Link>
 
-            {/* Dok bawah, selalu terlihat · FR-EARN-09. `--nv-bottom-nav` bukan
-                `bottom-0`: layar ini hidup di dalam `topbar`, tetapi polanya
-                sama dan menaruhnya di nol adalah cara tercepat menutupi tombol
-                uang di HP (CLAUDE.md §8). */}
+            {/* Dok bawah, selalu terlihat · FR-EARN-09.
+                `bottom-0` **benar di sini**: layar ini hidup di `TopBarLayout`,
+                yang tidak punya bilah navigasi bawah. Di dalam `AppShell` ia
+                harus `bottom-[var(--nv-bottom-nav)]`, dan menaruhnya di nol
+                adalah cara tercepat menutupi tombol uang di HP
+                (`CLAUDE.md` §8). Komentar lama menyebut yang sebaliknya dan
+                membantah kodenya sendiri; diperbaiki di R9a. */}
             <div className="fixed inset-x-0 bottom-0 border-nv-line border-t bg-nv-card p-3">
               <div className="mx-auto flex max-w-2xl items-center gap-3">
                 <span className="min-w-0 flex-1 truncate text-caption text-nv-muted tabular-nums">

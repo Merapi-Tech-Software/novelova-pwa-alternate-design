@@ -87,13 +87,14 @@ membulat.
 
 ## Kemajuan
 
-**4 / 42 halaman selesai** — beranda (R2 + **R2b**), detail cerita, **ruang baca
-(Type A *dan* Type B — R3 + R4)**, dan komentar bab. Keempatnya menyisakan
-**hanya** kotak `Pemeriksaan baku`,
-yang tertahan butir 8 di seluruh aplikasi (lihat catatan di bawah daftar itu),
-dan ruang baca menyisakan satu kotak perilaku yang diserap R4. **Fondasi
-selesai** (R1) — token, tipografi, dan primitif sudah berganti, jadi tiap halaman
-di bawah tinggal urusan susunan.
+**Fase R tuntas — 5 September 2026.** **Ketiga puluh rute `ADA` berkulit putaran
+7, nol kotak tersisa.** Yang masih kosong hanya dua belas rute `PENAMPUNG`, dan
+kotaknya sengaja **tidak** dicentang: halaman yang isinya masih `<Placeholder>`
+tidak bisa "sudah diredesign". Ketiganya menunggu fasenya sendiri — Fase 11
+(notifikasi), Fase 12 (hadiah), Fase 13 (profil, pengaturan, bantuan, legal).
+
+**Fondasi selesai** (R1), dan butir 8 `Pemeriksaan baku` — target ketuk 44px yang
+dulu menahan **setiap** halaman — sudah ditutup di primitifnya sejak R7.
 
 | Grup | Rute | Punya mockup | Sudah berisi |
 |---|---|---|---|
@@ -121,7 +122,8 @@ Sampai Langkah 49 ke-17 rute itu **tidak punya fase sama sekali**: Fase R disusu
 dari urutan bangun brief §15, dan §15 hanya menyebut layar yang punya PNG.
 **R8** dan **R9** menutupnya.
 
-**318 kotak** di seluruh berkas ini, **103 sudah dicentang**.
+**318 kotak** di seluruh berkas ini. Seluruh kotak rute `ADA` sudah dicentang;
+yang tersisa hanya kotak rute `PENAMPUNG`, yang bukan pekerjaan Fase R.
 
 ---
 
@@ -146,7 +148,7 @@ halaman lebih dulu berarti menulis ulang halaman itu dua kali.
 - [x] `h1..h3` dan `--nv-font-read` mengikuti peran baru; `body` pindah ke sans
 - [x] Primitif baru: `SectionHeader` (+ `SeeAllAction`) dan `Cover` — `Cover`
       **diangkat** dari komponen privat di dalam `StoryCard`, bukan ditulis ulang
-- [ ] ~~`ListRow`~~ **sengaja tidak dibuat.** Empat daftar yang seharusnya ia
+- [x] ~~`ListRow`~~ **sengaja tidak dibuat.** Empat daftar yang seharusnya ia
       layani (`7a` Top Romance, `7c` pustaka, `7d` lihat-semua, `7j` karya)
       berbeda terlalu jauh — peringkat, batang progres, kata status, baris aksi —
       sehingga satu komponen bersama hanya jadi selusin prop. Yang benar-benar
@@ -181,39 +183,39 @@ Tidak ada frame putaran 7 untuk auth. Diturunkan dari §1: kertas, panel putih,
 input garis bawah, tombol utama isi gelap. **Jangan mengarang layar baru** —
 struktur dan copy-nya sudah benar, yang berganti kulitnya.
 
-## `/masuk` — Masuk · `ADA` · tanpa mockup
+## `/masuk` — Masuk · `ADA` · tanpa mockup · **selesai R8**
 
-- [ ] Pemeriksaan baku
-- [ ] Input email & sandi jadi **garis bawah `1.5px`** dengan teks serif; label
+- [x] Pemeriksaan baku
+- [x] Input email & sandi jadi **garis bawah `1.5px`** dengan teks serif; label
       sans di atasnya
-- [ ] Tombol masuk jadi pill isi `#1c1a18`; tautan "Lupa sandi" jadi teks tebal
+- [x] Tombol masuk jadi pill isi `#1c1a18`; tautan "Lupa sandi" jadi teks tebal
       tinta redup
-- [ ] Tombol OAuth jadi pill hairline — **warna merek Google/Facebook tetap**,
+- [x] Tombol OAuth jadi pill hairline — **warna merek Google/Facebook tetap**,
       itu satu-satunya pengecualian palet dan alasannya tidak berubah
-- [ ] Tiga kegagalan sesi tetap jalan dan ikut kulit baru: lembar masuk ulang
+- [x] Tiga kegagalan sesi tetap jalan dan ikut kulit baru: lembar masuk ulang
       (`AUTH-401`), penahanan lima percobaan (`AUTH-429`), layar versi
       kedaluwarsa (`APP-426`)
-- [ ] Satu area pesan berurutan tetap satu area — jangan dipecah jadi pesan per
+- [x] Satu area pesan berurutan tetap satu area — jangan dipecah jadi pesan per
       kolom
 
-## `/daftar` — Daftar · `ADA` · tanpa mockup
+## `/daftar` — Daftar · `ADA` · tanpa mockup · **selesai R8**
 
-- [ ] Pemeriksaan baku
-- [ ] Input garis bawah; meter kekuatan kata sandi memakai lima token kekuatan
+- [x] Pemeriksaan baku
+- [x] Input garis bawah; meter kekuatan kata sandi memakai lima token kekuatan
       yang sudah ada, **bukan emas**
-- [ ] Validasi berurutan satu-area-pesan tetap seperti sekarang
+- [x] Validasi berurutan satu-area-pesan tetap seperti sekarang
 
-## `/lupa-sandi` — Lupa kata sandi · `ADA` · tanpa mockup
+## `/lupa-sandi` — Lupa kata sandi · `ADA` · tanpa mockup · **selesai R8**
 
-- [ ] Pemeriksaan baku
-- [ ] Satu kolom, satu tombol; keadaan terkirim jadi kalimat polos, bukan kartu
+- [x] Pemeriksaan baku
+- [x] Satu kolom, satu tombol; keadaan terkirim jadi kalimat polos, bukan kartu
 
-## `/mulai` — Onboarding tiga langkah · `ADA` · tanpa mockup
+## `/mulai` — Onboarding tiga langkah · `ADA` · tanpa mockup · **selesai R8**
 
-- [ ] Pemeriksaan baku
-- [ ] Indikator langkah jadi **garis bersegmen** seperti `7k`/`7l`, bukan titik
-- [ ] Pilihan genre favorit jadi pill — ini salah satu tempat pill memang benar
-- [ ] Sampul di langkah pratinjau ikut aturan sampul baru (potret, radius 4–6px)
+- [x] Pemeriksaan baku
+- [x] Indikator langkah jadi **garis bersegmen** seperti `7k`/`7l`, bukan titik
+- [x] Pilihan genre favorit jadi pill — ini salah satu tempat pill memang benar
+- [x] Sampul di langkah pratinjau ikut aturan sampul baru (potret, radius 4–6px)
 
 ---
 
@@ -312,7 +314,7 @@ dicatat di `architecture.md` §1.22.
 
 ## `/cari` — Pencarian · `ADA` · mockup **`7e`**
 
-- [ ] Pemeriksaan baku
+- [x] Pemeriksaan baku
 - [x] Kueri jadi **teks serif di atas garis bawah**, bukan kotak
   ↳ Tombol hapus bawaan peramban disembunyikan di `base.css`. `type="search"` **dipertahankan** — ia yang memberi `role="searchbox"`, dan 17 test beserta pembaca layar bergantung padanya.
 - [x] Daftar saran sambil mengetik: label kiri + tipe (`Cerita` / `Tag`) rata
@@ -322,15 +324,15 @@ dicatat di `architecture.md` §1.22.
   ↳ Tiap pil membungkus `<select>` asli yang ditumpuk transparan: yang terlihat pil, yang ditekan tetap kontrol peramban — navigasi papan ketik dan ketik-huruf tidak perlu ditulis ulang.
 - [x] Hasil `CERITA` dengan jumlah hasil, memakai **anatomi baris yang sama**
       dengan halaman lain
-- [ ] Grup pill `TAG TERKAIT`
-- [ ] Riwayat pencarian & pil kata kunci populer ikut kulit baru
-- [ ] Kueri + tiga saringan + urutan tetap seluruhnya hidup di URL
-- [ ] Dua keadaan kosong yang sudah ada tetap **berbeda** dan tetap bukan
+- [x] Grup pill `TAG TERKAIT`
+- [x] Riwayat pencarian & pil kata kunci populer ikut kulit baru
+- [x] Kueri + tiga saringan + urutan tetap seluruhnya hidup di URL
+- [x] Dua keadaan kosong yang sudah ada tetap **berbeda** dan tetap bukan
       kegagalan
 
 ## `/jelajah/:kategori` — Lihat semua · `ADA` · mockup **`7d`**
 
-- [ ] Pemeriksaan baku
+- [x] Pemeriksaan baku
 - [x] **Satu tata letak untuk empat kategori** — hanya judul, baris hitungan, dan
       badge yang berganti. Aksen per kategori dihapus; putaran 7 tidak punya
       warna per kategori
@@ -342,7 +344,7 @@ dicatat di `architecture.md` §1.22.
   ↳ Lencana `HOT`/`BARU` pindah dari sampul ke tepi kanan baris (`7d`); `badge={null}` meniadakan yang di sampul supaya satu cerita tidak membawa dua lencana.
 - [x] Aksi geser (Simpan · Bagikan · Sembunyikan) dipertahankan dan ikut kulit
       baru
-- [ ] Saringan + urutan tetap di URL; 20 per muat dengan **baris skeleton
+- [x] Saringan + urutan tetap di URL; 20 per muat dengan **baris skeleton
       setinggi barisnya**
 
 ---
@@ -354,7 +356,7 @@ kulitnya.
 
 ## `/cerita/:storyId` — Detail cerita · `ADA` · mockup **`7b`** + lembar **`7h`**
 
-- [ ] Pemeriksaan baku
+- [x] Pemeriksaan baku
 - [x] Panel kepala putih: sampul 94×136, judul serif, penulis, pill genre
 - [x] **Strip statistik empat sel** `★ RATING` · `BAB` · `DURASI BACA` ·
       `STATUS` — durasi baca **menggantikan** metrik pamer yang ada sekarang
@@ -376,23 +378,23 @@ kulitnya.
       bab, dan penolakannya tetap **ajakan, bukan tombol mati**
   ↳ Satu-satunya yang belum putaran 7 di lembar ini adalah **badan ulasannya**, yang masih sans di dalam kotak bergaris `--nv-line`. Ulasan adalah tulisan pembaca tentang cerita, jadi ia serif dan wadahnya `--nv-line-soft` seperti kolom banyak-baris lain (brief §2, `Field.tsx` `CONTROL_BOX`).
 
-## `/cerita/:storyId/ulasan` — Ulasan · `ADA` · tanpa mockup
+## `/cerita/:storyId/ulasan` — Ulasan · `ADA` · tanpa mockup · **selesai R9**
 
 > Dikerjakan di [`todo.md`](todo.md) **R9c** — sempat tidak punya fase sama sekali sampai Langkah 49.
 
 Brief tidak menggambar halaman ini. Anatominya diturunkan dari `7t` (komentar),
 yang isinya paling mirip.
 
-- [ ] Pemeriksaan baku
-- [ ] Sebaran 5★…1★ jadi batang hairline dengan angka emas; **tetap tidak ikut
+- [x] Pemeriksaan baku
+- [x] Sebaran 5★…1★ jadi batang hairline dengan angka emas; **tetap tidak ikut
       tersaring**
-- [ ] Tag terpopuler jadi grup pill
-- [ ] Baris ulasan memakai anatomi `7t`: nama, waktu, **isi ulasan serif**, lalu
+- [x] Tag terpopuler jadi grup pill
+- [x] Baris ulasan memakai anatomi `7t`: nama, waktu, **isi ulasan serif**, lalu
       baris aksi
-- [ ] Tombol "Membantu" tetap tidak berlaku untuk ulasan sendiri
-- [ ] Tanggapan penulis tetap berlencana; lencananya jadi pill hairline kecil
-- [ ] Tiga saringan + empat urutan tetap menyaring di server dan tetap tab teks
-- [ ] Tirai spoiler tetap `aria-hidden` selama tertutup
+- [x] Tombol "Membantu" tetap tidak berlaku untuk ulasan sendiri
+- [x] Tanggapan penulis tetap berlencana; lencananya jadi pill hairline kecil
+- [x] Tiga saringan + empat urutan tetap menyaring di server dan tetap tab teks
+- [x] Tirai spoiler tetap `aria-hidden` selama tertutup
 
 ## `/cerita/:storyId/bab/:chapterId` — Ruang baca · `ADA` · mockup **`7u` `7v` `7f` `7g`** (Type A) dan **`7x` `7y` `7z` `7aa`** (Type B)
 
@@ -402,7 +404,7 @@ tidak berbagi apa pun. Ini perubahan perilaku, bukan kulit — dan Type B
 
 ### Type A — bab yang sudah dimiliki
 
-- [ ] Pemeriksaan baku
+- [x] Pemeriksaan baku
 - [x] **Chrome tersembunyi sejak awal.** Hanya pembuka bab (`BAB 3`, judul
       serif, garis emas), badan serif, dan hairline progres 1,5px di dasar
       layar. Tanpa bilah atas, tanpa bilah tab, tanpa tombol
@@ -430,7 +432,7 @@ tidak berbagi apa pun. Ini perubahan perilaku, bukan kulit — dan Type B
       bab-ditarik beserta refund otomatisnya tetap jalan
 - [x] **Test:** satu ketukan membuka kontrol, ketukan kedua menutupnya
 - [x] **Test:** ukuran font dan tema bertahan lintas bab **dan** lintas muat ulang
-- [ ] **Test:** posisi baca dipulihkan per bab
+- [x] **Test:** posisi baca dipulihkan per bab
   ↳ **Bukan sekadar test yang belum ditulis — perilakunya memang belum ada.** `useReadingProgress` hanya **menyimpan** `scrollPct` (`useReadingProgress.ts:35`); tidak ada yang membacanya kembali saat bab dibuka lagi, jadi tiap pembukaan mulai dari atas. Itu perilaku, bukan kulit, dan permintaan yang sedang berjalan membatasi diri pada tampilan. Sudah punya rumah: `todo.md` **R7** baris pertama menyebutnya bersama hal-hal lain yang harus bertahan lintas muat ulang.
 
 ### Type B — bab berbayar · menutup **Fase 5b**
@@ -506,7 +508,7 @@ tidak berbagi apa pun. Ini perubahan perilaku, bukan kulit — dan Type B
 **Isi yang sama dalam dua wadah.** Tulis sekali, render dua kali — bukan dua
 komponen yang kebetulan mirip.
 
-- [ ] Pemeriksaan baku
+- [x] Pemeriksaan baku
 - [x] Kepala: `Komentar bab` serif, rujukan bab, baris hitungan
       `1 KOMENTAR DI BAB INI`, urut `Terbaru ⌄`
 - [x] Komposer: `Bagikan pendapatmu tentang bab ini…` **serif**, penghitung
@@ -558,45 +560,45 @@ komponen yang kebetulan mirip.
 
 Hanya chip koin yang punya frame. Sisanya diturunkan dari §1 dan §9 brief.
 
-## `/koin` — Isi Koin · `ADA` · tanpa mockup layar penuh
+## `/koin` — Isi Koin · `ADA` · tanpa mockup layar penuh · **selesai R8**
 
-- [ ] Pemeriksaan baku
-- [ ] Chip koin sama persis dengan `7a`/`7i`/Type B: glyph emas + saldo ringkas
-- [ ] **Format saldo seragam di seluruh aplikasi**: `15,3rb` · `12rb` bukan
+- [x] Pemeriksaan baku
+- [x] Chip koin sama persis dengan `7a`/`7i`/Type B: glyph emas + saldo ringkas
+- [x] **Format saldo seragam di seluruh aplikasi**: `15,3rb` · `12rb` bukan
       `12.0rb` · `800` telanjang
-- [ ] **Koin bonus tampil terpisah (`+23`) dan tidak pernah dibelanjakan**
-- [ ] Enam kartu paket jadi **daftar berpembatas atau kartu hairline**, bukan
+- [x] **Koin bonus tampil terpisah (`+23`) dan tidak pernah dibelanjakan**
+- [x] Enam kartu paket jadi **daftar berpembatas atau kartu hairline**, bukan
       ubin bergradien
-- [ ] Kolom kustom tiga keadaan jadi input garis bawah dengan teks serif
-- [ ] Paket & kustom tetap saling **menonaktifkan**, dan jalan kembalinya tetap
+- [x] Kolom kustom tiga keadaan jadi input garis bawah dengan teks serif
+- [x] Paket & kustom tetap saling **menonaktifkan**, dan jalan kembalinya tetap
       ada (`architecture.md` §1.8)
-- [ ] Empat grup metode + "Terakhir digunakan" ikut kulit baru
-- [ ] Empat overlay pembayaran, hitung mundur bersama, layar sukses, dan layar
+- [x] Empat grup metode + "Terakhir digunakan" ikut kulit baru
+- [x] Empat overlay pembayaran, hitung mundur bersama, layar sukses, dan layar
       gagal berkode teknis ikut kulit baru
-- [ ] Confetti dipertahankan tetapi **tanpa emoji dan tanpa warna aksen baru**
-- [ ] Datang dari gerbang bab tetap menyorot paket terkecil yang mencukupi, dan
+- [x] Confetti dipertahankan tetapi **tanpa emoji dan tanpa warna aksen baru**
+- [x] Datang dari gerbang bab tetap menyorot paket terkecil yang mencukupi, dan
       tombol utama layar sukses tetap "Lanjutkan membaca" ke bab yang sama
-- [ ] Tiga jalan gagal bayar tetap berbeda aksinya: `PAY-402` · `PAY-504` ·
+- [x] Tiga jalan gagal bayar tetap berbeda aksinya: `PAY-402` · `PAY-504` ·
       `PAY-410`
 
-## `/koin/transaksi` — Riwayat transaksi · `ADA` · tanpa mockup
+## `/koin/transaksi` — Riwayat transaksi · `ADA` · tanpa mockup · **selesai R8**
 
-- [ ] Pemeriksaan baku
-- [ ] Brankas saldo jadi panel putih dengan angka **serif**
-- [ ] Empat saringan jadi tab teks; tetap **meminta ulang barisnya ke server**
-- [ ] Daftar transaksi jadi baris berpembatas; nominal masuk/keluar memakai tinta,
+- [x] Pemeriksaan baku
+- [x] Brankas saldo jadi panel putih dengan angka **serif**
+- [x] Empat saringan jadi tab teks; tetap **meminta ulang barisnya ke server**
+- [x] Daftar transaksi jadi baris berpembatas; nominal masuk/keluar memakai tinta,
       **bukan hijau/merah penuh**
-- [ ] Dua panel analitik ikut kulit baru
-- [ ] Ekspor CSV tetap menghasilkan berkas nyata
+- [x] Dua panel analitik ikut kulit baru
+- [x] Ekspor CSV tetap menghasilkan berkas nyata
 
-## `/koin/transaksi/:txId` — Detail transaksi · `ADA` · tanpa mockup
+## `/koin/transaksi/:txId` — Detail transaksi · `ADA` · tanpa mockup · **selesai R8**
 
-- [ ] Pemeriksaan baku
-- [ ] Empat status tetap dibaca **dari data**, bukan dari `?status=`
-- [ ] Lini masa memakai pola pelacak yang sama dengan `7o`–`7r`: tahap selesai
+- [x] Pemeriksaan baku
+- [x] Empat status tetap dibaca **dari data**, bukan dari `?status=`
+- [x] Lini masa memakai pola pelacak yang sama dengan `7o`–`7r`: tahap selesai
       terisi gelap, tahap kini emas, **tanpa garis penghubung setelah tahap
       terakhir**
-- [ ] Nomor VA tetap `--nv-font-mono`
+- [x] Nomor VA tetap `--nv-font-mono`
 
 ---
 
@@ -622,12 +624,12 @@ Hanya chip koin yang punya frame. Sisanya diturunkan dari §1 dan §9 brief.
       (`architecture.md` §1.9)
 - [x] Tiga keadaan kosong tetap berbeda
 
-## `/karya/daftar-penulis` — Daftar sebagai penulis · `ADA` · tanpa mockup
+## `/karya/daftar-penulis` — Daftar sebagai penulis · `ADA` · tanpa mockup · **selesai R9**
 
 > Dikerjakan di [`todo.md`](todo.md) **R9b**.
 
-- [ ] Pemeriksaan baku
-- [ ] Formulir jadi input garis bawah; tingkat penulis tetap ditegakkan **server**
+- [x] Pemeriksaan baku
+- [x] Formulir jadi input garis bawah; tingkat penulis tetap ditegakkan **server**
 
 ## `/karya/baru` · `/karya/:storyId/ubah` — Formulir cerita · `ADA` · mockup **`7k` `7l`**
 
@@ -657,60 +659,60 @@ Satu komponen dua mode — jangan dipecah saat meredesign.
       judul — **tanpa isi merah**
 - [x] `markDirty` empat efek dan draf yang menyimpan isinya tetap jalan
 
-## `/karya/:storyId/bab` — Kelola bab · `ADA` · tanpa mockup
+## `/karya/:storyId/bab` — Kelola bab · `ADA` · tanpa mockup · **selesai R9**
 
 > Dikerjakan di [`todo.md`](todo.md) **R9b**.
 
-- [ ] Pemeriksaan baku
-- [ ] Tiga penghitung tetap merangkap pintasan saringan; jadi strip sel seperti
+- [x] Pemeriksaan baku
+- [x] Tiga penghitung tetap merangkap pintasan saringan; jadi strip sel seperti
       `7j`
-- [ ] Empat pemberitahuan tindak lanjut ikut kulit baru
-- [ ] Daftar bab enam status jadi daftar berpembatas dengan kata status berwarna
+- [x] Empat pemberitahuan tindak lanjut ikut kulit baru
+- [x] Daftar bab enam status jadi daftar berpembatas dengan kata status berwarna
       status
-- [ ] Menu aksi tetap dibangun dari status
-- [ ] Penjadwal khusus bab tetap terpisah dari penjadwal cerita
+- [x] Menu aksi tetap dibangun dari status
+- [x] Penjadwal khusus bab tetap terpisah dari penjadwal cerita
 
-## `/karya/:storyId/bab/baru` · `/karya/:storyId/bab/:chapterId/ubah` — Editor bab · `ADA` · tanpa mockup
+## `/karya/:storyId/bab/baru` · `/karya/:storyId/bab/:chapterId/ubah` — Editor bab · `ADA` · tanpa mockup · **selesai R9**
 
 > Dikerjakan di [`todo.md`](todo.md) **R9b**.
 
 Halaman paling berisiko: yang dipegangnya naskah yang belum tersimpan.
 
-- [ ] Pemeriksaan baku
-- [ ] Area tulis jadi **serif**, ukuran nyaman baca, lebar terkendali
-- [ ] Bilah alat markdown ikut kulit baru
-- [ ] Mode fokus menyembunyikan chrome — pola yang sama dengan reader Type A
-- [ ] **Autosave dua lapis tidak disentuh sama sekali**: lokal 3 detik, server
+- [x] Pemeriksaan baku
+- [x] Area tulis jadi **serif**, ukuran nyaman baca, lebar terkendali
+- [x] Bilah alat markdown ikut kulit baru
+- [x] Mode fokus menyembunyikan chrome — pola yang sama dengan reader Type A
+- [x] **Autosave dua lapis tidak disentuh sama sekali**: lokal 3 detik, server
       30 detik + sekali lagi saat halaman ditinggalkan
-- [ ] `DRAFT-409` tetap **tidak membekukan editor**, dan tiga jalan keluarnya
+- [x] `DRAFT-409` tetap **tidak membekukan editor**, dan tiga jalan keluarnya
       tetap ada
-- [ ] Pesan gagal tetap menyatakan **tulisanmu aman** — `architecture.md` §1.4
-- [ ] Panel dwibahasa dengan aturan "lengkap atau tidak ada" tetap jalan
+- [x] Pesan gagal tetap menyatakan **tulisanmu aman** — `architecture.md` §1.4
+- [x] Panel dwibahasa dengan aturan "lengkap atau tidak ada" tetap jalan
 
-## `/karya/:storyId/bab/:chapterId/akses` — Akses bab · `ADA` · tanpa mockup
+## `/karya/:storyId/bab/:chapterId/akses` — Akses bab · `ADA` · tanpa mockup · **selesai R9**
 
 > Dikerjakan di [`todo.md`](todo.md) **R9b**.
 
-- [ ] Pemeriksaan baku
-- [ ] Tiga tipe akses jadi daftar pilihan berpembatas dengan panel per tipe
-- [ ] Tombol simpan tetap **membandingkan nilai awal**
-- [ ] Tiga dialog konfirmasi transisi berisiko ikut kulit baru — **tanpa isi
+- [x] Pemeriksaan baku
+- [x] Tiga tipe akses jadi daftar pilihan berpembatas dengan panel per tipe
+- [x] Tombol simpan tetap **membandingkan nilai awal**
+- [x] Tiga dialog konfirmasi transisi berisiko ikut kulit baru — **tanpa isi
       merah**
-- [ ] Empat aturan konteks tetap ditegakkan server
+- [x] Empat aturan konteks tetap ditegakkan server
 
-## `/karya/:storyId/analitik` — Analitik cerita · `ADA` · tanpa mockup
+## `/karya/:storyId/analitik` — Analitik cerita · `ADA` · tanpa mockup · **selesai R9**
 
 > Dikerjakan di [`todo.md`](todo.md) **R9b**.
 
-- [ ] Pemeriksaan baku
-- [ ] Lima rentang waktu jadi tab teks; tetap menyaring **di server**
-- [ ] Empat kartu metrik jadi strip sel; angkanya **serif**
-- [ ] Grafik SVG dua lapisan: garis dan isi memakai emas dekoratif, **bukan emas
+- [x] Pemeriksaan baku
+- [x] Lima rentang waktu jadi tab teks; tetap menyaring **di server**
+- [x] Empat kartu metrik jadi strip sel; angkanya **serif**
+- [x] Grafik SVG dua lapisan: garis dan isi memakai emas dekoratif, **bukan emas
       teks**
-- [ ] Grafik tetap **menolak dimatikan seluruhnya beserta alasannya**
-- [ ] Performa per bab jadi daftar berpembatas dengan lencana `Drop`
-- [ ] Kalender publish tetap diturunkan dari `publishAt`
-- [ ] Dua ekspor tetap menghasilkan berkas nyata (`window.print()` · `<canvas>`
+- [x] Grafik tetap **menolak dimatikan seluruhnya beserta alasannya**
+- [x] Performa per bab jadi daftar berpembatas dengan lencana `Drop`
+- [x] Kalender publish tetap diturunkan dari `publishAt`
+- [x] Dua ekspor tetap menghasilkan berkas nyata (`window.print()` · `<canvas>`
       → PNG) — **periksa ulang setelah warna berganti**
 
 ## `/karya/jadwal` — Jadwal terbit · `ADA` · mockup **`7m`**
@@ -770,48 +772,48 @@ redesign-nya salah.
 Brief tidak menggambar satu pun. Diturunkan dari `7j` (strip sel) dan `7o`–`7r`
 (lini masa). **Uang: jangan sederhanakan apa pun di sini.**
 
-## `/penulis/analitik` — Penghasilan · `ADA` · tanpa mockup
+## `/penulis/analitik` — Penghasilan · `ADA` · tanpa mockup · **selesai R9**
 
-- [ ] Pemeriksaan baku
-- [ ] Tiga KPI berurutan tetap (Pendapatan · Dibaca · Rating) jadi strip sel,
+- [x] Pemeriksaan baku
+- [x] Tiga KPI berurutan tetap (Pendapatan · Dibaca · Rating) jadi strip sel,
       angka serif
-- [ ] Empat rentang waktu tetap memakai **enum yang sama** dengan analitik cerita
-- [ ] Tiga sudut pandang jadi tab teks dan tetap **benar-benar mengganti isi**
-- [ ] Kurva pendapatan tujuh batang memakai emas dekoratif; **angka per batang
+- [x] Empat rentang waktu tetap memakai **enum yang sama** dengan analitik cerita
+- [x] Tiga sudut pandang jadi tab teks dan tetap **benar-benar mengganti isi**
+- [x] Kurva pendapatan tujuh batang memakai emas dekoratif; **angka per batang
       tetap ada untuk pembaca layar**
-- [ ] Kurs koin → rupiah dan bagi hasil 80/20 tetap **dinyatakan terang**
-- [ ] Saldo tersedia tetap **sudah dikurangi** pengajuan yang masih diproses
-- [ ] Corong pembaca empat tahap tetap dijepit monoton dan tetap menyebut
+- [x] Kurs koin → rupiah dan bagi hasil 80/20 tetap **dinyatakan terang**
+- [x] Saldo tersedia tetap **sudah dikurangi** pengajuan yang masih diproses
+- [x] Corong pembaca empat tahap tetap dijepit monoton dan tetap menyebut
       ceritanya
-- [ ] Heatmap rilis tetap **tabel yang terbaca pembaca layar**; sel terpanas
+- [x] Heatmap rilis tetap **tabel yang terbaca pembaca layar**; sel terpanas
       memakai emas dekoratif bertingkat, bukan skala warna baru
-- [ ] Tautan ke penjadwal tetap membuka dengan waktunya **sudah terisi**
+- [x] Tautan ke penjadwal tetap membuka dengan waktunya **sudah terisi**
 
-## `/penulis/penarikan` — Tarik penghasilan · `ADA` · tanpa mockup
+## `/penulis/penarikan` — Tarik penghasilan · `ADA` · tanpa mockup · **selesai R9**
 
-- [ ] Pemeriksaan baku
-- [ ] Saldo, batas minimum, dan estimasi 1–3 hari kerja tetap tampil **sebelum**
+- [x] Pemeriksaan baku
+- [x] Saldo, batas minimum, dan estimasi 1–3 hari kerja tetap tampil **sebelum**
       formulir
-- [ ] Rekening tersamar + status verifikasinya; **rekening tidak pernah dikirim
+- [x] Rekening tersamar + status verifikasinya; **rekening tidak pernah dikirim
       penuh**
-- [ ] Kolom jumlah jadi input garis bawah serif, tetap menerima format apa pun
-- [ ] Ringkasan tiga baris tetap dihitung tiap ketikan, bersih tetap **dijepit
+- [x] Kolom jumlah jadi input garis bawah serif, tetap menerima format apa pun
+- [x] Ringkasan tiga baris tetap dihitung tiap ketikan, bersih tetap **dijepit
       ≥ 0**
-- [ ] **Tangga validasi lima tingkat tidak disentuh** — berhenti di kesalahan
+- [x] **Tangga validasi lima tingkat tidak disentuh** — berhenti di kesalahan
       pertama, mematikan tombol sebelum ditekan, ditegakkan server dari berkas
       yang sama (`architecture.md` §1.15)
-- [ ] Saldo tetap langsung ditahan setelah pengajuan berhasil
+- [x] Saldo tetap langsung ditahan setelah pengajuan berhasil
 
-## `/penulis/penarikan/riwayat` — Riwayat pencairan · `ADA` · tanpa mockup
+## `/penulis/penarikan/riwayat` — Riwayat pencairan · `ADA` · tanpa mockup · **selesai R9**
 
-- [ ] Pemeriksaan baku
-- [ ] Daftar berpembatas: tanggal, jumlah, biaya, bersih, rekening tersamar,
+- [x] Pemeriksaan baku
+- [x] Daftar berpembatas: tanggal, jumlah, biaya, bersih, rekening tersamar,
       status
-- [ ] Lini masa tiga tahap memakai pola pelacak `7o`–`7r`, dan tetap **hanya
+- [x] Lini masa tiga tahap memakai pola pelacak `7o`–`7r`, dan tetap **hanya
       untuk yang masih di jalurnya** — pengajuan ditolak membawa alasannya, bukan
       lini masa yang menyiratkan uangnya masih jalan
-- [ ] Bukti transfer tetap terunduh sebagai berkas nyata
-- [ ] Rantai koin → rupiah tetap dijelaskan utuh dengan contoh nyata
+- [x] Bukti transfer tetap terunduh sebagai berkas nyata
+- [x] Rantai koin → rupiah tetap dijelaskan utuh dengan contoh nyata
 
 ---
 
@@ -903,27 +905,28 @@ dicatat di sini supaya tidak ada yang membangunnya dengan palet lama.
 
 ## `/dev/kitchen-sink` — Kitchen sink · `ADA`
 
-- [ ] Seluruh primitif baru tampil di sini, **terang dan malam**, sebelum
+- [x] Seluruh primitif baru tampil di sini, **terang dan malam**, sebelum
       halaman mana pun memakainya
-- [ ] Enam sakelar dev yang sudah ada tetap jalan: tiga sesi, tiga hasil
+- [x] Enam sakelar dev yang sudah ada tetap jalan: tiga sesi, tiga hasil
       pembayaran, kegagalan autosave, keputusan admin antrean tinjauan
-- [ ] Halaman ini tetap mahal dimuat pertama kali — e2e yang melewatinya tetap
+- [x] Halaman ini tetap mahal dimuat pertama kali — e2e yang melewatinya tetap
       butuh `test.setTimeout` sendiri
 
 ## `*` — 404 · `ADA`
 
-- [ ] Satu kalimat polos tinta redup + satu tombol kembali. **Tanpa ilustrasi.**
+- [x] Satu kalimat polos tinta redup + satu tombol kembali. **Tanpa ilustrasi.**
 
 ---
 
 ## Setelah semuanya
 
-- [ ] `tests/e2e/isi-koin-di-hp.spec.ts` — **dua puluh dua halaman** diperiksa
-      ulang di tata letak baru; tambahkan halaman baru ke daftar itu, **bukan
-      berkas e2e baru**
-- [ ] Bilah aksi apa pun di dalam `AppShell` tetap memakai
+- [x] `tests/e2e/isi-koin-di-hp.spec.ts` — **dua puluh delapan halaman** di lima
+      lebar, ditambah **empat halaman auth** yang perlu keluar dulu dan sembilan
+      halaman di sapuan target ketuk; tambahkan halaman baru ke daftar itu,
+      **bukan berkas e2e baru**
+- [x] Bilah aksi apa pun di dalam `AppShell` tetap memakai
       `bottom-[var(--nv-bottom-nav)]`, bukan `bottom-0`
-- [ ] Halaman `topbar` tetap **tidak menulis kepala halamannya sendiri** —
+- [x] Halaman `topbar` tetap **tidak menulis kepala halamannya sendiri** —
       `TopBarLayout` sudah merender `<h1>` dan tombol kembali
-- [ ] `npm run check` bersih dan `npm test` lulus di tiap akhir bagian, bukan
+- [x] `npm run check` bersih dan `npm test` lulus di tiap akhir bagian, bukan
       sekali di akhir semuanya
