@@ -1275,6 +1275,68 @@ termasuk `rejected`, yang jelas-jelas punya babnya. `AuthorChapter` belum membaw
 alasan penolakan, jadi yang ditulis langkah berikutnya, bukan alasan yang
 dikarang.
 
+### 1.32 Seam API tidak boleh memakai top-level `await`
+
+Ditemukan saat menyiapkan deploy pertama lewat Cloudflare Tunnel — **build
+produksinya tidak merender apa pun**, dan sudah begitu entah sejak kapan.
+
+`api/client.ts` memilih implementasinya begini:
+
+```ts
+const impl = mode === 'http' ? await import('./http') : await import('./mock')
+```
+
+Di `npm run dev` ini benar: Vite menyajikan modul tanpa bundling, jadi tidak ada
+lingkar. Di `vite build`, Rollup memecahnya jadi tiga chunk yang saling
+menunggu — **entry → `client` → `mock` → entry** — dan `await` di tengah lingkar
+itu membuat grafik modulnya tidak pernah selesai dievaluasi.
+
+Gejalanya paling jahat yang mungkin:
+
+| Yang terlihat | Yang sebenarnya |
+|---|---|
+| Halaman putih | React tidak pernah dipasang |
+| **Nol error** di konsol | `await` yang menggantung tidak melempar apa pun |
+| Semua berkas JS **200** | chunk-nya memang terunduh, cuma tidak pernah selesai dievaluasi |
+| `npm run check` bersih, 588 unit + 83 e2e lulus | semuanya menguji `npm run dev` |
+
+Terukur: `#root` nol karakter, `navigator.serviceWorker.getRegistrations()`
+kosong (badan `main.tsx` tidak pernah jalan), dan mengimpor ketiga chunk secara
+manual dari konsol **menggantung** ketiganya.
+
+**Aturan yang berlaku sekarang:** seam API tidak memakai top-level `await`. Ia
+mengekspor objek kosong dan `initApi()` yang mengisinya, dan `main.tsx`
+memanggilnya lewat `.then()` **sebelum** `createRoot` — bukan `await` di tingkat
+modul, yang akan menghidupkan lingkar yang sama di chunk entry.
+
+Aman karena aturan struktur #3 sudah menjamin hanya `hooks/` yang memanggil
+`api`, dan hook berjalan saat render — bukan saat impor. Tidak ada satu pun
+pemanggil yang menyentuh `api` di tingkat modul; itu diperiksa sebelum diubah.
+
+**Penjaganya `npm run check:build`**, dan ia sengaja tidak menguji banyak hal:
+apakah aplikasinya benar-benar terpasang dari `dist/`, dan apakah halaman dev
+ikut terkirim. Dibuktikan bisa gagal — dijalankan terhadap build yang cacatnya
+dihidupkan lagi, ia keluar dengan kode 1 dan menyebut `#root kosong`.
+
+> **Titik butanya bukan test yang kurang, melainkan test yang semuanya menunjuk
+> satu arah.** `playwright.config.ts` menjalankan `npm run dev`, jadi delapan
+> puluh tiga e2e menguji server dev — dan **nol** menguji hasil `vite build`.
+> Menambah test e2e tidak akan pernah menemukannya.
+
+### 1.33 Halaman dev tidak boleh ikut ke bundel publik
+
+`DEV_ROUTES` sudah dijaga `import.meta.env.DEV`, jadi `/dev/kitchen-sink` memang
+tidak punya rute di produksi. Tetapi `const KitchenSink = lazy(() => import(…))`
+berdiri di puncak berkas, dan Rollup tidak bisa membuktikan `import()` itu tak
+terjangkau — jadi `dist/assets/KitchenSink-*.js` tetap dipancarkan dan ikut
+terunggah ke alamat publik. Isinya sakelar yang mencetak koin dan menyetujui
+tinjauan sendiri.
+
+Tidak bisa dijangkau lewat rute mana pun, tetapi berkasnya bisa diunduh. `lazy()`
+kini ada **di dalam** cabang `DEV`-nya. Precache turun 87 → 79 entri, dan
+`npm run check:build` menolak build yang membawanya kembali.
+
+
 > **Catatan cara mengukur.** Percobaan pertama memakai pemilih `article aside`
 > dan menyatakan pitanya ada di −6.828px. Itu **salah**: `AdSlot` juga sebuah
 > `<aside>`, jadi yang terukur slot iklan. Kesimpulannya kebetulan benar,

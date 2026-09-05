@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "check:build": "node scripts/check-build.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",

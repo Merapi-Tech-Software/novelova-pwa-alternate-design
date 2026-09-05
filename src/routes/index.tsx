@@ -71,7 +71,6 @@ const ReviewQueuePage = lazy(() => import('@/features/studio/pages/ReviewQueuePa
 const LibraryPage = lazy(() => import('@/features/library/pages/LibraryPage'))
 const TransactionsPage = lazy(() => import('@/features/wallet/pages/TransactionsPage'))
 const TransactionDetailPage = lazy(() => import('@/features/wallet/pages/TransactionDetailPage'))
-const KitchenSink = lazy(() => import('./KitchenSink'))
 
 /**
  * Pembagian tingkat penulis mengikuti aturan §8 "verifikasi baru diminta saat
@@ -334,7 +333,16 @@ export const ROUTES: RouteDef[] = [
   { path: '/legal/privasi', title: 'Kebijakan Privasi', layout: 'topbar', guard: 'none' },
 ]
 
-/** Halaman dev tidak masuk `ROUTES` supaya tabelnya tetap persis §8. */
+/**
+ * Halaman dev tidak masuk `ROUTES` supaya tabelnya tetap persis §8.
+ *
+ * **`lazy()`-nya ikut di dalam cabang `DEV`**, bukan di puncak berkas. Kalau ia
+ * di luar, Rollup tidak bisa membuktikan `import()`-nya tak terjangkau dan tetap
+ * memancarkan `dist/assets/KitchenSink-*.js` — chunk berisi sakelar dev
+ * (mencetak koin, menyetujui tinjauan sendiri) yang ikut terunggah ke alamat
+ * publik meski rutenya tidak ada. Terukur: berkasnya menjawab 200 di build
+ * sebelum perubahan ini.
+ */
 const DEV_ROUTES: RouteDef[] = import.meta.env.DEV
   ? [
       {
@@ -342,7 +350,10 @@ const DEV_ROUTES: RouteDef[] = import.meta.env.DEV
         title: 'Kitchen sink',
         layout: 'shell',
         guard: 'none',
-        element: <KitchenSink />,
+        element: (() => {
+          const KitchenSink = lazy(() => import('./KitchenSink'))
+          return <KitchenSink />
+        })(),
       },
     ]
   : []

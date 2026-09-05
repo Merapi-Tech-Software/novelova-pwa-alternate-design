@@ -430,15 +430,43 @@ export interface NovelovaApi {
 }
 
 /**
- * Implementasi dipilih saat modul dimuat, sekali.
+ * Implementasi dipilih sekali, saat aplikasi dinyalakan.
  *
  * `import()` dinamis membuat implementasi yang tidak dipakai tidak ikut ke dalam
  * bundel — build produksi mode `mock` tidak membawa kode `http`, dan sebaliknya.
+ *
+ * **Tanpa top-level `await`, dan itu bukan gaya melainkan keharusan.** Versi
+ * sebelumnya menulis `const impl = await import('./mock')` di tingkat modul, dan
+ * itu **mematikan seluruh build produksi**: Rollup memecah bundelnya jadi
+ * entry → `client` → `mock` → entry, dan `await` di tengah lingkar itu membuat
+ * grafik modulnya tidak pernah selesai dievaluasi. Gejalanya paling jahat yang
+ * mungkin — halaman putih, `#root` kosong, **nol error di konsol**, dan seluruh
+ * berkas JS berstatus 200. Di `npm run dev` tidak pernah terlihat karena Vite
+ * menyajikan modul tanpa bundling, jadi lingkar chunk itu tidak ada.
+ *
+ * Yang menggantikannya: objek kosong yang **diisi** sebelum React merender.
+ * Aman karena tidak ada satu pun pemanggil yang menyentuh `api` di tingkat
+ * modul — aturan struktur #3 sudah menjamin hanya `hooks/` yang memanggilnya,
+ * dan hook berjalan saat render, bukan saat impor.
  */
 const mode = import.meta.env.VITE_API_MODE ?? 'mock'
 
-const impl = mode === 'http' ? await import('./http') : await import('./mock')
-
-export const api: NovelovaApi = impl.api
+export const api = {} as NovelovaApi
 
 export const apiMode = mode
+
+let siap: Promise<void> | null = null
+
+/**
+ * Memuat implementasinya dan mengisi `api`. Idempoten — dipanggil dua kali
+ * (mis. StrictMode) tetap hanya memuat sekali.
+ *
+ * Dipanggil `main.tsx` **sebelum** `createRoot`, dan di `tests/setup.ts` sebelum
+ * test mana pun berjalan.
+ */
+export function initApi(): Promise<void> {
+  siap ??= (mode === 'http' ? import('./http') : import('./mock')).then((impl) => {
+    Object.assign(api, impl.api)
+  })
+  return siap
+}

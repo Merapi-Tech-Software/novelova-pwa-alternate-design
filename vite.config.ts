@@ -4,6 +4,14 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
+/**
+ * Hostname tunnel Cloudflare. Vite menolak request yang Host header-nya bukan
+ * localhost — pengaman anti DNS-rebinding, bukan kerewelan — jadi domain
+ * tunnelnya harus didaftarkan sendiri. Awalan titik mencakup `merapiapp.my.id`
+ * **beserta** seluruh subdomainnya.
+ */
+const allowedHosts = ['.merapiapp.my.id']
+
 export default defineConfig({
   plugins: [
     react(),
@@ -68,7 +76,13 @@ export default defineConfig({
    * 1311 akan menemukan **versi yang salah** — `reuseExistingServer` membuatnya
    * lulus dengan tenang sambil menguji aplikasi lain. Lebih baik gagal keras.
    */
-  server: { port: 1311, host: true, strictPort: true },
+  server: { port: 1311, host: true, strictPort: true, allowedHosts },
+  /*
+   * `vite preview` menyajikan hasil `vite build` (folder `dist/`) di port yang
+   * sama, jadi tunnel yang mengarah ke `localhost:1311` tidak perlu diubah saat
+   * berpindah dari dev ke production.
+   */
+  preview: { port: 1311, host: true, strictPort: true, allowedHosts },
   test: {
     globals: true,
     environment: 'jsdom',

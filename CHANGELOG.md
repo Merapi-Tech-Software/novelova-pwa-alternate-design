@@ -5,6 +5,98 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-05 · Langkah 70 — deploy Cloudflare Tunnel, dan build produksi yang ternyata mati
+
+> "project ini mau saya deploy di cloudflare tunnel. saya sudah siapkan port sama
+> dengan port saat ini 1311. di vite sudah saya adjust juga […] tapi pas saya buka
+> domain, malah error Host Error"
+
+`npm run check` bersih · **588 test unit** · **83 e2e** · **`npm run check:build`
+baru dan lulus**.
+
+### Tiga sebab, bukan satu
+
+1. **Tidak ada origin.** Server dev-nya saya matikan sendiri di permintaan
+   sebelumnya ("matikan dulu service nya"), dan `cloudflared` tetap hidup — jadi
+   tunnelnya menyala tanpa apa pun di baliknya. Terukur: nol proses mendengarkan
+   di 1311, `cloudflared` PID 15892 berjalan sebagai layanan Windows.
+2. **`allowedHosts` tidak pernah tersimpan.** `vite.config.ts` di disk masih
+   `server: { port: 1311, host: true, strictPort: true }` — versi yang dikirim
+   di prompt tidak ada di berkasnya. Sudah diterapkan, berikut blok `preview`
+   supaya tunnel yang menunjuk `localhost:1311` tidak perlu diubah saat berpindah
+   dari dev ke produksi.
+3. **Build produksinya tidak merender apa pun** — dan ini yang paling mahal.
+   Lihat di bawah.
+
+Apex `merapiapp.my.id` sendiri sudah dipakai aplikasi **Flutter** lain (200, dan
+HTML-nya jelas hasil `flutter build`), jadi Novelova ditempatkan di subdomain
+`novelova.merapiapp.my.id` atas keputusan pengguna — aplikasi Flutter-nya tidak
+disentuh.
+
+### `api/client.ts` memakai top-level `await`, dan itu mematikan build
+
+Rincian di `architecture.md` **§1.32**. Ringkasnya: Rollup memecah bundel jadi
+entry → `client` → `mock` → entry, dan `await` di tengah lingkar itu membuat
+grafik modulnya tidak pernah selesai dievaluasi. Halaman putih, **nol error**,
+seluruh JS berstatus 200.
+
+Terukur sebelum perbaikan: `#root` nol karakter, nol registrasi service worker
+(badan `main.tsx` tidak pernah jalan), dan mengimpor ketiga chunk dari konsol
+**menggantung ketiganya**.
+
+Gantinya `initApi()` yang mengisi objek `api`, dipanggil `main.tsx` lewat
+`.then()` sebelum `createRoot`. Aman karena aturan struktur #3 sudah menjamin
+hanya `hooks/` yang memanggil `api` — diperiksa dulu, bukan diasumsikan.
+
+**Kenapa 83 e2e tidak melihatnya:** `playwright.config.ts` menjalankan
+`npm run dev`. Seluruh suite menguji server dev; **nol** menguji `vite build`.
+Menambah e2e tidak akan pernah menemukannya.
+
+### Halaman dev ikut terkirim ke bundel publik
+
+`/dev/kitchen-sink` tidak punya rute di produksi (`import.meta.env.DEV`), tetapi
+`lazy()`-nya berdiri di puncak berkas sehingga Rollup tetap memancarkan
+`dist/assets/KitchenSink-*.js` — berisi sakelar yang mencetak koin dan menyetujui
+tinjauan sendiri. Tidak terjangkau lewat rute, tetapi berkasnya bisa diunduh dari
+alamat publik. `lazy()` dipindahkan ke dalam cabang `DEV`; precache 87 → 79
+entri. `architecture.md` §1.33.
+
+### `npm run check:build`
+
+Penjaga baru, dan sengaja hanya dua hal: apakah aplikasinya benar-benar terpasang
+dari `dist/`, dan apakah halaman dev ikut terkirim. Memakai port 4311 sendiri,
+jadi tidak pernah merebut 1311 dari tunnel.
+
+**Dibuktikan bisa gagal**, bukan cuma bisa lulus: dijalankan terhadap build yang
+cacatnya dihidupkan kembali, ia keluar kode 1 dengan `#root kosong`; diberi
+berkas `KitchenSink-*.js` palsu, ia keluar kode 1 dengan `halaman dev ikut
+terkirim`.
+
+### Verifikasi
+
+| Yang diuji | Hasil |
+|---|---|
+| `localhost:1311` | 200 |
+| Host `novelova.merapiapp.my.id` | 200 |
+| Host `merapiapp.my.id` (apex) | 200 |
+| Host asing | **403**, pengaman Vite utuh |
+| Render dari hasil build lewat Host subdomain | `#root` 134.892 karakter, 147 tautan cerita, `/koin` → "Isi Koin", nol error |
+| Suite e2e melawan **hasil build** | 77 lulus; 6 gagal **hanya** karena memakai `/dev/kitchen-sink` yang produksi memang tidak punya |
+
+### Yang tidak dikerjakan
+
+- **Public Hostname di dashboard Cloudflare belum dibuat** — dan tidak bisa saya
+  buat dari sini. Tunnelnya `cloudflared tunnel run --token …`, artinya
+  *remotely-managed*: aturan hostname → service hidup di Zero Trust dashboard,
+  bukan di berkas mana pun di mesin ini (tidak ada `~/.cloudflared/config.yml`).
+  `novelova.merapiapp.my.id` masih belum punya DNS saat ini ditulis.
+- **`playwright.config.ts` tidak diubah** untuk menguji `preview`. Suite ini
+  memang milik alur dev, dan enam test-nya bergantung pada halaman dev yang
+  produksi tidak punya. `npm run check:build` menutup celahnya tanpa membuat
+  suite yang ada jadi bercabang dua.
+
+---
+
 ## 2026-09-05 · Langkah 69 — Fase R9 selesai, dan Fase R tuntas
 
 > "oke sekarang lanjutkan redesign. Kerjakan semua Fase R9, dan jangan lupa untuk
