@@ -87,8 +87,9 @@ membulat.
 
 ## Kemajuan
 
-**4 / 42 halaman selesai** — beranda (R2) plus detail cerita, ruang baca Type A,
-dan komentar bab (R3). Keempatnya menyisakan **hanya** kotak `Pemeriksaan baku`,
+**4 / 42 halaman selesai** — beranda (R2 + **R2b**, susunan ulang 5 September),
+detail cerita, ruang baca Type A, dan komentar bab (R3). Keempatnya menyisakan
+**hanya** kotak `Pemeriksaan baku`,
 yang tertahan butir 8 di seluruh aplikasi (lihat catatan di bawah daftar itu),
 dan ruang baca menyisakan satu kotak perilaku yang diserap R4. **Fondasi
 selesai** (R1) — token, tipografi, dan primitif sudah berganti, jadi tiap halaman
@@ -120,7 +121,7 @@ Sampai Langkah 49 ke-17 rute itu **tidak punya fase sama sekali**: Fase R disusu
 dari urutan bangun brief §15, dan §15 hanya menyebut layar yang punya PNG.
 **R8** dan **R9** menutupnya.
 
-**303 kotak** di seluruh berkas ini, **89 sudah dicentang**.
+**318 kotak** di seluruh berkas ini, **103 sudah dicentang**.
 
 ---
 
@@ -273,6 +274,41 @@ di antara halaman, persis seperti saran urutan bangun brief §15.
 - [x] **Test:** genre menyaring empat blok dan meninggalkan tiga
 - [x] **Test:** section tanpa isi hilang dari feed tetapi barisnya tetap ada di
       lembar; sakelarnya bertahan setelah muat ulang
+
+### Susunan ulang 5 September · **R2b** · §1.22
+
+Beranda sempat **nol sisa** setelah R2. Permintaan produk 5 September membukanya
+lagi: urutan blok, bentuk section, ukuran sampul, dan satu fitur baru. Enam
+keputusannya dikonfirmasi lewat pertanyaan langsung; yang ditimpa dari `7a`
+dicatat di `architecture.md` §1.22.
+
+- [x] **Data contoh dulu** (`todo.md` R2b-a): 11 dari 26 section di bawah tab
+      berisi < 4 cerita, dan sebagai rel mendatar itu terlihat seperti gagal
+      memuat. Katalog 40 → ~60 judul, dan `Cover` dapat `onError`
+- [x] Urutan: **3 section prioritas → banner → tab genre → section lainnya → Lanjut Membaca**
+- [x] Ketiga section prioritas **berhenti tersaring tab** — jadi peringkat global
+      (menimpa §1.6)
+- [x] Pesan "genre ini belum ada isinya" pindah ke **bawah tab genre**; tiga
+      section atas dan banner tetap tampil
+- [x] Semua section genre jadi **rel mendatar**; `ranked` dan `rail-wide` dihapus
+- [x] **Lanjut Membaca tetap daftar tegak** — batang progres, "Bab 45 dari 120",
+      dan tombol lanjut butuh lebar satu baris penuh
+- [x] Sampul seragam **80px** (dari 112/160) — 3,9 sampul terlihat di 360px
+- [x] Kutipan serif `7a` §7 di "Paling Banyak Dibuka" **dihapus** — tidak terbaca
+      di bawah sampul 80px
+- [x] Nomor peringkat bekas `ranked` pindah ke **badge sampul**
+- [x] **Ketuk sampul → sampul membesar** ke tengah layar, ~180ms `ease-out`;
+      judul di bawahnya tetap tautan ke ceritanya
+- [x] Lapisannya membawa `Buka cerita`, Esc menutup, fokus kembali ke sampul yang
+      ditekan
+- [x] `prefers-reduced-motion` mematikan animasinya — lapisannya tetap muncul
+- [x] Zoom **hanya di beranda**: `StoryCard` menerima `onCoverClick` opsional,
+      dan hanya beranda yang mengopernya
+- [x] **Test:** urutan blok · tab tidak mengubah tiga section atas · genre kosong
+      menyisakan tiga section atas · sampul membesar tanpa bernavigasi ·
+      `/jelajah` `/pustaka` `/cari` tidak ikut berubah
+- [x] **Test e2e:** beranda tidak menggeser badan halaman di kelima lebar setelah
+      susunan baru
 
 ## `/cari` — Pencarian · `ADA` · mockup **`7e`**
 

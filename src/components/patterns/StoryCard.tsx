@@ -19,13 +19,22 @@ export interface StoryCardProps {
   badge?: ReactNode | null
   /** Sel kanan baris — lencana `HOT` / `BARU` di `7d`. Hanya `variant="list"`. */
   trailing?: ReactNode
-  /**
-   * Satu baris tambahan di bawah metrik: garis pertumbuhan emas di
-   * **Baru & Naik Cepat**, kutipan serif di **Editor's Picks**.
-   */
-  note?: ReactNode
   /** Nomor urut di kiri baris. Hanya `variant="list"`. */
   rank?: number
+  /**
+   * Bila diisi, **sampulnya jadi tombol sendiri** dan judulnya tetap tautan ke
+   * ceritanya. Hanya beranda yang mengopernya (`architecture.md` §1.22):
+   * menaruh perilakunya di sini tanpa sakelar akan mengubah `/jelajah`,
+   * `/pustaka`, dan `/cari` sekaligus tanpa diminta.
+   *
+   * `origin` adalah elemen sampul yang ditekan — lapisan zoom memakai posisinya
+   * sebagai titik tumbuh, dan mengembalikan fokus ke sana saat ditutup.
+   *
+   * Hanya berlaku untuk `variant="grid"`. Di `variant="list"` seluruh barisnya
+   * satu tautan dengan aksi lanjut-baca di ujungnya; memecahnya di sana menukar
+   * satu ketukan yang jelas dengan dua target sempit.
+   */
+  onCoverClick?: ((story: Story, origin: HTMLElement) => void) | undefined
   className?: string
 }
 
@@ -58,9 +67,9 @@ export function StoryCard({
   variant = 'grid',
   progress,
   badge,
-  note,
   rank,
   trailing,
+  onCoverClick,
   className,
 }: StoryCardProps) {
   const to = `/cerita/${story.id}`
@@ -97,7 +106,6 @@ export function StoryCard({
           <span className="block pt-1">
             <Meta story={story} />
           </span>
-          {note}
 
           {progress !== undefined && (
             <span className="mt-2 flex items-center gap-2">
@@ -130,17 +138,54 @@ export function StoryCard({
     )
   }
 
+  /*
+   * **Varian grid membawa sampul dan judul saja** — permintaan produk
+   * 5 September (`bugs/bugs_home_content_01.png`). Nama pena, ★ rating, dan
+   * jumlah baca dicabut dari sini; ketiganya tetap hidup di `variant="list"`,
+   * yang memang punya lebar satu baris penuh untuk menampungnya.
+   *
+   * Lencana di pojok sampul **tidak** ikut dicabut: ia menempel pada gambarnya,
+   * bukan baris data di bawahnya.
+   *
+   * `line-clamp-2` di sini **tanpa `block`**. Keduanya sama-sama menyetel
+   * `display`, dan `block` menang — akibatnya judul tiga baris tetap lolos dan
+   * elipsisnya tidak pernah muncul. Cacat itu berumur satu langkah dan hanya
+   * terlihat pada judul panjang di kartu sempit.
+   */
+  const teks = (
+    <span className="mt-2.5 line-clamp-2 font-display text-card leading-snug font-semibold">
+      {story.title}
+    </span>
+  )
+
+  /*
+   * **Dua target, bukan satu.** Tombol di dalam tautan bukan HTML yang sah, jadi
+   * sampulnya tidak bisa sekadar diberi `onClick` di tempatnya sekarang — ia
+   * harus keluar dari `<a>`. Judulnya yang tetap membawa ke ceritanya, supaya
+   * ketukan pada sampul tidak menghapus satu-satunya jalan yang dulu ia punya.
+   */
+  if (onCoverClick) {
+    return (
+      <div className={cx('block', className)}>
+        <button
+          type="button"
+          onClick={(e) => onCoverClick(story, e.currentTarget)}
+          aria-label={`Perbesar sampul ${story.title}`}
+          className="block w-full rounded-nv-cover"
+        >
+          {cover}
+        </button>
+        <Link to={to} className="block">
+          {teks}
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <Link to={to} className={cx('block', className)}>
       {cover}
-      <span className="mt-2.5 block line-clamp-2 font-display text-card leading-snug font-semibold">
-        {story.title}
-      </span>
-      <span className="mt-0.5 block truncate text-caption text-nv-muted">{story.penName}</span>
-      <span className="mt-1.5 block">
-        <Meta story={story} />
-      </span>
-      {note}
+      {teks}
     </Link>
   )
 }

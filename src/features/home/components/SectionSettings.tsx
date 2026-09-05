@@ -10,15 +10,24 @@ import { type SectionKey, useHomeSections } from '@/stores/homeSections'
  * Sembilan blok beranda, urutannya persis urutan tampilnya di layar. Label dan
  * keterangannya dari mockup `7s` — ia yang menentukan copy.
  */
+/**
+ * Urutannya **mengikuti halaman**, bukan urutan historis kuncinya.
+ *
+ * Disusun ulang di §1.22 bersama berandanya: daftar sakelar yang urutannya beda
+ * dari halaman yang diaturnya memaksa pembaca mencocokkan dua daftar di kepala,
+ * dan itu bukan pengaturan. Kuncinya sendiri **tidak** diganti — mengganti
+ * `sec-editor` jadi sesuatu yang lebih cocok akan membuang pilihan yang sudah
+ * tersimpan di perangkat.
+ */
 const ROWS: Array<[key: SectionKey, label: string, hint: string]> = [
-  ['sec-banner', 'Banner', 'Carousel bagian atas'],
-  ['sec-genres', 'Genre', 'Deret kategori'],
   ['sec-popular', 'Populer', 'Kurasi terlaris'],
-  ['sec-ad1', 'Iklan banner', 'Slot setelah Populer'],
   ['sec-trending', 'Baru & Naik Cepat', 'Cerita yang sedang naik'],
   ['sec-editor', 'Paling Banyak Dibuka', 'Bab yang dibuka pakai koin'],
-  ['sec-ad2', 'Iklan native', 'Slot setelah Paling Banyak Dibuka'],
+  ['sec-banner', 'Banner', 'Carousel setelah tiga section teratas'],
+  ['sec-genres', 'Genre', 'Deret kategori'],
   ['sec-toprom', 'Section tematik', 'Kurasi mengikuti tab genre'],
+  ['sec-ad1', 'Iklan banner', 'Slot setelah section tematik pertama'],
+  ['sec-ad2', 'Iklan native', 'Slot setelah section tematik kedua'],
   ['sec-continue', 'Lanjut Membaca', 'Progres bacaan kamu'],
 ]
 

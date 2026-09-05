@@ -34,12 +34,9 @@ import {
   CATALOG_AUTHORS,
   FILLER,
   FILLER_BADGES,
-  FILLER_STATUS,
-  KISAH_TAGS,
   MY_SYNOPSES,
   type StorySeed,
   SYNOPSES,
-  TAGS_BY_GENRE,
 } from './data/catalog'
 import { CHAPTER_SEED, PAID_PRICES, PROSE } from './data/chapters'
 import { db } from './db'
@@ -163,18 +160,26 @@ function weeklyReadsOf(growth: string): number {
   return match[2] === 'jt' ? value * 1_000_000 : match[2] === 'rb' ? value * 1_000 : value
 }
 
-const CATALOG_FILLER: StorySeed[] = FILLER.map(([title, genres], i) => {
+const CATALOG_FILLER: StorySeed[] = FILLER.map((seed, i) => {
   const reads = 890_000 - i * 21_000
   const day = new Date(Date.parse('2026-08-23') - i * 3 * 86_400_000)
   return {
     id: `s${i + 9}`,
-    title,
+    title: seed.title,
     authorIdx: i % CATALOG_AUTHORS.length,
-    genres,
+    genres: seed.genres,
     rating: Math.round((4.9 - (i % 12) * 0.05) * 10) / 10,
     reads,
     saves: Math.round(reads / 8),
-    status: FILLER_STATUS[i % FILLER_STATUS.length] ?? 'ongoing',
+    // Ketiganya **dibaca dari seed**, bukan dihitung dari `i`. Alasannya
+    // architecture.md §1.22: selama atributnya turunan indeks, isi sebuah
+    // section beranda hanya bisa diatur dengan menghitung mundur posisi tiap
+    // judul — dan satu judul yang disisipkan di tengah menggeser semuanya.
+    status: seed.status,
+    free: seed.free === true,
+    kisah: seed.kisah === true,
+    tags: seed.tags,
+    synopsis: seed.synopsis,
     badge: FILLER_BADGES[i % FILLER_BADGES.length] ?? 'BARU',
     updatedAt: day.toISOString().slice(0, 10),
     chapterCount: 12 + (i % 9) * 3,
@@ -183,29 +188,37 @@ const CATALOG_FILLER: StorySeed[] = FILLER.map(([title, genres], i) => {
   }
 })
 
-function tagsFor(genres: readonly string[], index: number): string[] {
-  const picked = genres.flatMap((g) => {
-    const pool = TAGS_BY_GENRE[g] ?? []
-    return pool.length === 0 ? [] : [pool[index % pool.length] ?? '']
-  })
-  return [...new Set(picked.filter(Boolean))]
-}
+/**
+ * Tag delapan cerita kanvas.
+ *
+ * Dulu diturunkan `tagsFor(genres, i)`; ditulis di sini setelah §1.22 menuntut
+ * isi tiap section kurasi bisa diatur. Delapan, sependek itu, jadi tidak perlu
+ * ikut pindah ke `data/catalog.ts` bersama enam puluh dua pengisinya.
+ */
+const CANVAS_TAGS: string[][] = [
+  ['kantor', 'pernikahan kontrak'],
+  ['kasus tertutup', 'keluarga'],
+  ['twist', 'psikologis'],
+  ['kehilangan', 'cinta pertama'],
+  ['balas dendam', 'kantor'],
+  ['dunia lain', 'sihir'],
+  ['musuh jadi cinta', 'slow burn'],
+  ['kejar-kejaran', 'kasus tertutup'],
+]
 
 const catalogStories: Story[] = [...CATALOG, ...CATALOG_FILLER].map((s, i) => ({
   id: s.id,
   title: s.title,
-  synopsis: SYNOPSES[i] ?? '',
+  synopsis: s.synopsis ?? SYNOPSES[i] ?? '',
   coverUrl: pickImage(COVER_URLS, i),
   bannerUrl: pickImage(BANNER_URLS, i),
   authorId: `a${s.authorIdx + 1}`,
   penName: CATALOG_AUTHORS[s.authorIdx] ?? 'Penulis Novelova',
   genres: s.genres,
-  // Delapan cerita kanvas tetap fiksi; sebagian pengisi jadi kisah nyata.
-  kind: i >= CATALOG.length && i % 4 === 1 ? 'kisah' : 'fiksi',
-  tags:
-    i >= CATALOG.length && i % 4 === 1
-      ? [...tagsFor(s.genres, i), KISAH_TAGS[Math.floor(i / 4) % KISAH_TAGS.length] ?? 'tragedi']
-      : tagsFor(s.genres, i),
+  // Delapan cerita kanvas tetap fiksi; sebagian pengisi jadi kisah nyata —
+  // dan yang mana, ditulis di seed-nya, bukan dihitung dari posisinya.
+  kind: s.kisah === true ? 'kisah' : 'fiksi',
+  tags: s.tags ?? CANVAS_TAGS[i] ?? [],
   audience: 'Remaja',
   language: i % 9 === 4 ? 'English' : 'Indonesia',
   status: s.status,
@@ -213,7 +226,7 @@ const catalogStories: Story[] = [...CATALOG, ...CATALOG_FILLER].map((s, i) => ({
   rejectReason: null,
   visibility: 'public',
   // Sebagian gratis — tanpa itu section "Gratis Hari Ini" selalu kosong.
-  monetizeType: i % 5 === 3 ? 'free' : 'partial',
+  monetizeType: s.free === true ? 'free' : 'partial',
   fullAccessCoins: 300,
   badge: s.badge,
   updatedAt: s.updatedAt,
@@ -244,6 +257,14 @@ const catalogStories: Story[] = [...CATALOG, ...CATALOG_FILLER].map((s, i) => ({
  * termasuk dua yang **tidak ada di kanvas**: satu `in_review` dan satu
  * `rejected`, karena FR-STUDIO-38 menuntut keduanya terlihat.
  */
+/** Tag empat karya penulis contoh; dulu diturunkan `tagsFor`. */
+const MY_TAGS: string[][] = [
+  ['kasus tertutup', 'twist'],
+  ['keluarga', 'kehilangan'],
+  ['psikologis', 'kejar-kejaran'],
+  ['kehilangan', 'slow burn'],
+]
+
 const myStories: Story[] = [
   {
     id: 'ms1',
@@ -304,7 +325,7 @@ const myStories: Story[] = [
   penName: 'Amelia Putri',
   genres: s.genres,
   kind: 'fiksi',
-  tags: tagsFor(s.genres, i),
+  tags: MY_TAGS[i] ?? [],
   audience: 'Remaja',
   language: 'Indonesia',
   status: s.status as Story['status'],

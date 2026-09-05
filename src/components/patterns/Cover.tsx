@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { cx } from '@/lib/cx'
 
 export interface CoverProps {
@@ -28,6 +29,20 @@ export interface CoverProps {
  * mengunggahnya (toleransi ±0,12, `architecture.md` §1.5) — bukan kebetulan.
  */
 export function Cover({ src, title, badge, className }: CoverProps) {
+  /*
+   * **Sampul yang gagal dimuat jatuh ke jaket hurufnya, bukan ke ikon rusak.**
+   * Sampul contoh adalah URL jarak jauh, dan sejak beranda memakai sampul 80px
+   * satu layar memuat ~30 gambar alih-alih ~12 — CDN yang mati atau perangkat
+   * yang offline dulu menghasilkan sebaris ikon patah. Jaketnya sudah ada untuk
+   * cerita tanpa artwork; ini cuma memakainya untuk satu kegagalan lagi.
+   */
+  // Yang disimpan **URL yang gagal**, bukan sebuah bendera. Dengan begitu sampul
+  // baru tidak mewarisi kegagalan sampul lama saat komponennya dipakai ulang di
+  // rel atau saat daftarnya diurut ulang — dan tidak perlu efek yang mereset
+  // apa pun, karena tidak ada yang perlu direset.
+  const [gagal, setGagal] = useState<string | null>(null)
+  const image = src && src !== gagal ? src : null
+
   return (
     // `<span class="block">`, bukan `<div>`: hampir setiap pemakainya menaruh
     // sampul ini di dalam `<a>`, dan elemen blok di dalam elemen inline bukan
@@ -37,10 +52,16 @@ export function Cover({ src, title, badge, className }: CoverProps) {
         'relative block aspect-[2/3] shrink-0 overflow-hidden rounded-nv-cover shadow-nv-soft',
         className,
       )}
-      style={src ? undefined : { background: jacketOf(title) }}
+      style={image ? undefined : { background: jacketOf(title) }}
     >
-      {src ? (
-        <img src={src} alt="" loading="lazy" className="size-full object-cover" />
+      {image ? (
+        <img
+          src={image}
+          alt=""
+          loading="lazy"
+          onError={() => setGagal(image)}
+          className="size-full object-cover"
+        />
       ) : (
         <span
           aria-hidden

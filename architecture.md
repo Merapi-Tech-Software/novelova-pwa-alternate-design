@@ -226,6 +226,10 @@ Kegagalan formulir cerita seluruhnya **inline**: hanya satu kolom yang salah, se
 
 ### 1.6 Section beranda per tab — perubahan produk yang menimpa PRD
 
+> **Ditimpa sebagian oleh §1.22 (5 September).** Tiga section teratas —
+> Populer, Baru & Naik Cepat, Paling Banyak Dibuka — **berhenti ikut tersaring
+> tab**; tabel di bawah masih menandainya "ya". Sisanya berlaku.
+
 Permintaan produk 1 September 2026, di luar PRD dan kanvas. **Tiap tab punya section tematiknya sendiri**, dengan empat blok pertama yang tidak pernah berubah:
 
 | # | Section | Ikut tersaring tab? |
@@ -601,7 +605,7 @@ Ditemukan saat menelusuri alur ini, bukan dicari. Ketiganya sudah ada sejak `nov
 
 **1. `PRICE_SINGLE = 1_500` sudah jadi kode mati.** Nol pemakai di seluruh `src/`. Gerbang memakai `Chapter.priceCoins` milik tiap bab — dan itu **benar**, sudah diperbaiki sebagai cacat PRD 05 §7 #12. Akibatnya kalimat FR-READ-09 *"selalu memakai harga satuan 1.500"* tidak lagi menggambarkan kodenya: harga bab di seed **1.500 · 1.800 · 2.000**, dan auto-unlock menguras saldo dengan laju yang berubah-ubah.
 
-**2. Lencana hemat PRD tidak cocok dengan aritmetikanya sendiri.** `prd_00` §6 menulis bundel "hemat ±5%"; sepuluh bab satuan pada harga seed berjumlah **17.200** melawan bundel **12.000** — **30%**. Kodenya sudah benar: `UnlockOption.individualCoins` menghitung total satuan sungguhan. **Konsekuensi untuk pita tawaran:** angkanya wajib datang dari `individualCoins`, tidak boleh persentase tetap.
+**2. Lencana hemat PRD tidak cocok dengan aritmetikanya sendiri.** `prd_00` §6 menulis bundel "hemat ±5%" dan **`prd_05` §2 langkah 5 mengulangnya** ("hemat 5%") — hanya `prd_00` yang sudah membawa catatan bahwa angkanya nominal, `prd_05` belum. Sepuluh bab satuan pada harga seed berjumlah **17.200** melawan bundel **12.000** — **30%**. Kodenya sudah benar: `UnlockOption.individualCoins` menghitung total satuan sungguhan. **Konsekuensi untuk pita tawaran:** angkanya wajib datang dari `individualCoins`, tidak boleh persentase tetap.
 
 **3. Skala harga bab tidak cocok dengan skala paket koin — sengaja dibiarkan.**
 
@@ -685,6 +689,232 @@ Sakelar global auto-unlock dicabut seluruhnya — sisa satu sakelar akan bersain
 
 `stores/readerSettings.ts` (kolom `autoUnlock`) · `lib/coin.ts:86` (`READER_DEFAULTS.autoUnlock`) · `features/reader/components/ReaderSettingsPanel.tsx:52-55` · `i18n/id.ts:47-48` (`reader.autoUnlock`, `reader.autoUnlockHint`) · `tests/unit/readerSettings.test.ts`.
 
+
+
+### 1.22 Beranda disusun ulang — tiga section global, semua mendatar, sampul 80px
+
+**Permintaan produk 5 September 2026.** Enam keputusannya ditanyakan langsung
+sebelum sebaris pun ditulis, karena lima di antaranya menimpa sesuatu yang sudah
+diputuskan. Rencananya `todo.md` **R2b**; belum diimplementasikan saat catatan
+ini ditulis.
+
+#### Apa yang berubah
+
+| | Sebelum | Sesudah |
+|---|---|---|
+| Urutan | tab genre → banner → 3 tetap → generik → kurasi → Lanjut Membaca | **3 prioritas → banner → tab genre** → generik → kurasi → Lanjut Membaca |
+| 3 section teratas | ikut tersaring tab | **tidak tersaring** — peringkat global |
+| Bentuk section | 4 bentuk (`rail`, `rail-wide`, `ranked`, `continue`) | **2** (`rail`, `continue`) |
+| Sampul di rel | 112px · 160px | **80px**, seragam |
+| Ketuk sampul | membuka `/cerita/:id` | **membesar** jadi lapisan; judulnya yang membuka cerita |
+
+#### Tiga penimpaan, dan kenapa masing-masing diterima
+
+**1. §1.6 ditimpa sebagian: tiga section teratas berhenti tersaring.** §1.6
+mencatatnya sebagai "ikut tersaring: ya" untuk Populer, Baru & Naik Cepat, dan
+Paling Banyak Dibuka. Yang memaksanya berubah adalah **urutan barunya**, bukan
+selera: tab genre kini duduk *di bawah* ketiganya. Kalau isinya tetap ikut
+tersaring, menekan sebuah tab mengubah isi yang berada di luar layar — kontrol
+yang efeknya tidak terlihat saat ditekan terbaca sebagai kontrol yang rusak.
+Ketiganya jadi sejajar dengan `BANNER` dan `CONTINUE`: dibangun dari seluruh
+katalog, bukan dari `inTab`.
+
+**Konsekuensinya bukan cuma satu baris.** Beranda tidak akan pernah benar-benar
+kosong lagi, jadi keadaan kosong "genre ini belum ada isinya" harus dinilai dari
+**section di bawah tab saja** dan dirender di sana juga. Menilainya dari seluruh
+feed membuat pesannya tidak pernah muncul, dan genre kosong berubah jadi halaman
+yang diam-diam kelihatan normal.
+
+**2. Brief §4 dibatalkan untuk beranda: "daftar mengalahkan kartu" tidak berlaku
+di sini.** Aturan putaran 7 menyuruh konten berulang jadi daftar berpembatas, dan
+`7a` memang menggambar section tematik sebagai daftar tegak bernomor. Permintaan
+produknya persis kebalikannya, dengan alasan yang sah: **daftar tegak menampilkan
+3–4 cerita per layar, rel mendatar 80px menampilkan hampir 4 per baris tanpa
+memakan tinggi.** Untuk beranda — satu-satunya halaman yang tugasnya *penemuan* —
+melihat banyak judul sekaligus lebih penting daripada membaca satu baris dengan
+tenang. **Aturannya tetap berlaku penuh di halaman lain**; `/jelajah` dan
+`/pustaka` baru saja jadi daftar tegak di Langkah 51 dan tidak ikut berubah.
+
+**Yang hilang, dan diterima:** kutipan serif `7a` §7 di "Paling Banyak Dibuka".
+Tiga baris serif miring tidak terbaca di bawah sampul 80px, dan mempertahankannya
+berarti satu section memakai sampul lebih besar sendiri — persis kebalikan dari
+yang diminta.
+
+**3. Brief §8 dibatalkan setipis mungkin: satu hal boleh membesar.** Aturannya
+berbunyi "tidak ada yang memantul atau membesar", dan fitur baru ini adalah
+animasi membesar. Pengecualiannya dibatasi pada **satu gerakan, satu tempat**:
+sampul yang ditekan di beranda tumbuh ke tengah layar, ~180ms, `ease-out`. Tidak
+ada yang lain yang boleh membesar.
+
+**`prefers-reduced-motion` tetap mematikannya.** Menimpa aturan gerak untuk
+seluruh pengguna termasuk yang sudah menyatakan tidak mau adalah dua pelanggaran,
+bukan satu — dan yang kedua tidak diminta siapa pun.
+
+#### Kenapa sampul jadi target sendiri, dan apa akibatnya pada struktur kartu
+
+Seluruh `StoryCard` hari ini adalah satu `<a>` ke `/cerita/:id`. Menaruh tombol
+di dalamnya bukan HTML yang sah, jadi sampulnya harus keluar dari tautan itu:
+**sampul jadi `<button>`, judul tetap `<a>`.** Itu perubahan struktur, bukan
+penambahan handler — dan itulah bagian termahal dari fitur ini.
+
+**Lapisannya membawa tombol `Buka cerita`.** Tanpa itu, ketukan pada sampul
+menghapus satu-satunya jalan yang dulu ia punya, dan sampul adalah target
+terbesar di kartu.
+
+**Zoom hanya di beranda.** `StoryCard` dipakai `/jelajah`, `/pustaka`, `/cari`,
+dan beranda; menaruh lapisannya di dalam `StoryCard` mengubah keempatnya tanpa
+diminta. Karena itu `StoryCard` cuma menerima prop opsional `onCoverClick`, dan
+hanya beranda yang mengopernya — halaman lain tidak berubah sama sekali, sampulnya
+tetap bagian dari tautan.
+
+#### Data contoh belum sanggup memikul bentuk barunya
+
+Diperiksa dengan mensimulasikan `seed.ts`, bukan diperkirakan. **11 dari 26
+section di bawah tab berisi kurang dari 4 cerita** — tidak cukup mengisi satu
+baris sampul 80px:
+
+| Tab | Section | Isi |
+|---|---|---|
+| Fantasy | Dunia Lain | **1** |
+| Mystery · CEO | Tamat & Siap Dibaca | **1** |
+| Fantasy | Gratis Hari Ini | 2 |
+| Thriller · My Kisah | Tamat & Siap Dibaca | **0** — dibuang server |
+| lima lainnya | tag & Gratis | 3 |
+
+**Cacat ini dibuat oleh perubahan ini, dan tidak ada hari ini.** Daftar tegak
+berisi tiga cerita terbaca wajar; rel mendatar berisi tiga sampul dengan ruang
+kosong di kanannya terbaca sebagai gagal memuat. Bentuk `ranked` selama ini
+menyembunyikannya.
+
+**Yang menghalangi perbaikannya bukan jumlah judul, melainkan dari mana
+atributnya datang.** `status`, `monetizeType`, dan tag tiap cerita pengisi
+**diturunkan dari indeksnya** di `seed.ts` — `i % 5 === 3` untuk gratis,
+`FILLER_STATUS[(i-8) % 4]` untuk status, `tagsFor(genres, i)` memilih
+`pool[i % pool.length]`. Selama begitu, isi sebuah section hanya bisa diatur
+dengan menghitung mundur posisi tiap judul, dan satu judul yang disisipkan di
+tengah menggeser atribut semua yang sesudahnya. `FILLER` karena itu harus
+membawa `status`, `monetize`, dan `tags`-nya sendiri sebelum katalognya ditambah.
+
+**Aturan "tiap section ≥ 6" dijaga skrip, bukan hitungan tangan** —
+`scripts/cek-beranda.mjs`, ikut `npm run check`. Tanpa itu ia lapuk pada judul
+berikutnya yang ditambahkan, dan gejalanya muncul sebagai satu section yang
+terlihat rusak di satu tab saja.
+
+#### Perbaikan 5 September sore · `bugs/bugs_home_content_01.png`
+
+Empat penyesuaian setelah berandanya dilihat di preview mobile. Dua di antaranya
+**cacat sungguhan**, dan keduanya tidak meluber sedikit pun — jadi sapuan lima
+lebar yang ada tidak akan pernah menangkapnya.
+
+**1. `snap-x` tanpa `scroll-px-4` memakan padding kiri rel.** Peramban
+menempelkan kartu pertama ke tepi wadah, menggulir rel-nya sendiri saat dimuat,
+dan padding kirinya hilang bersama gulirannya. Terukur: `scrollLeft: 16`,
+`kartu.left: 0`, sementara kepala section-nya tetap di 16. Akibatnya sampul
+pertama menempel persis di tepi layar. **Setiap rel bersnap wajib membawa
+`scroll-px-*` yang sepadan dengan paddingnya.**
+
+**2. `block` menimpa `line-clamp-2`.** Keduanya menyetel `display`, dan `block`
+menang — jadi `line-clamp-2` tidak melakukan apa pun dan judul panjang tumbuh
+jadi tiga baris tanpa elipsis. Terukur: tinggi judul 66px (tiga baris) walau
+`webkitLineClamp` terbaca `2`. Sekarang 44px dan seragam untuk seluruh 140 kartu.
+
+**3. Kartu bentuk grid tinggal sampul dan judul.** Nama pena, ★ rating, jumlah
+baca, dan garis "+N baca minggu ini" dicabut dari beranda. Ketiganya tetap hidup
+di `variant="list"`, yang punya lebar satu baris penuh. **Lencana di pojok sampul
+tidak ikut dicabut** — ia menempel pada gambarnya, bukan baris data di bawahnya.
+Prop `note` jadi mati dan ikut dihapus.
+
+**4. Tiga section teratas bersih dari iklan**, dan jarak antar section **28 → 16px**
+(sempat dicoba 14, dikembalikan ke 16).
+Kedua slot iklan pindah ke bawah tab genre; jumlahnya di halaman tetap dua.
+`SectionSettings` ikut disusun ulang lagi supaya urutan sakelarnya tetap
+mengikuti halamannya.
+
+#### Lapisan zoom diperbesar · `bugs/feedback_home_content_01.png`
+
+Sampulnya **240×360 → 350×525** di layar 390px (+46%), dan **rating + jumlah
+baca ditambahkan ke lapisannya** — bukan dikembalikan ke kartunya. Kartu di rel
+tetap tinggal sampul dan judul; lapisan inilah tempat pembaca berhenti untuk
+memutuskan, jadi di sinilah angkanya berguna.
+
+**Ukurannya dijepit dua arah, dan itu bukan kehati-hatian berlebihan.** Sampul
+2:3 yang hanya dibatasi lebar tumbuh 1,5× lebih tinggi daripada lebarnya, dan di
+ponsel pendek tombolnya terdorong keluar layar. Rumusnya
+`min(100%, max(11rem, (100dvh − 19rem) / 1.5))`, dan ketiga sukunya menjawab satu
+bentuk layar masing-masing:
+
+| Suku | Untuk apa | Terlihat di |
+|---|---|---|
+| `100%` | margin di layar sempit | 320px potret |
+| `(100dvh − 19rem) / 1.5` | tombol tidak terdorong keluar | 320×568 |
+| `max(11rem, …)` | teks tidak teremas | lanskap 844×390 |
+
+**Lantai `11rem` ditemukan lewat pengukuran, bukan diperkirakan.** Menjepit lebar
+dengan tinggi juga meremas teksnya, dan teks yang teremas justru tumbuh tinggi:
+tanpa lantai itu, lanskap 844×390 menghasilkan panel setinggi **866px di layar
+setinggi 390** — judul dan tombolnya pecah jadi belasan baris. Percobaan pertama
+memakai `13rem` dan itu terlalu tinggi ke arah sebaliknya: 320×568 jadi perlu
+digulir padahal sebelumnya muat.
+
+**Satu cacat lama ikut tertutup.** Lapisannya tidak punya `overflow-y-auto`, jadi
+pada bentuk layar yang tidak muat, isinya **terpotong dan tombolnya tidak bisa
+dicapai sama sekali** — bukan sekadar perlu digulir. Terukur di 320×568 sebelum
+perubahan ini.
+
+#### Teks lapisan diperbesar, dan ketukan di mana saja menutupnya
+
+Judul 20 → 26, nama pena dan statistik 12 → 14 — **naik di dalam skala yang
+sudah ada**, bukan angka baru; skalanya keputusan terkunci §1.20 dan lapisan ini
+bukan alasan menambah ukuran ketujuh.
+
+**Ketukan di mana saja menutup**, kecuali `Buka cerita`. Dulu hanya latarnya, dan
+itu benar sampai lapisannya diperbesar: setelah sampulnya memenuhi lebar layar,
+sisa latar di kiri-kanan tinggal ~16px dan praktis tidak bisa dikenai jari.
+Tombol `Tutup` tetap ada — ia satu-satunya kontrol tutup yang punya nama untuk
+pembaca layar.
+
+**Cadangan tinggi ikut naik 19 → 21rem.** Teks yang lebih besar memakan ruang
+yang sama; cadangan yang tidak diperbarui bersamanya mendorong tombolnya keluar
+layar di ponsel pendek.
+
+**Satu bentuk layar sengaja dibiarkan menggulir: 320×568.** Di sana sampul 2:3
+ditambah judul 26px dan dua tombol 44px memang tidak muat tanpa mengecilkan
+sampulnya ke ~150px — dan itu membatalkan seluruh maksud "diperbesar". Sisa
+ruangnya 2px, jadi perubahan metrik font sedikit saja akan membuatnya menggulir.
+Itu **bukan kerusakan**: `overflow-y-auto` menjaga tombolnya tetap terjangkau,
+dan itulah yang dituntut `CLAUDE.md` §2. Lanskap 844×390 juga menggulir, dengan
+alasan yang sama.
+
+#### Dua akibat yang diterima dengan sadar
+
+**1. Keadaan kosong genre tidak akan pernah terlihat di aplikasi yang jalan.**
+Setelah katalog ditambah, tidak ada genre yang benar-benar kosong — dan
+diputuskan **tidak** dibuatkan sakelar dev (berbeda dari pita bundling §1.21,
+yang dapat satu). Layarnya hanya hidup di test unit. Disebut di sini supaya sesi
+berikutnya tidak menyimpulkan layarnya rusak karena tidak pernah muncul.
+
+**2. Sampul gagal-muat jatuh ke jaket satu huruf.** Sampul contoh adalah URL
+jarak jauh (`assets.kbm-cdn.com`); `Cover.tsx` tidak punya `onError`, jadi CDN
+mati atau perangkat offline memunculkan ikon gambar rusak. Diperbaiki bersama
+R2b, bukan ditunda: beranda 80px memuat ~30 gambar alih-alih ~12, dan seluruh
+inti fitur zoom adalah gambarnya.
+
+#### Angka 80px bukan selera
+
+Dipilih dari lebar tersempit yang wajib lulus (`CLAUDE.md` §2). Pada lebar konten
+344px dengan `gap-3`:
+
+| Lebar sampul | Terlihat di 360px | Terlihat di 320px |
+|---|---|---|
+| 112 (sekarang) | 2,9 | 2,5 |
+| 96 | 3,3 | 2,9 |
+| **80** | **3,9** | **3,4** |
+| 72 | 4,2 | 3,7 |
+
+96px hanya menambah 0,4 sampul untuk pekerjaan yang sama besarnya; 72px memaksa
+judul jadi satu baris terpotong dan membuat `★ rating` + jumlah baca tidak lagi
+muat berdampingan. 80px satu-satunya yang mengubah kesan tanpa membuang
+metadata.
 
 
 ---

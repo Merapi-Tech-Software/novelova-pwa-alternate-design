@@ -171,3 +171,26 @@ export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
+
+/**
+ * Menjalankan `run` saat `node` masuk layar. Mengembalikan pembersihnya.
+ *
+ * Ada di sini karena `IntersectionObserver` **tidak selalu ada**, dan memanggil
+ * konstruktornya tanpa memeriksa menjatuhkan seluruh halaman — bukan sekadar
+ * mematikan muat-bertahapnya. `ReaderPage` sudah memeriksanya sejak awal;
+ * `/cari` dan `/jelajah` tidak, dan keduanya lolos bertahun-tahun hanya karena
+ * katalog contohnya terlalu kecil untuk pernah punya halaman kedua. Begitu
+ * katalognya bertambah di §1.22, keduanya langsung jatuh.
+ *
+ * Tanpa observer, muat-bertahapnya diam — dan itu benar: tombol "Muat lagi"
+ * tetap ada di halamannya sebagai jalan manual.
+ */
+export function onVisible(node: Element, run: () => void): () => void {
+  if (typeof IntersectionObserver === 'undefined') return () => {}
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0]?.isIntersecting) run()
+  })
+  observer.observe(node)
+  return () => observer.disconnect()
+}

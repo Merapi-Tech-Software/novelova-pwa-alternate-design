@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useLibraryIds, useProgressMap } from '@/hooks/useLibrary'
 import { t } from '@/i18n/t'
+import { onVisible } from '@/lib/a11y'
 import { BROWSE, BROWSE_DEFAULT } from '../browseConfig'
 import type { BrowseFilters } from '../components/BrowseControls'
 import { BrowseControls } from '../components/BrowseControls'
@@ -60,11 +61,7 @@ export default function BrowsePage() {
     const node = sentinel.current
     if (!node || !canFetch) return
 
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) void fetchNext()
-    })
-    observer.observe(node)
-    return () => observer.disconnect()
+    return onVisible(node, () => void fetchNext())
   }, [canFetch, fetchNext])
 
   if (!sectionId || !config) {

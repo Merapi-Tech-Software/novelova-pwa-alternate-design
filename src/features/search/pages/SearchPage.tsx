@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SearchInput } from '@/components/ui/Field'
 import { t } from '@/i18n/t'
+import { onVisible } from '@/lib/a11y'
 import { SEARCH_MIN_CHARS } from '@/lib/limits'
 import { useBackNavigation } from '@/lib/nav'
 import { useSearchHistory } from '@/stores/searchHistory'
@@ -73,11 +74,7 @@ export default function SearchPage() {
     const node = sentinel.current
     if (!node || !canFetch) return
 
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) void fetchNext()
-    })
-    observer.observe(node)
-    return () => observer.disconnect()
+    return onVisible(node, () => void fetchNext())
   }, [canFetch, fetchNext])
 
   /** Menulis ke URL; nilai kosong dihapus supaya alamatnya tetap terbaca. */

@@ -689,6 +689,110 @@ tempat di mana mockup-nya sendiri gagal AA, dicatat di `architecture.md` §1.20.
 - [x] Section kosong **disembunyikan seluruhnya**, bukan menyisakan kepala kosong — tetapi barisnya tetap ada di lembar pengaturan · `P0` · `[PRODUK]`
 - [x] **Test:** genre menyaring empat blok dan meninggalkan tiga; section tanpa isi hilang dari feed tapi tetap di lembar pengaturan
 
+### R2b — Susunan ulang beranda · 2–3 hari · `[PRODUK]` · §1.22 · **selesai**
+
+**Permintaan produk 5 September**, enam keputusannya dikonfirmasi lewat
+pertanyaan langsung sebelum kotak-kotak ini ditulis. Ia menimpa sebagian `7a`
+dan **membatalkan aturan brief §4 ("daftar mengalahkan kartu") untuk beranda
+saja**; alasan, batas, dan apa yang hilang ada di `architecture.md` §1.22. Yang
+tetap dari `7a`: kepala, chip koin, tab teks, kepala section. Yang ditimpa:
+**urutan blok, bentuk section, ukuran sampul**.
+
+Ia juga **menimpa sebagian §1.6** — tiga section teratas tidak lagi ikut
+tersaring tab.
+
+Dikerjakan sesudah R3 (selesai) dan boleh mendahului R4; tidak ada yang saling
+menunggu.
+
+#### R2b-a — Data contoh · **dikerjakan pertama**
+
+Section tidak bisa ditata sebelum isinya cukup. Simulasi seed hari ini
+(`scripts/cek-beranda.mjs`) menemukan **11 dari 26 section di bawah tab berisi
+kurang dari 4 cerita** — tidak cukup mengisi satu baris sampul 80px. Sebagai
+daftar tegak itu tidak kelihatan; sebagai rel mendatar, ruang kosong di kanan
+terbaca sebagai gagal memuat. Yang terburuk: Fantasy "Dunia Lain" **1 cerita**,
+Mystery dan CEO "Tamat & Siap Dibaca" **1 cerita**.
+
+- [x] `FILLER` berhenti jadi `[judul, genres]` dan membawa **`status`, `monetize`, dan `tags` sendiri** · `P0` · `[LUAR]`
+  ↳ Hari ini ketiganya **diturunkan dari indeks** di `seed.ts`: `i % 5 === 3` menentukan gratis, `FILLER_STATUS[(i-8) % 4]` menentukan status, dan `tagsFor(genres, i)` memilih `pool[i % pool.length]`. Artinya isi sebuah section tidak bisa diatur tanpa menghitung mundur posisi tiap judul — dan judul baru yang disisipkan di tengah menggeser atribut semua yang sesudahnya. Selama atributnya turunan indeks, "tiap section ≥ 6" adalah target yang tidak bisa dipegang.
+- [x] Katalog contoh ditambah sampai **tiap section di bawah tab berisi ≥ 6 cerita** · `P0` · `[PRODUK]`
+  ↳ Dari 40 judul sekarang ke sekitar 60. Yang perlu diisi paling banyak: `Tamat & Siap Dibaca` untuk Fantasy · Mystery · CEO · Thriller · My Kisah (empat di antaranya 0 atau 1), lalu tag `dunia lain`, `kasus tertutup`, `pernikahan kontrak`, `kejar-kejaran`, `kehilangan`, `musuh jadi cinta`.
+- [x] Tiap judul baru dapat **sinopsis sendiri** yang kalimat pertamanya berdiri sendiri · `P0`
+  ↳ Aturan Langkah 46, dan masih berlaku walau `PullQuote` dihapus dari beranda: kalimat pertama sinopsis tetap dipakai di tempat lain, dan 40 cerita yang berbagi satu sinopsis pernah lolos sampai ada layar yang menampilkannya.
+- [x] Semuanya masuk `src/api/mock/data/catalog.ts`, **bukan** `seed.ts` · `P0`
+- [x] Ambang "tiap section ≥ 6" dijaga **`tests/unit/beranda-data.test.ts`**, bukan skrip · `P0` · `[LUAR]`
+  ↳ Rencananya `scripts/cek-beranda.mjs` di `npm run check`; jadi test karena test bisa **mengimpor modulnya** dan memanggil `getHomeFeed` yang sungguhan. Skrip harus mem-parse `catalog.ts` sebagai teks, dan parser seperti itu tetap hijau sambil salah begitu aturan penyusunan section berubah. Ia tetap satu cek yang bisa dijalankan, hanya lewat `npm test`.
+- [x] **Keadaan kosong genre dijaga test unit saja** — tidak ada sakelar dev · `P1` · `[PRODUK]`
+  ↳ Dikonfirmasi. Konsekuensinya disebut terang: setelah katalog ditambah, **tidak ada genre yang benar-benar kosong**, jadi layarnya tidak akan pernah terlihat di aplikasi yang jalan. Ia hanya hidup di test.
+- [x] `Cover.tsx` dapat **`onError` yang membuang `src`**, sehingga sampul gagal-muat jatuh ke jaket satu hurufnya · `P0` · `[PRODUK]`
+  ↳ Sampul contoh adalah URL jarak jauh (`assets.kbm-cdn.com`). Tanpa ini, CDN mati atau perangkat offline memunculkan ikon gambar rusak — bukan jaket. Beranda 80px memuat ~30 gambar, bukan ~12 seperti sekarang, dan seluruh inti fitur zoom adalah gambarnya.
+- [x] **Test:** sampul yang `onError` menampilkan huruf jaketnya, bukan `<img>` kosong
+
+#### R2b-b — Susunan blok & tiga section global
+
+- [x] Urutan baru: **3 section prioritas → banner → tab genre → section lainnya → Lanjut Membaca** · `P0` · `[PRODUK]`
+  ↳ Sekarang kebalikannya: `HomePage.tsx` merender `GenreTabs`, lalu `BannerCarousel`, lalu seluruh section menurut urutan server. Dua berkas berubah: susunan JSX di `HomePage.tsx` dan larik `sections` di `handlers/home.ts:97`.
+- [x] Tiga section prioritas = `FIXED` yang sudah ada — **Populer · Baru & Naik Cepat · Paling Banyak Dibuka** (`handlers/sections.ts:37`). Tidak ada section baru dibuat · `P0`
+- [x] **Ketiganya berhenti tersaring tab** — dibangun dari `all`, bukan `inTab`, sejajar dengan `BANNER` dan `CONTINUE` · `P0` · `[PRODUK]`
+  ↳ Inilah yang membuat urutan barunya masuk akal: tab genre duduk **di bawah** ketiganya, jadi kalau isinya ikut berubah, pembaca menekan kontrol yang mengubah sesuatu di luar layar. Ini **menimpa §1.6**, yang menandai ketiganya "ikut tersaring: ya".
+- [x] `sectionsFor()` dipecah — `FIXED` tidak lagi ikut di dalamnya, karena ia kini dibangun dari kolam cerita yang berbeda · `P0`
+  ↳ `findSection()` (dipakai `getSection` untuk `/jelajah`) tetap harus menemukan ketiganya; memecah `sectionsFor` tanpa memperbaiki `findSection` mematikan halaman lihat-semua ketiga section itu, dan gejalanya muncul jauh dari sini.
+- [x] Docstring `handlers/home.ts` aturan 1 & 2 diperbarui — sekarang ia menulis "tiga section pertama … tetap ikut tersaring tab itu", dan itu jadi salah · `P1`
+- [x] Banner tetap tidak tersaring, dan sakelar `sec-banner` tetap mematikannya di posisi barunya · `P1`
+- [x] `SectionSettings` menampilkan barisnya **menurut urutan baru** — daftar sakelar yang urutannya beda dari halaman yang diaturnya bukan pengaturan · `P1`
+
+#### R2b-c — Keadaan kosong pindah ke bawah tab
+
+- [x] Genre tanpa isi **tidak lagi mengosongkan seluruh beranda**: tiga section atas dan banner tetap tampil, dan pesan kosongnya muncul **tepat di bawah tab genre** · `P0` · `[PRODUK]`
+- [x] `hasDiscovery` (`HomePage.tsx`) dinilai dari **section di bawah tab saja** — `GENERIC` + `CURATED`. Dengan ketiga section atas kini selalu ada, menilainya dari seluruh feed membuat pesan kosong tidak pernah muncul · `P0`
+- [x] Pesannya tetap membawa tombol kembali ke `Semua`, dan tetap `EmptyState`, bukan `FailureNotice` — kosong ≠ gagal (FR-CORE-03) · `P0`
+
+#### R2b-d — Semua section genre jadi rel mendatar
+
+- [x] `shapeOf()` (`StorySection.tsx:22`) menyusut jadi **dua bentuk**: `rail` untuk seluruh section genre, `continue` untuk Lanjut Membaca · `P0` · `[PRODUK]`
+  ↳ `ranked` (daftar tegak bernomor) dan `rail-wide` (160px + kutipan) dihapus. Empat bentuk jadi dua.
+- [x] **Lanjut Membaca tetap daftar tegak** — ia membawa batang progres, "Bab 45 dari 120", dan tombol lanjut; ketiganya butuh lebar satu baris penuh · `P0` · `[PRODUK]`
+- [x] Nomor peringkat `#1 #2 #3` milik bekas `ranked` pindah ke **badge sampul**, mekanisme yang sudah dipakai Populer · `P0`
+- [x] `PullQuote` **dihapus** beserta pemakaiannya — tiga baris serif miring tidak terbaca di bawah sampul 80px · `P1` · `[PRODUK]`
+  ↳ Kehilangan nyata dari `7a` §7, dikonfirmasi. Kalimat pertama sinopsis tetap dipakai di tempat lain, jadi sinopsis seed tidak perlu ditulis ulang.
+- [x] `GrowthNote` (`+N baca minggu ini`) bertahan — satu baris pendek, masih muat · `P1`
+- [x] Rel tetap `snap-x` + `overflow-x-auto` + `-mx-4 px-4`, dan tetap **tidak menggeser badan halaman** di 320px · `P0`
+- [x] Tiap kartu di rel tetap bisa dicapai keyboard · `P0`
+
+#### R2b-e — Sampul 80px
+
+- [x] Sampul rel jadi **80px** (`w-20`, tinggi 120px pada rasio 2:3), dari 112px sekarang · `P0` · `[PRODUK]`
+  ↳ Angkanya dipilih dari lebar tersempit yang wajib lulus: di **360px** ia memberi **3,9 sampul** (sekarang 2,9), di 320px **3,4**.
+- [x] Huruf jaket ikut mengecil sendiri — `Cover.tsx` memakai `text-[2.6em]`, relatif; tidak ada yang perlu disentuh · `P1`
+- [x] Judul kartu dua baris; `★ rating` + jumlah baca tetap satu baris di bawahnya · `P0`
+- [x] Badge sampul (`#1 Populer`, `Rising`, `Hot`) tetap terbaca di 80px — kalau tidak, **badge-nya** yang dipendekkan, bukan sampulnya yang dibesarkan lagi · `P1`
+
+#### R2b-f — Ketuk sampul → sampul membesar · `[PRODUK]`
+
+- [x] **Sampul jadi target sendiri**: menekannya membuka lapisan sampul besar di tengah layar dengan latar diredupkan. **Judul di bawahnya tetap tautan** ke `/cerita/:id` · `P0` · `[PRODUK]`
+  ↳ Perubahan **struktur kartu**, bukan sekadar handler: sekarang seluruh `StoryCard` satu `<a>`. Sampul harus jadi `<button>` **di luar** tautan judulnya — tombol di dalam tautan bukan HTML yang sah.
+- [x] `StoryCard` dapat prop opsional `onCoverClick`; **hanya beranda yang mengopernya** · `P0`
+  ↳ Menaruh lapisannya di `StoryCard` berarti `/jelajah`, `/pustaka`, dan `/cari` ikut berubah tanpa diminta. Lapisannya sendiri tinggal di `features/home/`.
+- [x] Lapisannya membawa **jalan ke ceritanya**: judul, penulis, dan tombol `Buka cerita` · `P0`
+- [x] Animasi **zoom-in**: sampul tumbuh dari posisi & ukurannya di rel menuju ukuran besar di tengah, ~180ms, `ease-out` · `P0` · `[PRODUK]`
+- [x] **`prefers-reduced-motion` mematikan animasinya** — lapisannya tetap muncul, hanya tanpa tumbuh · `P0`
+  ↳ Bukan kesopanan: brief §8 melarang apa pun "membesar", dan §1.22 mencatat kenapa larangan itu ditimpa. Menimpanya juga untuk yang memintanya mati adalah dua pelanggaran, bukan satu.
+- [x] Esc menutup, ketuk latar menutup, fokus terkunci selama terbuka lalu **kembali ke sampul yang ditekan** · `P0`
+- [x] Gulir halaman terkunci lewat `useScrollLock` yang sudah ada (`lib/a11y.ts`) — jangan tulis yang baru · `P1`
+- [x] Cerita tanpa artwork membuka **jaket satu hurufnya** yang diperbesar, bukan lapisan kosong · `P1`
+
+#### R2b-g — Test
+
+- [x] **Test:** urutan blok — tiga section prioritas mendahului banner, banner mendahului tab genre
+- [x] **Test:** ganti tab **tidak** mengubah isi ketiga section atas, dan **mengubah** section di bawah tab
+- [x] **Test:** genre tanpa isi → pesan kosong muncul di bawah tab, sementara tiga section atas dan banner **tetap tampil**
+- [x] **Test:** tiap section genre adalah rel mendatar; Lanjut Membaca tetap daftar tegak berbatang progres
+- [x] **Test:** menekan sampul membuka lapisan dan **tidak** bernavigasi; menekan judul bernavigasi ke `/cerita/:id`
+- [x] **Test:** Esc menutup lapisan dan fokus kembali ke sampul yang ditekan
+- [x] **Test:** dengan `prefers-reduced-motion: reduce`, lapisan tetap terbuka tanpa kelas animasinya
+- [x] **Test:** `/jelajah`, `/pustaka`, `/cari` **tidak** ikut punya lapisan zoom — sampulnya tetap bagian dari tautan
+- [x] **Test e2e:** beranda tidak menggeser badan halaman di **kelima lebar** setelah susunan baru
+
 ### R3 — Detail cerita, reader Type A & komentar · 4–5 hari · mockup `7b` `7u` `7v` `7f` `7g` `7t` `7w` · **selesai**
 
 - [x] Detail cerita: panel kepala putih (sampul 94×136, judul serif, penulis, pill genre) · `P0`
@@ -798,7 +902,7 @@ lebih dulu berarti menulisnya dua kali.
 
 - [ ] **Pita non-blocking di pembuka bab**, bukan lembar dan bukan dialog — alur ini menjanjikan baca tanpa terputus · `P0` · `[PRODUK]`
 - [ ] Isinya dari `getBundleOffer`: harga bundel, jumlah bab, dan **hemat dihitung dari `individualCoins`** · `P0`
-  ↳ Tidak boleh persentase tetap: `prd_00` §6 menulis "±5%" padahal sepuluh bab seed berjumlah 17.200 melawan bundel 12.000 — **30%**.
+  ↳ Tidak boleh persentase tetap: `prd_00` §6 **dan** `prd_05` §2 langkah 5 sama-sama menulis "5%" padahal sepuluh bab seed berjumlah 17.200 melawan bundel 12.000 — **30%**. Yang membawa catatan "angkanya nominal" baru `prd_00`; jangan membaca `prd_05` apa adanya di titik ini.
 - [ ] Dua aksi: ambil bundel (`unlockChapter({ source: 'bundle' })`, **pembelian eksplisit**) dan tolak (`dismissBundleOffer`) · `P0`
 - [ ] Muncul **sekali per cerita**; ditolak berarti tidak muncul lagi di cerita itu · `P1` · `[PRODUK]`
 - [ ] Auto-unlock tetap **tidak pernah** membeli bundel atau paket tamat sendiri (FR-READ-09) · `P0`

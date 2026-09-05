@@ -5,6 +5,391 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-05 · Langkah 60 — jarak antar section kembali 16px
+
+> "oh ya untuk jarak antar section sebelumnya pernah diubah menjadi 14 sekarang
+> dibalikin lagi aja jadi 16"
+
+Membatalkan Langkah 57. Empat tempat yang sama: dua bentuk `<section>` di
+`StorySection` dan dua slot iklan di `HomePage`. Terukur di peramban:
+`marginBottom: 16px` di keempat section pertama.
+
+`npm run check` bersih · **563 test unit** · **62 e2e**.
+
+---
+
+## 2026-09-05 · Langkah 59 — teks lapisan diperbesar, ketukan di mana saja menutup
+
+> "oke bagus, mungkin masih case sama untuk title, nama author, rating, total
+> view bisa diperbesar. sama misal ingin tutup kan masih harus klik/pilih
+> \"Tutup\" mungkin lebih baik user bisa melakukan itu tanpa harus klik/pilih
+> tutup."
+
+`npm run check` bersih · **563 test unit** · **62 e2e**.
+
+### Teks
+
+Judul **20 → 26**, nama pena dan statistik **12 → 14**. Naik di dalam skala yang
+sudah ada, bukan angka baru — skalanya keputusan terkunci §1.20.
+
+Cadangan tinggi panel ikut naik **19 → 21rem**, dan padding lapisannya turun
+20 → 16px. Teks yang lebih besar memakan ruang yang sama; cadangan yang tidak
+diperbarui bersamanya mendorong tombolnya keluar layar di ponsel pendek.
+
+### Menutup
+
+**Ketukan di mana saja menutup** — sampul, judul, statistik, latar. Yang
+dikecualikan hanya `Buka cerita`. Dulu hanya latarnya yang menutup, dan itu benar
+sampai lapisannya diperbesar: setelah sampulnya memenuhi lebar layar, sisa latar
+tinggal ~16px dan praktis tidak bisa dikenai jari.
+
+Tombol `Tutup` **tetap ada** (dikonfirmasi) — ia satu-satunya kontrol tutup yang
+punya nama untuk pembaca layar.
+
+### Ukuran akhir, terukur
+
+| Layar | Sampul |
+|---|---|
+| 320×568 | 176×264 · sisa 2px |
+| 320×844 | 288×432 |
+| 360×640 | 203×304 |
+| 390×844 | 339×508 |
+| 430×932 | **397×596** |
+
+### Satu bentuk layar sengaja dibiarkan menggulir
+
+Di **320×568**, sampul 2:3 ditambah judul 26px dan dua tombol 44px memang tidak
+muat tanpa mengecilkan sampulnya ke ~150px — dan itu membatalkan seluruh maksud
+"diperbesar". Percobaan menurunkan lantai lebar ke `10rem` justru **memperburuk**
+: panel yang lebih sempit membuat judulnya wrap jadi tiga baris, dan panelnya
+malah lebih tinggi. Sisa ruangnya sekarang 2px, jadi ia bisa sewaktu-waktu
+menggulir — dan itu bukan kerusakan: `overflow-y-auto` menjaga tombolnya
+terjangkau.
+
+---
+
+## 2026-09-05 · Langkah 58 — lapisan zoom diperbesar, statistiknya ditambahkan
+
+> "saya ingin kamu buka folder bugs, dan cari file image
+> feedback_home_content_01.png. Nah saya ingin saat diklik gambar ukuran gambar
+> diperbesar lagi. Kemudian statistik ditambahkan lagi total view dan rating."
+
+`npm run check` bersih · **562 test unit** · **62 e2e**.
+
+### Ukuran
+
+| Layar | Sebelum | Sesudah |
+|---|---|---|
+| 320×568 | 240×360, **terpotong** | 176×264, muat |
+| 320×844 | 240×360 | 280×420 |
+| 390×844 | 240×360 | **350×525** |
+| 430×932 | 240×360 | 390×585 |
+
+Dijepit **dua arah**: `min(100%, max(11rem, (100dvh − 19rem) / 1.5))`. Sampul 2:3
+yang hanya dibatasi lebar tumbuh 1,5× lebih tinggi daripada lebarnya, dan di
+ponsel pendek tombolnya terdorong keluar layar.
+
+**Lantai `11rem` ditemukan lewat pengukuran.** Menjepit lebar dengan tinggi juga
+meremas teksnya, dan teks yang teremas justru tumbuh tinggi: tanpa lantai itu,
+lanskap 844×390 menghasilkan panel **866px di layar setinggi 390**. Percobaan
+pertama memakai `13rem`, dan itu terlalu tinggi ke arah sebaliknya — 320×568 jadi
+perlu digulir padahal sebelumnya muat.
+
+### Statistik
+
+★ rating dan jumlah baca ditambahkan **ke lapisannya**, bukan dikembalikan ke
+kartunya — kartu di rel tetap tinggal sampul dan judul. Emasnya `--nv-gold-line`,
+bukan `--nv-gold`: yang kedua emas gelap untuk teks di atas kertas, dan di atas
+scrim gelap ia nyaris hilang.
+
+### Satu cacat lama ikut tertutup
+
+Lapisannya tidak punya `overflow-y-auto`, jadi pada bentuk layar yang tidak muat
+isinya **terpotong dan `Buka cerita` tidak bisa dicapai sama sekali** — bukan
+sekadar perlu digulir. Terukur di 320×568 sebelum perubahan ini, dan itu salah
+satu dari lima lebar yang wajib lulus.
+
+### Satu penyederhanaan yang menghapus duplikasi
+
+Skala awal animasinya dulu menghitung ulang lebar panel di JS
+(`Math.min(240, innerWidth - 64)`) — rumus yang sama dengan CSS-nya, di dua
+tempat. Sekarang lebarnya **diukur** lewat `offsetWidth` di `useLayoutEffect`,
+jadi CSS tetap satu-satunya yang menentukan ukuran dan animasinya tidak bisa
+melenceng dari titik asalnya.
+
+---
+
+## 2026-09-05 · Langkah 57 — jarak antar section 16 → 14px
+
+> "coba jarak antar section sebelumnya 16px coba diubah menjadi 14px"
+
+Satu nilai, empat tempat: dua bentuk `<section>` di `StorySection` dan dua slot
+iklan di `HomePage` — slot iklan ikut supaya jaraknya tidak berselisih dengan
+section di sekitarnya. Terukur di peramban: `marginBottom: 14px` di kelima
+section pertama.
+
+`npm run check` bersih · **561 test unit** · **62 e2e**.
+
+---
+
+## 2026-09-05 · Langkah 56 — empat perbaikan beranda dari `bugs/`
+
+> "saya ada buat folder baru di project novelova-v2 yaitu bugs. Yang isinya
+> adalah file image untuk perbaikan tambahan yang saya inginkan. Didalam file
+> gambar bugs_home_content_01.png itu ada tanda garis merah untuk memberikan
+> informasi bahwa ketika aplikasi dibuka dalam preview mobile jarak batas kiri
+> dengan story terlalu menempel. dikasih space sedikit supaya tidak kelihatan
+> menempel. Kemudian untuk di daerah home content saya kasih tanda hijau untuk
+> memberitahu bahwa data yang tampil hanya titleStory dan Cover Image. dan saya
+> ingin pada title yang panjang diberikan batas 2 saja lebih dari itu dikasin …
+> Dan saya ingin untuk 3 section utama jangan ada iklan, lalu jarak antar
+> section (semua section) jangan terlalu jauh."
+
+`npm run check` bersih · **561 test unit** (naik dari 557) · **62 e2e**.
+
+### Dua di antaranya cacat sungguhan, dan keduanya tidak meluber
+
+Sapuan lima lebar yang ada tidak akan pernah menangkap keduanya — tidak ada
+halaman yang menggeser ke samping. Keduanya diukur, bukan ditebak:
+
+**Tepi kiri.** `snap-x` tanpa `scroll-px-4`: peramban menempelkan kartu pertama
+ke tepi wadah, menggulir rel-nya **16px sendiri saat dimuat**, dan padding
+kirinya tergulir habis. Terukur `scrollLeft: 16`, `kartu.left: 0`, sementara
+kepala section-nya tetap di 16 — persis garis merah di gambarnya. Sekarang
+keduanya 16.
+
+**Judul tiga baris.** `line-clamp-2` **tidak melakukan apa pun**: kelas `block`
+di elemen yang sama menimpa `display: -webkit-box` yang dibutuhkannya. Terukur
+tinggi judul 66px walau `webkitLineClamp` terbaca `2`. Sekarang 44px, seragam
+untuk seluruh 140 kartu, dan terpotong dengan elipsis.
+
+### Dua sisanya perubahan tampilan
+
+Kartu bentuk grid tinggal **sampul dan judul**; nama pena, ★ rating, jumlah baca,
+dan garis "+N baca minggu ini" dicabut dari beranda — semuanya tetap hidup di
+`variant="list"`. Prop `note` jadi mati dan ikut dihapus.
+
+Tiga section teratas bersih dari iklan (kedua slotnya pindah ke bawah tab genre,
+jumlahnya tetap dua), dan jarak antar section **28 → 16px**.
+
+### Satu keputusan yang saya ambil dari jawaban "dibiarkan saja"
+
+Lencana di pojok sampul — `#1 #2 #3` dan `HOT`/`BARU`/`PERMATA` — **tidak
+dicabut**. Ia menempel pada gambar sampulnya, bukan baris data di bawahnya, dan
+itu batas yang saya pakai untuk membaca "hanya title dan cover image".
+
+### Dijaga supaya tidak balik
+
+Empat test unit baru (kartu hanya satu baris teks · `line-clamp-2` tanpa `block`
+· kedua slot iklan sesudah tab genre · rel membawa `scroll-px-4`), dan e2e lima
+lebar + desktop kini **mengukur** tepi kiri rel, gulirannya, dan tinggi judulnya
+— bukan hanya luberan halaman.
+
+---
+
+## 2026-09-05 · Langkah 55 — R2b dikerjakan: beranda disusun ulang
+
+> "jika sudah selesai implementasi aja dulu R2b semua step nya. Dan pastikan
+> selalu test di preview mobile dari berbagai macam layar supaya func nya
+> berjalan sama dengan preview website"
+
+**Seluruh 46 kotak R2b selesai.** `npm run check` bersih · **557 test unit**
+(naik dari 543) · **62 e2e** (naik dari 61).
+
+### Data lebih dulu, dan itu memang yang paling banyak berubah
+
+Katalog contoh **40 → 70 cerita**. Tapi yang penting bukan jumlahnya:
+`status`, `monetizeType`, dan tag tiap cerita pengisi dulu **diturunkan dari
+indeksnya** di `seed.ts`. Selama begitu, isi sebuah section hanya bisa diatur
+dengan menghitung mundur posisi tiap judul, dan satu judul yang disisipkan di
+tengah menggeser atribut semua yang sesudahnya. `FILLER` sekarang membawa
+atributnya sendiri, sinopsisnya ikut di entrinya, dan larik `SYNOPSES` yang
+dipasangkan menurut urutan tinggal untuk delapan cerita kanvas.
+
+**Ambang "tiap section ≥ 6" dijaga test, bukan skrip.** Rencananya
+`scripts/cek-beranda.mjs` di `npm run check`; jadi `tests/unit/beranda-data.test.ts`
+karena test bisa memanggil `getHomeFeed` yang sungguhan. Skrip harus mem-parse
+`catalog.ts` sebagai teks, dan parser seperti itu tetap hijau sambil salah
+begitu aturan penyusunan section berubah.
+
+Checker itu langsung bekerja: percobaan pertama menyisakan empat section di
+bawah ambang (Mystery "Gratis Hari Ini" = 3), dan yang diperbaiki **datanya**,
+bukan ambangnya.
+
+### Susunan, bentuk, ukuran
+
+Urutan baru: **tiga section prioritas → banner → tab genre → section tersaring →
+Lanjut Membaca**. Ketiga section teratas berhenti tersaring tab; keadaan kosong
+"genre ini belum ada isinya" pindah ke bawah tab, dan tiga section teratas
+beserta banner tetap berdiri di sana.
+
+Empat bentuk section jadi **dua**. Sampul seragam **80px** — 3,9 sampul terlihat
+di 360px, dari 2,9. `SectionSettings` ikut disusun ulang: daftar sakelar yang
+urutannya beda dari halaman yang diaturnya bukan pengaturan.
+
+### Ketuk sampul → sampul membesar
+
+`StoryCard` dipecah: sampul jadi `<button>`, judul tetap `<a>`. Lapisannya tumbuh
+**dari kotak sampul yang ditekan**, bukan dari tengah layar — sampul di rel
+berjejer rapat, dan lapisan yang muncul entah dari mana tidak memberi tahu sampul
+mana yang dibuka. Esc menutup, fokus kembali ke sampul itu.
+
+**Hanya di beranda.** `StoryCard` dipakai empat halaman; ia menerima
+`onCoverClick` opsional dan hanya beranda yang mengopernya. Dijaga test:
+`/jelajah`, `/pustaka`, dan `/cari` harus tetap punya satu tautan per kartu.
+
+### Satu cacat lama ketahuan karena datanya bertambah
+
+`/cari` dan `/jelajah` memanggil `new IntersectionObserver(...)` **tanpa
+pengaman**, sementara `ReaderPage` sudah memeriksanya sejak awal. Keduanya lolos
+bertahun-tahun hanya karena katalog contohnya terlalu kecil untuk pernah punya
+halaman kedua — begitu katalognya jadi 70 cerita, `hasNextPage` jadi benar dan
+keduanya **menjatuhkan seluruh halaman**. Gejalanya menyesatkan: dua test
+`SearchPage` gagal dengan "element could not be focused", jauh dari sebabnya.
+
+Diperbaiki di akarnya: `onVisible()` di `lib/a11y.ts`, satu pengaman untuk
+keduanya. Tanpa observer, muat-bertahapnya diam — dan tombol "Muat lagi" tetap
+ada sebagai jalan manual.
+
+`Cover` juga dapat `onError`, dan yang disimpan **URL yang gagal**, bukan sebuah
+bendera: dengan begitu sampul baru tidak mewarisi kegagalan sampul lama saat
+komponennya dipakai ulang di rel, dan tidak perlu efek yang mereset apa pun.
+
+### Diuji di lima lebar **dan** desktop
+
+Sapuan lebar yang lama cuma membuktikan halamannya tidak menggeser ke samping.
+Yang ditambahkan R2b bisa rusak tanpa meluber sedikit pun, jadi ada satu test
+baru di berkas yang sama yang menjalankan alurnya di **320 · 360 · 390 · 412 ·
+430 · 1280**: susunan blok diperiksa lewat posisi DOM, sampulnya **ditekan**,
+lapisannya diperiksa tidak meluber, lalu `Buka cerita` **ditekan** juga — elemen
+yang tertutup tetap lolos `toBeVisible()`, yang gagal adalah kliknya.
+
+### Empat test lama diperbarui, bukan dihapus
+
+Empat test `home.test.ts` menjaga aturan §1.6 yang baru saja ditimpa. Dua di
+antaranya sempat saya perbaiki salah arah — membandingkan tab lawan "Semua",
+padahal di "Semua" favorit onboarding memang mengurutkan ulang isinya (§1.7).
+Yang benar: membandingkan **antar dua tab**.
+
+---
+
+## 2026-09-05 · Langkah 54 — kesiapan data contoh untuk R2b
+
+> "saya konfirmasi untuk data mock nya sudah siap?"
+
+**Belum, dan yang menahannya dibuat oleh R2b sendiri.** Diperiksa dengan
+mensimulasikan `seed.ts`, bukan diperkirakan. R2b bertambah **8 kotak** di
+sub-bagian baru **R2b-a — Data contoh, dikerjakan pertama**; `architecture.md`
+§1.22 bertambah dua bagian. Nol baris kode berubah.
+
+### Yang sudah siap
+
+40 cerita, semua `published` · **100 sampul potret 2:3** dan 20 banner dengan URL
+sungguhan yang terjangkau (HTTP 200, 0,32 dtk) — jadi fitur zoom punya gambar
+nyata · tiga section prioritas menarik dari seluruh katalog, jadi setelah berhenti
+tersaring ketiganya selalu penuh · Lanjut Membaca punya data progres.
+
+### Yang belum
+
+**11 dari 26 section di bawah tab berisi kurang dari 4 cerita** — tidak cukup
+mengisi satu baris sampul 80px. Terburuk: Fantasy "Dunia Lain" **1**, Mystery dan
+CEO "Tamat & Siap Dibaca" **1**, Thriller dan My Kisah "Tamat" **0**.
+
+**Cacat ini tidak ada hari ini.** Daftar tegak berisi tiga cerita terbaca wajar;
+rel mendatar berisi tiga sampul dengan ruang kosong di kanannya terbaca sebagai
+gagal memuat. Bentuk `ranked` selama ini menyembunyikannya.
+
+**Dan yang menghalangi perbaikannya bukan jumlah judul.** `status`,
+`monetizeType`, dan tag tiap cerita pengisi diturunkan dari **indeksnya** di
+`seed.ts`, jadi isi sebuah section hanya bisa diatur dengan menghitung mundur
+posisi tiap judul — dan satu judul yang disisipkan di tengah menggeser atribut
+semua yang sesudahnya. `FILLER` harus membawa atributnya sendiri sebelum
+katalognya ditambah.
+
+### Tiga keputusan pengguna
+
+1. **Katalog ditambah sampai tiap section ≥ 6** — 40 → ~60 judul, masing-masing
+   dengan sinopsisnya sendiri. Dijaga `scripts/cek-beranda.mjs` yang ikut
+   `npm run check`, bukan hitungan tangan.
+2. **Keadaan kosong genre cukup dijaga test unit** — tidak ada sakelar dev.
+   Konsekuensinya disebut terang di §1.22: layarnya tidak akan pernah terlihat di
+   aplikasi yang jalan.
+3. **`Cover.tsx` dapat `onError`** yang menjatuhkan sampul gagal-muat ke jaket
+   satu hurufnya. Sampulnya URL jarak jauh, dan tanpa ini CDN mati memunculkan
+   ikon gambar rusak — di halaman yang setelah R2b memuat ~30 gambar.
+
+---
+
+## 2026-09-05 · Langkah 53 — rencana susunan ulang beranda (R2b)
+
+> "oke sekarang saya ada adjustment todo untuk home-content di novelova v2. Home
+> content terdapat redesign. Jadi urutan nya adalah 3 section prioritas yang
+> dincer oleh penulis. Kemudian setelah itu terdapat banner dan home category dan
+> section lainya. Saya ingin setiap section diberbagai genre selalu story diurut
+> secara horizontal. Dan saya ingin ukuran cover diperkecil aja supaya pas user
+> lihat terlihat banyak list story di setiap section. Konsep untuk section di
+> setiap kategory tetap dipakai (3 section prioritas tetap muncul walau genre
+> berganti). Jika ada yang bingung dari todo ini dikabarkan saja. Dan ada
+> tambahan fitur yaitu jika user klik cover image di home content maka gambar itu
+> akan diperbesar dan tambahkan animasi seperti zoom in. SELALU TANYAKAN JIKA ADA
+> KEPUTUSAN YANG INGIN ANDA BUAT SUPAYA TIDAK TERJADI HAL YANG TIDAK DIINGINKAN"
+
+**Rencana, belum implementasi.** Yang bertambah: `todo.md` **R2b** (38 kotak),
+`architecture.md` **§1.22**, dan 14 kotak di bagian beranda `todo-redesign.md`.
+Tidak ada satu baris kode pun yang berubah.
+
+### Satu kesalahan proses, dan koreksinya
+
+Percobaan pertama saya menulis R2b dengan **tujuh keputusan yang saya buat
+sendiri** — termasuk apakah tiga section teratas tetap tersaring genre, dan
+bagaimana pembaca membuka cerita setelah sampul dipakai untuk zoom. Pengguna
+menghentikannya dan menambahkan kalimat yang sekarang berlaku seterusnya:
+*"SELALU TANYAKAN JIKA ADA KEPUTUSAN YANG INGIN ANDA BUAT."* Draf itu dibuang dan
+R2b ditulis ulang setelah **enam pertanyaan dijawab**.
+
+### Enam keputusan, semuanya dari pengguna
+
+1. **Tiga section teratas berhenti tersaring genre** — jadi peringkat global.
+2. **Hanya section genre yang jadi rel mendatar**; Lanjut Membaca tetap daftar
+   tegak, karena batang progres, "Bab 45 dari 120", dan tombol lanjut butuh lebar
+   satu baris penuh.
+3. **Sampul 80px** — 3,9 sampul terlihat di layar 360px, dari 2,9 sekarang.
+4. **Judul tetap tautan, sampul jadi tombol zoom**, dan lapisannya membawa tombol
+   `Buka cerita`.
+5. **Genre kosong diberi pesannya di bawah tab**, bukan mengosongkan seluruh
+   beranda — tiga section atas dan banner tetap tampil.
+6. **Kutipan serif dihapus**, semua section seragam 80px.
+
+### Tiga hal yang ditimpa, dicatat di §1.22
+
+- **§1.6** menandai tiga section teratas "ikut tersaring: ya". Tidak lagi. Yang
+  memaksanya adalah urutan barunya: tab genre kini duduk **di bawah** ketiganya,
+  dan kontrol yang efeknya di luar layar terbaca sebagai kontrol yang rusak.
+- **Brief §4 ("daftar mengalahkan kartu") dibatalkan untuk beranda saja.** `7a`
+  menggambar section tematik sebagai daftar tegak; permintaannya kebalikannya.
+  Alasannya sah: beranda satu-satunya halaman yang tugasnya penemuan. Aturannya
+  **tetap berlaku penuh** di `/jelajah` dan `/pustaka`, yang baru jadi daftar
+  tegak di Langkah 51.
+- **Brief §8 ("tidak ada yang membesar") dibatalkan setipis mungkin** — satu
+  gerakan, satu tempat, dan `prefers-reduced-motion` tetap mematikannya.
+
+### Dua akibat yang tidak diminta tetapi tidak bisa dihindari
+
+- **Keadaan kosong harus dipindah.** Dengan tiga section teratas selalu ada,
+  beranda tidak pernah benar-benar kosong; menilai "genre ini kosong" dari seluruh
+  feed membuat pesannya tidak pernah muncul.
+- **`StoryCard` harus dipecah.** Seluruh kartu hari ini satu `<a>`, dan tombol di
+  dalam tautan bukan HTML yang sah. Sampul keluar jadi `<button>`, judul tetap
+  `<a>` — perubahan struktur, dan bagian termahal dari fitur zoom-nya.
+
+### Yang sengaja tidak berubah
+
+Zoom **hanya di beranda**. `StoryCard` dipakai empat halaman; menaruh lapisannya
+di dalam komponen itu mengubah keempatnya tanpa diminta. Ia cuma menerima prop
+opsional `onCoverClick`, dan hanya beranda yang mengopernya.
+
+---
+
 ## 2026-09-05 · Langkah 52 — R2 & R3: detail cerita, ruang baca Type A, komentar bab
 
 > "oke sekarang lanjutkan untuk melakukan redesign tampilan saja dulu. Ikti todo

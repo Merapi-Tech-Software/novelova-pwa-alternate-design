@@ -4,68 +4,53 @@ import { StoryCard } from '@/components/patterns/StoryCard'
 import { Skeleton } from '@/components/ui/Card'
 import { SectionHeader, SeeAllAction } from '@/components/ui/SectionHeader'
 import { t } from '@/i18n/t'
-import { formatCompactCoin } from '@/lib/coin'
 
 /**
- * Empat bentuk section · mockup `7a`.
+ * **Dua bentuk section**, turun dari empat · `architecture.md` §1.22.
  *
- * `rail` — deret mendatar kartu 112px: Populer, Baru & Naik Cepat.
- * `rail-wide` — deret mendatar kartu lebih lebar berkutipan: Paling Banyak Dibuka.
- * `ranked` — daftar tegak bernomor: section tematik yang mengikuti tab.
- * `continue` — daftar tegak berbatang progres dan tombol putar: Lanjut Membaca.
+ * `rail` — deret mendatar sampul 80px: **seluruh section genre**.
+ * `continue` — daftar tegak berbatang progres: Lanjut Membaca saja.
+ *
+ * `ranked` (daftar tegak bernomor) dan `rail-wide` (160px + kutipan serif)
+ * dihapus. Permintaan produk 5 September membalik aturan brief §4 untuk beranda:
+ * daftar tegak menampilkan tiga sampai empat cerita per layar, rel 80px hampir
+ * empat **per baris** tanpa memakan tinggi — dan beranda satu-satunya halaman
+ * yang tugasnya penemuan. Aturannya tetap berlaku penuh di `/jelajah` dan
+ * `/pustaka`.
+ *
+ * **Lanjut Membaca sengaja tidak ikut.** Ia membawa batang progres, "Bab 45 dari
+ * 120", dan tombol lanjut; ketiganya butuh lebar satu baris penuh.
  *
  * Dipilih dari **id**, bukan dari judulnya: judul section berganti mengikuti tab
  * (Fase 3b), id-nya tidak.
  */
-type Shape = 'rail' | 'rail-wide' | 'ranked' | 'continue'
+type Shape = 'rail' | 'continue'
 
 function shapeOf(id: string): Shape {
-  if (id === 'lanjut-baca') return 'continue'
-  if (id === 'terbuka') return 'rail-wide'
-  if (id === 'populer' || id === 'terbaru') return 'rail'
-  return 'ranked'
+  return id === 'lanjut-baca' ? 'continue' : 'rail'
 }
 
 export function SectionSkeleton() {
   return (
-    <section className="mb-7">
+    <section className="mb-4">
       <Skeleton className="mb-3 h-3 w-28" />
       <div className="flex gap-3">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-52 w-28 shrink-0" />
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-44 w-20 shrink-0" />
         ))}
       </div>
     </section>
   )
 }
 
-/** Garis pertumbuhan emas · `7a` §6. Angkanya `weeklyReads`, bukan kalimat. */
-function GrowthNote({ story }: { story: Story }) {
-  if (story.stats.weeklyReads <= 0) return null
-  return (
-    <span className="mt-1 block text-caption font-semibold text-nv-gold">
-      +{formatCompactCoin(story.stats.weeklyReads)} baca minggu ini
-    </span>
-  )
-}
-
 /**
- * Kutipan serif satu baris · `7a` §7.
+ * Section yang tiga teratasnya diberi nomor.
  *
- * Diambil dari **kalimat pertama sinopsisnya**, bukan dari kolom kontrak baru.
- * Itu sekaligus alasan tiap sinopsis di seed ditulis supaya kalimat pertamanya
- * berdiri sendiri — sebelum Langkah 46 keempat puluh cerita berbagi satu
- * sinopsis, dan ketiga kartu di section ini menampilkan kalimat yang identik.
+ * Populer sejak `7a`; sisanya mewarisi nomor dari bentuk `ranked` yang dihapus
+ * di §1.22 — tanpa itu peringkatnya hilang sama sekali, dan section bernama
+ * "Paling Banyak Dibuka" yang tidak menunjukkan urutan tidak menjawab namanya.
  */
-function PullQuote({ story }: { story: Story }) {
-  const first = story.synopsis.split(/(?<=[.!?])\s/)[0]?.trim()
-  if (!first) return null
-  return (
-    <span className="mt-1.5 line-clamp-3 font-display text-caption text-nv-text-2 italic">
-      “{first}”
-    </span>
-  )
-}
+const RANKED = new Set(['populer', 'terbuka'])
 
 /**
  * Satu section beranda · FR-HOME-04.
@@ -77,14 +62,23 @@ function PullQuote({ story }: { story: Story }) {
  * dengan penyaring yang sama — bukan mengembalikan pengguna ke katalog penuh
  * yang baru saja ia persempit.
  */
-export function StorySection({ section, tab }: { section: HomeSection; tab: string | null }) {
+export function StorySection({
+  section,
+  tab,
+  onCoverClick,
+}: {
+  section: HomeSection
+  tab: string | null
+  /** Diteruskan ke tiap kartu di rel; lihat `StoryCard.onCoverClick`. */
+  onCoverClick?: ((story: Story, origin: HTMLElement) => void) | undefined
+}) {
   const shape = shapeOf(section.id)
   const seeAll = section.seeAll
     ? `/jelajah/${section.seeAll}${tab ? `?tab=${encodeURIComponent(tab)}` : ''}`
     : null
 
   return (
-    <section className="mb-7">
+    <section className="mb-4">
       <SectionHeader
         label={section.title}
         className="mb-3"
@@ -111,35 +105,17 @@ export function StorySection({ section, tab }: { section: HomeSection; tab: stri
         </ul>
       )}
 
-      {shape === 'ranked' && (
-        <ul className="divide-y divide-nv-line">
-          {section.stories.map((story, i) => (
-            <li key={story.id}>
-              <StoryCard story={story} variant="list" rank={i + 1} />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {(shape === 'rail' || shape === 'rail-wide') && (
-        <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {shape === 'rail' && (
+        <div className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {section.stories.map((story, i) => (
             <StoryCard
               key={story.id}
               story={story}
-              className={
-                shape === 'rail-wide' ? 'w-40 shrink-0 snap-start' : 'w-28 shrink-0 snap-start'
-              }
-              // Populer memberi nomor peringkat; section lain memakai lencana
-              // milik ceritanya sendiri (`Rising` · `New` · `Hot`).
-              {...(section.id === 'populer' && i < 3 ? { badge: `#${i + 1} Populer` } : {})}
-              note={
-                section.id === 'terbaru' ? (
-                  <GrowthNote story={story} />
-                ) : shape === 'rail-wide' ? (
-                  <PullQuote story={story} />
-                ) : null
-              }
+              className="w-20 shrink-0 snap-start"
+              onCoverClick={onCoverClick}
+              // Nomor peringkat dulu milik bentuk `ranked` yang dihapus; ia
+              // pindah ke badge sampul, mekanisme yang sudah dipakai Populer.
+              {...(RANKED.has(section.id) && i < 3 ? { badge: `#${i + 1}` } : {})}
             />
           ))}
         </div>

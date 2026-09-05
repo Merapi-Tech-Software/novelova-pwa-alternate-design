@@ -1,5 +1,7 @@
 import { Bell, Search } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import type { Story } from '@/api/contracts'
 import { AdSlot } from '@/components/patterns/AdSlot'
 import { CoinChip } from '@/components/patterns/CoinChip'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
@@ -10,6 +12,7 @@ import type { SectionKey } from '@/stores/homeSections'
 import { useHomeSections } from '@/stores/homeSections'
 import { useSession } from '@/stores/session'
 import { BannerCarousel } from '../components/BannerCarousel'
+import { CoverZoom, type CoverZoomTarget } from '../components/CoverZoom'
 import { GenreTabs } from '../components/GenreTabs'
 import { SectionSettings } from '../components/SectionSettings'
 import { SectionSkeleton, StorySection } from '../components/StorySection'
@@ -50,6 +53,13 @@ const SWITCH_OF: Record<string, SectionKey> = {
 const ICON_LINK =
   'grid size-11 shrink-0 place-items-center rounded-nv-pill text-nv-text transition hover:bg-nv-accent-soft'
 
+/**
+ * Tiga section prioritas, di paling atas dan **tidak ikut tersaring tab**
+ * (`architecture.md` §1.22). Id-nya, bukan judulnya: judul berganti mengikuti
+ * tab sejak Fase 3b.
+ */
+const PRIORITAS = ['populer', 'terbaru', 'terbuka']
+
 export default function HomePage() {
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab')
@@ -58,6 +68,11 @@ export default function HomePage() {
   const profile = useSession((s) => s.profile)
   const wallet = useWallet()
   const visible = useHomeSections((s) => s.visible)
+  const [zoom, setZoom] = useState<CoverZoomTarget | null>(null)
+
+  /** Sampul ditekan · §1.22. `origin` dipakai sebagai titik tumbuh animasinya. */
+  const buka: (story: Story, origin: HTMLElement) => void = (story, origin) =>
+    setZoom({ story, origin })
 
   function pickTab(next: string | null) {
     setParams(
@@ -77,9 +92,21 @@ export default function HomePage() {
     (s) => visible[SWITCH_OF[s.id] ?? 'sec-toprom'],
   )
   const banner = sections.find((s) => s.id === 'banner')
-  // Keadaan kosong dinilai dari section **discovery** saja: Continue Reading
-  // tidak ikut tersaring, jadi kehadirannya tidak berarti tab ini punya isi.
-  const hasDiscovery = sections.some((s) => s.seeAll !== null)
+  const prioritas = sections.filter((s) => PRIORITAS.includes(s.id))
+  const lanjut = sections.find((s) => s.id === 'lanjut-baca')
+  // Ekor yang **benar-benar tersaring tab** — satu-satunya kelompok yang isinya
+  // berubah saat pembaca menekan tab genre.
+  const ekor = sections.filter(
+    (s) => !PRIORITAS.includes(s.id) && s.id !== 'banner' && s.id !== 'lanjut-baca',
+  )
+  /*
+   * Keadaan kosong dinilai dari **ekor saja**, dan sejak §1.22 itu bukan lagi
+   * penghalusan: tiga section prioritas kini selalu ada di tab mana pun, jadi
+   * menilainya dari seluruh feed membuat pesan "genre ini belum ada isinya"
+   * tidak pernah muncul — dan genre kosong berubah jadi halaman yang diam-diam
+   * terlihat normal.
+   */
+  const adaIsi = ekor.length > 0
 
   return (
     <div>
@@ -132,14 +159,13 @@ export default function HomePage() {
         <p className="pt-0.5 text-body text-nv-muted">{t('home.greetingSub')}</p>
       </header>
 
-      {visible['sec-genres'] && (
-        <div className="mb-5">
-          <GenreTabs tabs={tabs} value={tab} onChange={pickTab} />
-        </div>
-      )}
-
-      {banner && <BannerCarousel stories={banner.stories} />}
-
+      {/*
+        Susunan `architecture.md` §1.22: **tiga section prioritas lebih dulu**,
+        lalu banner, lalu tab genre, lalu ekor yang tersaring, lalu bacaan
+        pribadi. Tab duduk di bawah ketiga section teratas justru karena
+        ketiganya berhenti tersaring — kalau tidak, menekannya akan mengubah isi
+        yang berada di luar layar.
+      */}
       {feed.isPending && (
         <>
           <SectionSkeleton />
@@ -157,7 +183,24 @@ export default function HomePage() {
         />
       )}
 
-      {feed.isSuccess && !hasDiscovery && (
+      {/*
+        **Tiga section teratas bersih dari iklan** — permintaan produk 5
+        September. Kedua slotnya pindah ke bawah tab genre; jumlahnya di halaman
+        tetap dua, hanya tidak ada lagi yang mendahului banner.
+      */}
+      {prioritas.map((section) => (
+        <StorySection key={section.id} section={section} tab={tab} onCoverClick={buka} />
+      ))}
+
+      {banner && <BannerCarousel stories={banner.stories} />}
+
+      {visible['sec-genres'] && (
+        <div className="mb-5">
+          <GenreTabs tabs={tabs} value={tab} onChange={pickTab} />
+        </div>
+      )}
+
+      {feed.isSuccess && !adaIsi && (
         <EmptyState
           variant="no-results"
           title={t('home.noGenreResultsTitle')}
@@ -166,32 +209,32 @@ export default function HomePage() {
         />
       )}
 
-      {sections
-        .filter((section) => section.id !== 'banner')
-        .map((section) => (
-          <div key={section.id}>
-            <StorySection section={section} tab={tab} />
+      {ekor.map((section, i) => (
+        <div key={section.id}>
+          <StorySection section={section} tab={tab} onCoverClick={buka} />
+          {i === 0 && visible['sec-ad1'] && (
+            <AdSlot
+              variant="slim"
+              className="mb-4"
+              title={t('home.adSlimTitle')}
+              actionLabel={t('home.adSlimAction')}
+              onClick={() => {}}
+            />
+          )}
+          {i === 1 && visible['sec-ad2'] && (
+            <AdSlot
+              variant="native"
+              className="mb-4"
+              title={t('home.adNativeTitle')}
+              source={t('home.adNativeSource')}
+            />
+          )}
+        </div>
+      ))}
 
-            {/* Slot iklan menempel pada section di atasnya (FR-HOME-05). */}
-            {section.id === 'populer' && visible['sec-ad1'] && (
-              <AdSlot
-                variant="slim"
-                className="mb-7"
-                title={t('home.adSlimTitle')}
-                actionLabel={t('home.adSlimAction')}
-                onClick={() => {}}
-              />
-            )}
-            {section.id === 'terbuka' && visible['sec-ad2'] && (
-              <AdSlot
-                variant="native"
-                className="mb-7"
-                title={t('home.adNativeTitle')}
-                source={t('home.adNativeSource')}
-              />
-            )}
-          </div>
-        ))}
+      {lanjut && <StorySection section={lanjut} tab={tab} />}
+
+      {zoom && <CoverZoom target={zoom} onClose={() => setZoom(null)} />}
     </div>
   )
 }

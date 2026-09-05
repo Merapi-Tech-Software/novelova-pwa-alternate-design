@@ -144,9 +144,17 @@ export function tabFilter(tab: string | undefined): (story: Story) => boolean {
   return (story) => story.genres.some((g) => g === tab)
 }
 
-/** Susunan section untuk sebuah tab, tanpa banner dan Lanjut Membaca. */
-export function sectionsFor(tab: string | undefined): SectionDef[] {
-  return [...FIXED, ...GENERIC, ...(tab ? (CURATED[tab] ?? []) : DEFAULT_CURATED)]
+/**
+ * Section yang **ikut tersaring tab**, tanpa banner dan Lanjut Membaca.
+ *
+ * `FIXED` sengaja **tidak** ada di sini sejak `architecture.md` §1.22: ketiganya
+ * kini peringkat global yang dibangun dari seluruh katalog, sejajar dengan
+ * `BANNER` dan `CONTINUE`. Yang memaksanya adalah susunan barunya — tab genre
+ * duduk *di bawah* ketiganya, dan kontrol yang efeknya di luar layar terbaca
+ * sebagai kontrol yang rusak.
+ */
+export function filteredSectionsFor(tab: string | undefined): SectionDef[] {
+  return [...GENERIC, ...(tab ? (CURATED[tab] ?? []) : DEFAULT_CURATED)]
 }
 
 /** Dipakai `getSection`: mencari definisi mana pun berdasarkan id-nya. */

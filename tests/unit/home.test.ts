@@ -13,15 +13,38 @@ beforeEach(async () => {
 })
 
 describe('beranda · FR-HOME-13', () => {
-  it('genre menyaring empat section discovery', async () => {
+  it('genre menyaring section di bawah tab, bukan tiga section teratas', async () => {
     const feed = await api.getHomeFeed('Mystery')
-    const filtered = feed.sections.filter((s) => ['populer', 'terbaru', 'terbuka'].includes(s.id))
+    // Sejak §1.22 yang tersaring hanyalah ekor: dua section generik dan dua
+    // kurasi khas tabnya. Tiga teratas jadi peringkat global.
+    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'lanjut-baca']
+    const tersaring = feed.sections.filter((s) => !global.includes(s.id))
 
-    expect(filtered.length).toBeGreaterThan(0)
-    for (const section of filtered) {
+    expect(tersaring.length).toBeGreaterThan(0)
+    for (const section of tersaring) {
       for (const story of section.stories) {
         expect(story.genres).toContain('Mystery')
       }
+    }
+  })
+
+  it('tiga section teratas TIDAK ikut tersaring — §1.22', async () => {
+    const mystery = await api.getHomeFeed('Mystery')
+    const romance = await api.getHomeFeed('Romance')
+    const pick = (feed: Awaited<ReturnType<typeof api.getHomeFeed>>, id: string) =>
+      feed.sections.find((s) => s.id === id)?.stories.map((x) => x.id)
+
+    /*
+     * Isinya sama persis dari satu tab ke tab lain. Ini yang membuat susunan
+     * barunya masuk akal: tab genre duduk **di bawah** ketiganya di halaman,
+     * dan kalau isinya ikut berubah, menekan tab mengubah sesuatu di luar layar.
+     *
+     * Dibandingkan **antar dua tab**, bukan terhadap "Semua": di "Semua"
+     * favorit onboarding menaikkan cerita bergenre favorit ke depan (§1.7), dan
+     * itu tetap berlaku — yang tidak boleh berubah adalah isinya karena tab.
+     */
+    for (const id of ['populer', 'terbaru', 'terbuka']) {
+      expect(pick(mystery, id), id).toEqual(pick(romance, id))
     }
   })
 
@@ -47,10 +70,12 @@ describe('beranda · FR-HOME-13', () => {
     }
   })
 
-  it('tiga section pertama selalu ada di tab mana pun', async () => {
+  it('tiga section prioritas mendahului banner, di tab mana pun · §1.22', async () => {
     for (const tab of [undefined, 'Romance', 'Fantasy', 'My Kisah']) {
       const ids = (await api.getHomeFeed(tab)).sections.map((s) => s.id)
-      expect(ids.slice(0, 4)).toEqual(['banner', 'populer', 'terbaru', 'terbuka'])
+      // Susunan baru: prioritas dulu, **lalu** banner. Sebelum §1.22 banner
+      // yang paling depan.
+      expect(ids.slice(0, 4)).toEqual(['populer', 'terbaru', 'terbuka', 'banner'])
     }
   })
 
@@ -60,6 +85,7 @@ describe('beranda · FR-HOME-13', () => {
 
     // Kepala sama, ekor berbeda — itu seluruh isi perubahan Fase 3b.
     expect(semua.slice(0, 4)).toEqual(romance.slice(0, 4))
+    expect(semua.slice(0, 4)).toEqual(['populer', 'terbaru', 'terbuka', 'banner'])
     expect(semua).toContain('ramai')
     expect(romance).toContain('romance-kantor')
     expect(romance).not.toContain('ramai')
@@ -75,9 +101,10 @@ describe('beranda · FR-HOME-13', () => {
 
   it('tab My Kisah menyaring kisah nyata, bukan genre — dan genrenya macam-macam', async () => {
     const feed = await api.getHomeFeed('My Kisah')
-    const stories = feed.sections
-      .filter((s) => s.id !== 'banner' && s.id !== 'lanjut-baca')
-      .flatMap((s) => s.stories)
+    // Tiga section teratas kini global, jadi mereka **memang** berisi fiksi
+    // biasa walau tabnya My Kisah — yang menyaring `kind` hanyalah ekornya.
+    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'lanjut-baca']
+    const stories = feed.sections.filter((s) => !global.includes(s.id)).flatMap((s) => s.stories)
 
     expect(stories.length).toBeGreaterThan(0)
     for (const story of stories) expect(story.kind).toBe('kisah')
@@ -145,8 +172,16 @@ describe('favorit onboarding memengaruhi beranda · FR-AUTH-11', () => {
     })
 
     const feed = await api.getHomeFeed('Drama')
-    for (const story of feed.sections.find((s) => s.id === 'populer')?.stories ?? []) {
-      expect(story.genres).toContain('Drama')
+    // Diperiksa di section yang **memang tersaring tab**. "Populer" tidak lagi
+    // bisa membuktikan apa pun soal ini sejak §1.22 menjadikannya global.
+    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'lanjut-baca']
+    const tersaring = feed.sections.filter((s) => !global.includes(s.id))
+
+    expect(tersaring.length).toBeGreaterThan(0)
+    for (const section of tersaring) {
+      for (const story of section.stories) {
+        expect(story.genres, section.title).toContain('Drama')
+      }
     }
   })
 })

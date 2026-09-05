@@ -2,7 +2,15 @@ import type { NovelovaApi } from '../../client'
 import type { HomeFeed, HomeSection, Paged, SectionParams, Story } from '../../contracts'
 import { db } from '../db'
 import { readingCounts } from './library'
-import { BANNER, CONTINUE, findSection, type SectionDef, sectionsFor, tabFilter } from './sections'
+import {
+  BANNER,
+  CONTINUE,
+  FIXED,
+  filteredSectionsFor,
+  findSection,
+  type SectionDef,
+  tabFilter,
+} from './sections'
 import { currentUserId } from './session'
 
 /**
@@ -10,11 +18,13 @@ import { currentUserId } from './session'
  *
  * Tiga aturan yang menentukan seluruh berkas ini:
  *
- * 1. **Tiga section pertama selalu ada** — Populer, Baru & Naik Cepat, Paling
- *    Banyak Dibuka — di tab mana pun, dan tetap ikut tersaring tab itu. Ekornya
- *    berganti: dua section generik dan dua kurasi khas tabnya.
- * 2. **Banner dan Lanjut Membaca tidak ikut tersaring.** Yang pertama kurasi
- *    editorial, yang kedua bacaan pribadi; menyaring keduanya berarti
+ * 1. **Tiga section prioritas selalu ada dan tidak pernah tersaring** —
+ *    Populer, Baru & Naik Cepat, Paling Banyak Dibuka. Sampai §1.22 ketiganya
+ *    ikut tersaring tab; sekarang tidak, karena tab genre duduk **di bawahnya**
+ *    di halaman, dan kontrol yang efeknya di luar layar terbaca sebagai rusak.
+ *    Ekor yang tersaring: dua section generik dan dua kurasi khas tabnya.
+ * 2. **Banner dan Lanjut Membaca juga tidak ikut tersaring.** Yang pertama
+ *    kurasi editorial, yang kedua bacaan pribadi; menyaring keduanya berarti
  *    menyembunyikan bacaan pengguna sendiri karena ia menekan sebuah tab.
  * 3. **Section yang kosong pada tab itu tidak dikirim sama sekali** — judul di
  *    atas ruang kosong terbaca sebagai kerusakan, bukan sebagai hasil nol.
@@ -95,9 +105,13 @@ export const homeHandlers: Pick<NovelovaApi, 'getHomeFeed' | 'getSection'> = {
       if (total > 0) readingPct[story.id] = finishedCount / total
     }
 
+    // Susunan `architecture.md` §1.22: **tiga section prioritas lebih dulu**,
+    // lalu banner, lalu yang tersaring tab, lalu bacaan pribadi. Ketiga yang
+    // pertama dibangun dari `all` — mereka peringkat global, bukan potongan tab.
     const sections = [
+      ...FIXED.map((def) => build(def, all, favorites)),
       build(BANNER, all, []),
-      ...sectionsFor(tab).map((def) => build(def, inTab, favorites)),
+      ...filteredSectionsFor(tab).map((def) => build(def, inTab, favorites)),
       build(CONTINUE, reading, [], readingPct),
     ]
 

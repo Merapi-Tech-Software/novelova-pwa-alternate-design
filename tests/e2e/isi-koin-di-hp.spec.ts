@@ -166,3 +166,122 @@ test('layar HP: lembar cetak dua tab terjangkau seluruhnya', async ({ page }) =>
 
   await expect(page.getByText(/Menunggu konfirmasi admin/)).toBeVisible()
 })
+
+/**
+ * Beranda susunan baru · `architecture.md` §1.22 — **ditekan di lima lebar**.
+ *
+ * Sapuan di atas cuma membuktikan halamannya tidak menggeser ke samping. Yang
+ * ditambahkan §1.22 adalah dua hal yang bisa rusak tanpa meluber sedikit pun:
+ * susunan bloknya, dan sebuah lapisan yang menutupi layar. Lapisan yang
+ * tombolnya tertutup tetap lolos `toBeVisible()` — jadi tombolnya **ditekan**.
+ */
+test('layar HP: susunan beranda dan zoom sampul bekerja di lima lebar + desktop', async ({
+  page,
+}) => {
+  // **Lebar desktop ikut**, mengikuti pola `karya-dua-lebar.spec.ts`: satu alur
+  // dijalankan di beberapa lebar, bukan beberapa test yang kebetulan mirip.
+  // Yang dijanjikan §1.22 adalah perilaku yang sama di HP dan di layar lebar,
+  // dan satu-satunya cara janji itu tidak bisa lapuk adalah alurnya sendiri
+  // dijalankan di sana.
+  for (const width of [...LEBAR_HP, 1280]) {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    await page.evaluate(() => document.fonts.ready)
+
+    // 1. Susunan: tiga section prioritas mendahului tab genre.
+    const populer = page.getByRole('heading', { name: 'Populer', exact: true })
+    const tabFantasy = page.getByRole('button', { name: 'Fantasy', exact: true })
+    await expect(populer).toBeVisible()
+    await expect(tabFantasy).toBeVisible()
+
+    const posisi = await page.evaluate(() => {
+      const judul = [...document.querySelectorAll('h2')].find((h) => h.textContent === 'Populer')
+      const tab = [...document.querySelectorAll('button')].find((b) => b.textContent === 'Fantasy')
+      if (!judul || !tab) return null
+      return { judul: judul.getBoundingClientRect().top, tab: tab.getBoundingClientRect().top }
+    })
+    expect(posisi, `susunan tidak terbaca di ${width}px`).not.toBeNull()
+    expect(posisi?.judul, `Populer harus di atas tab genre di ${width}px`).toBeLessThan(
+      posisi?.tab ?? 0,
+    )
+
+    // 2. Tepi kiri rel sejajar kepala section-nya, dan judulnya tidak lebih dari
+    //    dua baris. Keduanya cacat yang pernah terjadi dan tidak meluber sedikit
+    //    pun (`bugs/bugs_home_content_01.png`).
+    const ukur = await page.evaluate(() => {
+      const sec = [...document.querySelectorAll('section')].find(
+        (el) => el.querySelector('h2')?.textContent === 'Populer',
+      )
+      const rel = sec?.querySelector('.overflow-x-auto') as HTMLElement | null
+      const kartu = rel?.firstElementChild as HTMLElement | null
+      const judul = [...document.querySelectorAll('button[aria-label^="Perbesar sampul"]')]
+        .map((b) => b.parentElement?.querySelector('a > span') as HTMLElement | null)
+        .filter((el): el is HTMLElement => el !== null)
+      const tinggi = [...new Set(judul.map((el) => Math.round(el.getBoundingClientRect().height)))]
+      return {
+        kepala: Math.round(sec?.querySelector('h2')?.getBoundingClientRect().left ?? -1),
+        kartu: Math.round(kartu?.getBoundingClientRect().left ?? -1),
+        gulir: rel?.scrollLeft ?? -1,
+        tinggiJudul: tinggi,
+      }
+    })
+    // Sampul pertama mulai di garis yang sama dengan kepala section-nya.
+    expect(ukur.kartu, `tepi kiri rel di ${width}px`).toBe(ukur.kepala)
+    // Rel tidak boleh menggulir sendiri saat dimuat — itu yang dulu memakan
+    // padding kirinya (`snap-x` tanpa `scroll-px-4`).
+    expect(ukur.gulir, `rel tergulir sendiri di ${width}px`).toBe(0)
+    // Semua judul setinggi sama, dan tingginya paling banyak dua baris.
+    expect(ukur.tinggiJudul.length, `judul tidak seragam di ${width}px`).toBe(1)
+    expect(ukur.tinggiJudul[0] ?? 999, `judul lebih dari dua baris di ${width}px`).toBeLessThan(50)
+
+    // 3. Sampul ditekan → lapisan terbuka.
+    const sampul = page.getByRole('button', { name: /^Perbesar sampul / }).first()
+    await sampul.click({ timeout: 5_000 })
+
+    const lapisan = page.getByRole('dialog')
+    await expect(lapisan).toBeVisible()
+
+    // 4. Sampulnya **benar-benar besar**, dan statistiknya ikut. Angka 240px
+    //    adalah ukuran lamanya; lapisan yang mengecil lagi ke sana berarti
+    //    penjepit tinggi/lebarnya rusak (`bugs/feedback_home_content_01.png`).
+    const isi = await page.evaluate(() => {
+      const d = document.querySelector('[role="dialog"]') as HTMLElement
+      const p = d.firstElementChild as HTMLElement
+      const c = (p.querySelector('span') as HTMLElement).getBoundingClientRect()
+      return { lebarSampul: Math.round(c.width), teks: p.textContent ?? '' }
+    })
+    expect(isi.lebarSampul, `sampul mengecil di ${width}px`).toBeGreaterThanOrEqual(240)
+    expect(isi.teks, `statistik hilang di ${width}px`).toMatch(/\d,\d/)
+    expect(isi.teks).toMatch(/baca/)
+
+    // 5. Lapisannya sendiri tidak boleh meluber di lebar tersempit.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          ),
+        { message: `lapisan sampul meluber di lebar ${width}px`, timeout: 5_000 },
+      )
+      .toBeLessThanOrEqual(0)
+
+    // 6. `Buka cerita` benar-benar bisa ditekan — bukan sekadar terlihat.
+    const buka = page.getByRole('link', { name: 'Buka cerita' })
+    await expect(buka).toBeInViewport()
+    await buka.click({ timeout: 5_000 })
+    await expect(page).toHaveURL(/\/cerita\//)
+
+    // 7. Kembali, lalu Escape menutup lapisan tanpa berpindah halaman.
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    await page
+      .getByRole('button', { name: /^Perbesar sampul / })
+      .first()
+      .click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toBeHidden()
+    await expect(page).toHaveURL(/\/$/)
+  }
+})
