@@ -186,7 +186,14 @@ Penulis menerima notifikasi ulasan/komentar baru (lihat [`prd_11_search_notifica
 - Tombol **"Membantu"** dengan penghitung; satu pengguna satu kali per ulasan, dapat dibatalkan.
 - Urutan "Paling membantu" memakai jumlah ini.
 - Pengguna **tidak dapat** menandai ulasannya sendiri sebagai membantu.
-- **Tanggapan penulis** ditampilkan menempel di bawah ulasan dengan lencana **Penulis** yang jelas, memakai warna aksen — pembaca harus bisa membedakannya sekilas dari balasan biasa.
+- **Tanggapan penulis** ditampilkan menjorok di bawah ulasan dengan garis emas di tepinya dan lencana **Penulis** berupa pil garis rambut kecil — pembaca harus bisa membedakannya sekilas dari balasan biasa.
+
+> **Revisi 5 September 2026 · lencana penulis turun tingkat.** Versi lama menulis
+> lencana "memakai warna aksen", dan implementasinya pil terisi tinta. Di halaman
+> yang isinya ulasan pembaca, lencana terisi berteriak lebih keras daripada
+> ulasan yang ia tanggapi. Sejak R9c ia pil **garis rambut** berteks emas, dan
+> yang menandai tanggapan itu milik penulis adalah **garis emas di tepi
+> kiri** — bukan bidang berwarna. Pembedaannya tetap sekilas.
 - Satu ulasan hanya boleh punya **satu tanggapan penulis**; menulis lagi berarti menyunting.
 - Hanya pemilik cerita yang dapat menanggapi.
 - Penulis ulasan menerima notifikasi saat ulasannya ditanggapi (lihat [`prd_11_search_notifications.md`](prd_11_search_notifications.md) FR-NOTIF-02).
@@ -212,7 +219,16 @@ Penulis menerima notifikasi ulasan/komentar baru (lihat [`prd_11_search_notifica
 - Komentar **terikat pada satu bab**, bukan pada cerita — konsisten dengan `story_analytics` yang menghitung komentar per bab (mis. *"234 komentar"* pada Chapter 8).
 - **Syarat menulis:** pembaca harus sudah membuka bab tersebut. Bab terkunci berarti komentarnya belum bisa dibaca maupun ditulis — mencegah bocornya isi cerita ke pembaca yang belum membeli.
 - Panjang komentar maksimal **500 karakter**.
-- **Balasan bertingkat satu level saja** — balasan atas balasan digabung ke utas yang sama agar tidak menjadi pohon dalam yang sulit dibaca di layar ponsel.
+- **Balasan bertingkat satu level saja** — balasan atas balasan digabung ke utas yang sama agar tidak menjadi pohon dalam yang sulit dibaca di layar ponsel. **Ditegakkan server**, bukan hanya oleh layar: membalas sebuah balasan **mendarat di utas yang sama**, bukan ditolak.
+- **Bab terkunci menolak membaca *dan* menulis komentarnya**, beserta jalan keluarnya. Komentar bab penuh berisi isi babnya, jadi membukanya untuk yang belum membeli sama dengan membocorkan cerita lewat pintu samping.
+- **Urutan punya pemecah seri yang stabil** — tanpa itu, dua komentar berwaktu sama bertukar posisi tiap kali halaman dimuat.
+- Komentar yang **sedang ditinjau tetap menempati barisnya**, isinya diganti keterangan — bukan hilang, karena baris yang lenyap terbaca sebagai komentar yang dihapus diam-diam.
+
+> **Revisi 5 September 2026.** Empat butir di atas sebelumnya hanya hidup di
+> `architecture.md` §1.17. Ditarik ke sini karena keempatnya **aturan produk**,
+> bukan detail implementasi: yang pertama menentukan bentuk utasnya, yang kedua
+> menutup kebocoran isi berbayar, dan dua terakhir menentukan apa yang pembaca
+> lihat saat data bergerak.
 - **Urutan:** Terbaru *(default)* · Paling disukai · Terlama.
 - Reaksi suka per komentar dengan penghitung.
 - Komentar penulis cerita diberi lencana **Penulis**, sama seperti FR-SOCIAL-04.

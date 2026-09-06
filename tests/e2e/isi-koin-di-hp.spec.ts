@@ -46,6 +46,17 @@ test('layar HP: tombol bayar tidak tertutup bilah navigasi bawah', async ({ page
  */
 const LEBAR_HP = [320, 360, 390, 412, 430] as const
 
+/**
+ * Tiga lebar di atas telepon · audit Fase 14.
+ *
+ * 768 dan 1024 ada karena **di 1024 tata letaknya berganti bentuk**: bilah
+ * navigasi bawah jadi sidebar 240px dan panel pengaturan baca jadi kolom kanan.
+ * Lebar tepat di kedua sisi ambang itulah tempat aturan `lg:` yang terlewat
+ * muncul, dan tidak satu pun lebar telepon bisa melihatnya. 1440 menutup arah
+ * sebaliknya: wadah `max-w-*` yang lupa dipasang baru meluber di layar lebar.
+ */
+const LEBAR_LUAS = [768, 1024, 1440] as const
+
 for (const path of [
   '/',
   '/pustaka',
@@ -80,9 +91,31 @@ for (const path of [
   // R8c — detail transaksi. Statusnya `success`, yang membawa lini masa tiga
   // tahap; `/koin` dan `/koin/transaksi` sudah ada di daftar sejak Fase 6.
   '/koin/transaksi/tx1',
+  // Fase 11 — pusat notifikasi dan lembar preferensinya. Yang pertama membawa
+  // **lima tab** di satu baris bersama tombol pengaturan, yang kedua membawa
+  // dua belas sakelar di dalam lembar; keduanya bentuk yang paling gampang
+  // meluber di 320px.
+  '/notifikasi',
+  '/notifikasi/pengaturan',
+  // Fase 12 — pusat hadiah. Kalender **tujuh sel dalam satu baris** adalah
+  // bentuk yang paling gampang mendorong halaman ke samping di 320px, dan strip
+  // ringkasan tiga kolomnya bertetangga dekat dengan strip `7j` yang pernah
+  // meluber di R9.
+  '/hadiah',
+  // Fase 13 — tujuh layar profil & pengaturan. Yang paling berisiko: strip tiga
+  // kolom profil publik, dua belas sakelar visibilitas, lima `<select>` bahasa,
+  // dan blok skor keamanan yang membawa batang, lima faktor, dan daftar sesi.
+  '/profil/ubah',
+  '/profil/koneksi',
+  '/pengguna/u2',
+  '/pengaturan/bahasa',
+  '/pengaturan/keamanan',
+  '/bantuan',
+  '/legal/ketentuan',
+  '/legal/privasi',
 ]) {
   test(`layar HP: ${path} tidak menggeser halaman ke samping`, async ({ page }) => {
-    for (const width of LEBAR_HP) {
+    for (const width of [...LEBAR_HP, ...LEBAR_LUAS]) {
       await page.setViewportSize({ width, height: 844 })
       await page.goto(path)
       await page.waitForLoadState('networkidle')
@@ -503,6 +536,16 @@ for (const path of [
   '/penulis/analitik',
   '/karya/ms1/bab',
   '/cerita/s1/ulasan',
+  // Fase 11 — lima tab teks, tombol pengaturan berikon, dan baris notifikasi
+  // yang seluruhnya tautan. Tab teks adalah bentuk yang kotak sentuhnya paling
+  // sering lebih kecil daripada yang terlihat.
+  '/notifikasi',
+  // Fase 12 — tujuh sel kalender, tiga tombol misi berukuran `sm`, tombol salin,
+  // dan tombol Gunakan per voucher. Halaman dengan kontrol terkecil sejauh ini.
+  '/hadiah',
+  // Fase 13 — sakelar, kotak centang ekspor, dan tombol Cabut per sesi.
+  '/profil/ubah',
+  '/pengaturan/keamanan',
 ]) {
   test(`target ketuk ≥44px di ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 900 })

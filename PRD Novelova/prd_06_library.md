@@ -243,7 +243,17 @@ Modul ini menerapkan pola cari–saring–urutkan yang dipakai ulang di [`prd_07
 - **Given** cerita berstatus sedang dibaca, **when** kartu dirender, **then** tombol berbunyi "Lanjut Baca".
 - **Given** cerita belum dimulai, **when** kartu dirender, **then** tombol berbunyi "Mulai Baca".
 - **Given** cerita sudah selesai, **when** kartu dirender, **then** tombol berbunyi "Baca Ulang".
-- **Given** pembaca menekan "Lanjut Baca" *(produksi)*, **when** halaman baca terbuka, **then** bab yang terbuka adalah bab terakhir yang dibaca.
+- **Given** pembaca menekan "Lanjut Baca" *(produksi)*, **when** halaman baca terbuka, **then** bab yang terbuka adalah bab terakhir yang dibaca, **dan posisi gulir di dalam bab itu ikut dipulihkan**.
+
+> **Revisi 5 September 2026 · posisi dipulihkan per bab.** Versi lama hanya
+> menuntut bab yang benar. Sejak `prd_05` FR-READ-16 direvisi, posisi gulir
+> disimpan **per bab**, bukan satu angka per cerita — jadi "Lanjut Baca"
+> mengembalikan pembaca ke titik yang sama persis, dan kembali ke bab yang lebih
+> awal juga membuka posisinya sendiri, bukan dari atas.
+>
+> Sebelum itu, kembali ke bab yang lebih awal selalu mulai dari atas — dan bagi
+> pembaca itu tidak bisa dibedakan dari kehilangan tempat. `architecture.md`
+> §1.24.
 
 ---
 

@@ -19,11 +19,15 @@ async function alurStudio(page: Page) {
   await page.goto('/karya')
 
   // Ringkasan empat metrik, dan metrik Koin adalah tautan (FR-EARN-10).
-  // Nama persisnya **angka lalu label** sejak `7j` (nilai serif di atas, label
-  // 9,5px di bawahnya). Angkanya ikut dijangkar: `/koin$/i` saja juga mengenai
-  // tautan "Isi Koin" di bilah navigasi, dan itu gagal sebagai strict mode
-  // violation yang terlihat seperti cacat produk.
-  await expect(page.getByRole('link', { name: /^[\d.,rbjt]+ Koin$/i })).toHaveAttribute(
+  //
+  // Namanya **label lalu angka** sejak audit Fase 14: strip metriknya kini
+  // `<dl>` yang sah (tiap sel `<div><dt><dd>`), jadi tautannya cuma membungkus
+  // angkanya — dan tautan bernama "1,2rb" tidak mengatakan apa pun. `aria-label`
+  // di sisi kode mengembalikan labelnya, di depan. Angkanya tetap ikut
+  // dijangkar: `/koin$/i` saja juga mengenai tautan "Isi Koin" di bilah
+  // navigasi, dan itu gagal sebagai strict mode violation yang terlihat seperti
+  // cacat produk.
+  await expect(page.getByRole('link', { name: /^Koin [\d.,rbjt]+$/i })).toHaveAttribute(
     'href',
     '/penulis/analitik',
   )

@@ -56,7 +56,10 @@ export function CoinChip({
       {text}
       <span className="sr-only">koin</span>
       {bonus > 0 && (
-        <span className="whitespace-nowrap pl-1 font-semibold text-caption text-nv-gold-line tabular-nums">
+        // Emas **teks** (`--nv-gold`), bukan emas garis: pada 12px di atas
+        // kertas, `--nv-gold-line` cuma 3,01:1 — terukur axe, dan 1.4.3 menuntut
+        // 4,5:1 untuk teks sekecil ini. Emas garis tetap benar untuk ikonnya.
+        <span className="whitespace-nowrap pl-1 font-semibold text-caption text-nv-gold tabular-nums">
           +{formatCompactCoin(bonus)} bonus
         </span>
       )}

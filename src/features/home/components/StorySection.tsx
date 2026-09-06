@@ -66,11 +66,18 @@ export function StorySection({
   section,
   tab,
   onCoverClick,
+  priority = false,
 }: {
   section: HomeSection
   tab: string | null
   /** Diteruskan ke tiap kartu di rel; lihat `StoryCard.onCoverClick`. */
   onCoverClick?: ((story: Story, origin: HTMLElement) => void) | undefined
+  /**
+   * Section paling atas · Lighthouse `lcp-lazy-loaded`. Hanya **tiga sampul
+   * pertamanya** yang dimuat lebih dulu — itu yang muat di layar 320px sebelum
+   * digulir, dan menandai selebihnya menghapus arti prioritasnya.
+   */
+  priority?: boolean
 }) {
   const shape = shapeOf(section.id)
   const seeAll = section.seeAll
@@ -113,6 +120,7 @@ export function StorySection({
               story={story}
               className="w-20 shrink-0 snap-start"
               onCoverClick={onCoverClick}
+              priority={priority && i < 3}
               // Nomor peringkat dulu milik bentuk `ranked` yang dihapus; ia
               // pindah ke badge sampul, mekanisme yang sudah dipakai Populer.
               {...(RANKED.has(section.id) && i < 3 ? { badge: `#${i + 1}` } : {})}

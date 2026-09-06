@@ -731,6 +731,8 @@ export const id = {
 
   library: {
     title: 'Perpustakaan',
+    /** Judul daftar, hanya untuk pembaca layar — lihat `heading-order` di LibraryPage. */
+    listHeading: 'Cerita di rakmu',
     subtitle: 'Cerita yang kamu simpan, beserta sejauh mana kamu membacanya.',
     statSaved: 'Disimpan',
     statReading: 'Dibaca',
@@ -782,6 +784,10 @@ export const id = {
   },
 
   studio: {
+    /** Judul daftar, hanya untuk pembaca layar — lihat `heading-order` di StudioPage. */
+    listHeading: 'Daftar karyamu',
+    /** Idem, di halaman kelola bab. */
+    chapterListHeading: 'Daftar bab',
     navEarnings: 'Penghasilan',
     navSchedule: 'Jadwal terbit',
     navReview: 'Antrean tinjauan',
@@ -1657,6 +1663,307 @@ export const id = {
     targetStory: (title: string) => `Cerita "${title}"`,
   },
 
+  /** Fase 14 · PWA & offline · arch §10.2–§10.4. */
+  pwa: {
+    updateReady: 'Versi baru tersedia',
+    reload: 'Muat ulang',
+    offlineBanner: 'Tidak ada koneksi. Bab tersimpan tetap bisa dibaca.',
+    backOnline: 'Koneksi kembali.',
+    offlineTitle: 'Tidak ada koneksi',
+    offlineBody: 'Perangkat ini sedang tidak terhubung ke internet.',
+    offlineSafe: 'Bab yang sudah kamu simpan tetap bisa dibaca.',
+    offlineAction: 'Buka bab tersimpan',
+    needsNetwork: 'Butuh koneksi',
+    needsNetworkBody: (aksi: string) =>
+      `${aksi} butuh koneksi internet. Kami tahan dulu, dan kamu bisa mencobanya lagi begitu jaringan kembali.`,
+    queued: 'Ditahan sampai jaringan kembali.',
+    install: 'Pasang aplikasi',
+    installBody: 'Buka lebih cepat dan tetap bisa membaca bab tersimpan saat offline.',
+    installed: 'Aplikasi sudah terpasang di perangkat ini.',
+    installFailed: 'Peramban ini belum bisa memasang aplikasi dari sini.',
+    saveOffline: 'Simpan offline',
+    savedOffline: 'Tersimpan offline',
+    removeOffline: 'Hapus dari offline',
+    saveLimit: (max: number) =>
+      `Batas ${max} bab tersimpan. Yang paling lama tidak dibuka dilepas otomatis.`,
+    savedCount: (n: number) => `${n} bab tersimpan`,
+    offlineAvailable: 'Tersedia offline',
+    pushDenied: 'Notifikasi diblokir peramban',
+    pushDeniedBody:
+      'Kamu pernah menolak izin notifikasi. Nyalakan lagi lewat pengaturan situs di peramban — kami tidak bisa memintanya ulang dari sini.',
+  },
+
+  /** Fase 13 · prd_10 · FR-PROF-* · FR-SET-* · FR-HELP-*. */
+  settings: {
+    onlyYou: 'HANYA KAMU',
+    recapTitle: 'Rekap 7 hari',
+    recapEmpty: 'Belum ada bab selesai minggu ini.',
+    recapLine: (bab: number, menit: number, cerita: number) =>
+      `${bab} bab · ${menit} menit · ${cerita} cerita`,
+    recapChange: (pct: number) =>
+      pct === 0 ? 'Sama dengan minggu lalu' : pct > 0 ? `Naik ${pct}%` : `Turun ${Math.abs(pct)}%`,
+    activityTitle: 'Aktivitas terbaru',
+    followers: 'Pengikut',
+    following: 'Mengikuti',
+    rewardsShortcut: 'Pusat hadiah',
+    authorStatus: 'Status penulis',
+    authorTierNone: 'Belum terdaftar',
+    authorTierRegistered: 'Terdaftar',
+    authorTierVerified: 'Terverifikasi',
+    authorNextSteps: (n: number) => `${n} langkah belum selesai`,
+    authorAllDone: 'Semua langkah selesai',
+    stepPayout: 'Verifikasi identitas pencairan',
+    stepTwoFactor: 'Nyalakan verifikasi dua langkah',
+    stepTerms: 'Setujui ketentuan penulis',
+    payoutIdentity: 'Identitas pencairan',
+    payoutIdentityNote: 'Rekening dan verifikasinya diatur di halaman pencairan.',
+    earningsShortcut: 'Penghasilan penulis',
+    installApp: 'Pasang aplikasi',
+    installBody: 'Buka lebih cepat dan tetap bisa membaca bab tersimpan saat offline.',
+    signOut: 'Keluar',
+    signOutConfirm: 'Keluar dari akun ini?',
+    signOutDraftWarning:
+      'Ada draf bab yang belum tersimpan ke server. Keluar sekarang bisa membuatnya tertinggal di perangkat ini.',
+    signOutCancel: 'Batal',
+
+    editProfile: 'Ubah profil',
+    tabReader: 'Pembaca',
+    tabAuthor: 'Penulis',
+    displayName: 'Nama tampilan',
+    username: 'Nama pengguna',
+    bio: 'Bio',
+    penName: 'Nama pena',
+    authorBio: 'Bio penulis',
+    changePhoto: 'Ganti foto',
+    removePhoto: 'Hapus foto',
+    saved: 'Profil disimpan.',
+    saveFailed: 'Profil gagal disimpan.',
+    nameRequired: 'Nama tampilan wajib diisi',
+
+    visibilityTitle: 'Visibilitas publik',
+    visibilityAll: 'SEMUA PUBLIK',
+    visibilityCustom: 'KUSTOM',
+    visibilityNote:
+      'Kategori yang dimatikan membuat tabnya hilang sepenuhnya dari profil publikmu — bukan tab kosong.',
+    visibilityServerNote: 'Tersimpan di akun, jadi berlaku di semua perangkatmu.',
+    walletNeverPublic: 'Data dompet tidak pernah tampil ke orang lain',
+    walletNeverPublicBody:
+      'Saldo, transaksi, dan penghasilan adalah aturan platform, bukan preferensi. Sakelarnya ada supaya kamu tahu itu memang tidak bisa dinyalakan.',
+
+    tabActivity: 'Aktivitas',
+    tabBooks: 'Buku',
+    tabReviews: 'Ulasan',
+    tabVisibility: 'Visibilitas',
+    follow: 'Ikuti',
+    unfollow: 'Mengikuti',
+    noPublicTabs: 'Profil ini disembunyikan',
+    noPublicTabsBody: 'Pemiliknya mematikan semua kategori yang bisa dilihat publik.',
+    hiddenByOwner: 'Disembunyikan pemiliknya',
+    shownPublicly: 'Tampil publik',
+    storiesRead: 'Cerita dibaca',
+
+    connections: 'Koneksi',
+    searchConnections: 'Cari nama atau username',
+    connectionsEmpty: 'Belum ada siapa pun di sini',
+    connectionsEmptyBody: 'Ikuti penulis yang kamu suka, dan mereka muncul di sini.',
+    noSearchResults: 'Tidak ada yang cocok',
+    loadMore: 'Muat lebih banyak',
+
+    localeTitle: 'Bahasa & wilayah',
+    appLang: 'Bahasa aplikasi',
+    translation: 'Prioritas terjemahan bab',
+    region: 'Wilayah konten',
+    currency: 'Mata uang & metode bayar',
+    timezone: 'Zona waktu',
+    previewTitle: 'Pratinjau',
+    previewNote: 'Berubah langsung saat kamu memilih — tanpa memuat ulang halaman.',
+    timezoneNote:
+      'Zona waktu ini jadi acuan tunggal untuk klaim check-in harian, kuota iklan, jadwal terbit, dan jam tenang notifikasi.',
+    localeSaved: 'Pengaturan disimpan.',
+
+    securityTitle: 'Keamanan',
+    scoreTitle: 'Skor perlindungan',
+    scoreOf: (n: number) => `${n} dari 100`,
+    levelStrong: 'Kuat',
+    levelMedium: 'Sedang',
+    levelWeak: 'Lemah',
+    factorsTitle: 'Yang dihitung',
+    tipsTitle: 'Saran',
+    tipPoints: (n: number) => `+${n} poin`,
+    noTips: 'Semua faktor sudah terpenuhi.',
+    sessionsTitle: 'Sesi aktif',
+    sessionCurrent: 'Perangkat ini',
+    revoke: 'Cabut',
+    revokeAll: 'Keluar dari semua perangkat',
+    revoked: 'Sesi dicabut.',
+    revokedAll: 'Semua perangkat lain dikeluarkan.',
+    lastActive: (when: string) => `Aktif ${when}`,
+
+    dataTitle: 'Data & akun',
+    clearHistory: 'Hapus riwayat membaca',
+    clearHistoryBody:
+      'Mengosongkan progres dan Lanjut Baca. Cerita tetap ada di perpustakaanmu — itu dua hal berbeda.',
+    clearHistoryConfirm: 'Hapus riwayat membaca?',
+    clearHistoryDone: 'Riwayat membaca dihapus. Perpustakaanmu tidak berubah.',
+    exportTitle: 'Ekspor data',
+    exportBody: 'Pilih apa yang ingin kamu unduh. Berkasnya disiapkan di latar belakang.',
+    exportIdentity: 'Identitas akun',
+    exportActivity: 'Aktivitas membaca',
+    exportWallet: 'Catatan dompet',
+    exportAuthor: 'Alat penulis',
+    exportRequest: 'Minta berkas',
+    exportQueued:
+      'Permintaan diterima. Kami memberi tahu lewat notifikasi saat berkasnya siap; tautannya berlaku 7 hari dan hanya untuk akunmu.',
+    exportPickOne: 'Pilih minimal satu kategori.',
+    deleteTitle: 'Hapus akun',
+    deleteBody: 'Tindakan ini tidak bisa dibatalkan setelah masa tenggang lewat.',
+    deleteBlocked: 'Belum bisa dihapus',
+    deleteConsequences: 'Sebelum melanjutkan, ini yang akan terjadi:',
+    deleteGrace: (days: number) =>
+      `Akun dinonaktifkan dulu selama ${days} hari. Masuk kembali dalam masa itu membatalkan penghapusan.`,
+    deleteTypeName: (phrase: string) => `Ketik "${phrase}" untuk melanjutkan`,
+    deleteConfirm: 'Hapus akun saya',
+    deleteQueued: (when: string) => `Akun dinonaktifkan. Penghapusan permanen ${when}.`,
+
+    helpTitle: 'Pusat bantuan',
+    helpSearch: 'Cari bantuan',
+    helpCategories: 'Kategori',
+    helpFaq: 'Pertanyaan yang sering muncul',
+    helpNoResults: 'Tidak ada artikel yang cocok',
+    helpNoResultsBody: 'Coba kata lain, atau hubungi kami lewat saluran di bawah.',
+    ticketTitle: 'Kirim tiket dukungan',
+    ticketSubject: 'Perihal',
+    ticketBody: 'Ceritakan masalahnya',
+    ticketSend: 'Kirim tiket',
+    ticketSent: 'Tiket terkirim. Kami balas lewat email dalam 1×24 jam kerja.',
+    contactTitle: 'Hubungi kami',
+    contactEmail: 'Email',
+    contactWhatsApp: 'WhatsApp',
+
+    termsTitle: 'Ketentuan Layanan',
+    privacyTitle: 'Kebijakan Privasi',
+    dataMapTitle: 'Data yang kami simpan',
+    rightsTitle: 'Hakmu atas data',
+    lastUpdated: 'Diperbarui 6 September 2026',
+  },
+
+  /** Fase 12 · prd_09 E · FR-RWD-01..07. */
+  rewards: {
+    title: 'Pusat hadiah',
+    /** Ringkasan tiga angka · FR-RWD-01. */
+    summaryCoins: 'Koin hadiah bulan ini',
+    walletBalance: 'Saldo koin',
+    summaryCoinsNote: 'Bukan saldo kedua — ini yang sudah kamu kumpulkan dari hadiah bulan ini.',
+    summaryVouchers: 'Voucher aktif',
+    // Sengaja sependek ini: di 320px slot ini selebar ~95px, dan kalimat yang
+    // pecah tiga baris mendorong strip tiga kolomnya jadi tidak sejajar.
+    summaryExpiring: (n: number) => `${n} segera berakhir`,
+    summaryStreak: 'Streak',
+    // `0/7`, bukan `0 dari 7`: slot ini bersebelahan dengan dua angka polos,
+    // dan frasa berspasi di sana pecah jadi tiga baris di 320px.
+    summaryStreakOf: (n: number) => `${n}/7`,
+    /** Check-in · FR-RWD-02. */
+    checkInTitle: 'Check-in harian',
+    checkInNote: 'Hadiah menaik tiap hari. Hari ke-7 memberi voucher, bukan koin.',
+    checkInMissNote: 'Melewatkan satu hari mengembalikanmu ke Hari 1.',
+    claim: 'Klaim',
+    claimed: 'Diklaim',
+    claimedToday: 'Sudah diklaim hari ini',
+    claimSuccess: (coins: number) => `Hari ini berhasil diklaim. +${coins} koin masuk ke saldomu.`,
+    claimVoucherSuccess: (title: string) =>
+      `Siklus tujuh hari selesai. Voucher "${title}" masuk ke koleksimu.`,
+    dayShort: (n: number) => `H${n}`,
+    /** Misi · FR-RWD-03. */
+    missionsTitle: 'Misi hari ini',
+    missionsNote: 'Progresnya dihitung dari aktivitasmu sendiri, dan mereset tiap hari.',
+    missionProgress: (now: number, target: number) => `${now} dari ${target}`,
+    missionClaimed: 'Sudah diklaim',
+    missionSuccess: (coins: number) => `Misi diklaim. +${coins} koin.`,
+    /** Referral · FR-RWD-04. */
+    referralTitle: 'Ajak teman',
+    referralReward: (coins: number) => `${coins} koin per teman`,
+    referralCodeLabel: 'Kode undanganmu',
+    copy: 'Salin',
+    copied: 'Kode undangan disalin.',
+    copyFailed: 'Peramban ini menolak menyalin. Pilih kodenya lalu salin manual.',
+    referralEarned: (coins: number) => `${coins} koin sudah cair`,
+    referralPending: (n: number) => `${n} menunggu bab pertama`,
+    referralWaiting: 'Menunggu bab pertama',
+    referralDone: 'Hadiah cair',
+    referralEmpty: 'Belum ada yang bergabung lewat kodemu.',
+    /** Voucher · FR-RWD-06. */
+    vouchersTitle: 'Voucher',
+    vouchersEmpty: 'Belum ada voucher aktif',
+    vouchersEmptyBody:
+      'Voucher datang dari check-in hari ke-7, misi tertentu, dan kode promo yang kamu tukarkan.',
+    use: 'Gunakan',
+    lockedShort: 'Terkunci',
+    lockedBy: (cond: string) => `Terkunci · ${cond}`,
+    expiresIn: (days: number) => (days <= 0 ? 'Berakhir hari ini' : `${days} hari lagi`),
+    scopeChapter: 'Bab tertentu',
+    scopeFirstN: (n: number) => `${n} bab pertama`,
+    scopeStory: 'Seluruh cerita',
+    scopeCross: 'Lintas cerita',
+    valueFree: 'Gratis',
+    valuePct: (pct: number) => `Diskon ${pct}%`,
+    /** Pemilih cerita · FR-RWD-06. */
+    pickStory: 'Pakai voucher di cerita mana?',
+    pickStoryNote: 'Hanya cerita yang voucher ini benar-benar berlaku padanya.',
+    pickStoryEmpty: 'Tidak ada cerita yang cocok',
+    pickStoryEmptyBody:
+      'Semua bab yang dicakup voucher ini sudah terbuka, atau ceritanya belum ada di rakmu.',
+    willUnlock: (n: number) => `${n} bab akan terbuka`,
+    applied: (n: number) => `${n} bab terbuka dengan voucher ini.`,
+    /** Riwayat klaim · FR-RWD-05. */
+    historyTitle: 'Riwayat klaim',
+    historyNote: 'Setiap perolehan juga tercatat di buku besar dompet.',
+    historyEmpty: 'Belum ada hadiah yang kamu klaim.',
+    openWallet: 'Buka dompet',
+    freeUnlock: 'Terbuka lewat voucher',
+  },
+
+  /** Fase 11 · prd_11 FR-NOTIF-01..04. */
+  notif: {
+    title: 'Notifikasi',
+    settings: 'Preferensi notifikasi',
+    markAll: 'Tandai semua terbaca',
+    markAllDone: 'Semua notifikasi ditandai terbaca.',
+    markAllFailed: 'Gagal menandai terbaca. Penandanya dikembalikan.',
+    loadMore: 'Muat lebih banyak',
+    unreadDot: 'Belum dibaca',
+    /** Lima saringan · FR-NOTIF-01. */
+    filterAll: 'Semua',
+    filterStory: 'Cerita',
+    filterWallet: 'Dompet',
+    filterRewards: 'Hadiah',
+    filterSystem: 'Sistem',
+    /** Keadaan kosong menjelaskan **kapan** notifikasi akan muncul · FR-CORE-02. */
+    emptyTitle: 'Belum ada pemberitahuan',
+    emptyBody:
+      'Notifikasi muncul saat cerita yang kamu ikuti merilis bab baru, saat isi koin selesai, saat check-in harian siap diklaim, dan saat ada kabar tentang karyamu.',
+    emptyFilteredTitle: 'Tidak ada di saringan ini',
+    emptyFilteredBody: 'Coba saringan lain, atau lihat Semua.',
+    /** Penggabungan · FR-NOTIF-02. */
+    grouped: (count: number) => `${count} pembaruan digabung`,
+    /** Preferensi · FR-NOTIF-04. */
+    prefsIntro:
+      'Pilih lewat jalur mana tiap kelompok boleh menghubungimu. Pengaturan ini tersimpan di akun, jadi berlaku di semua perangkatmu.',
+    channelInApp: 'Dalam aplikasi',
+    channelPush: 'Push',
+    channelEmail: 'Email',
+    lockedTitle: 'Peringatan keamanan tidak bisa dimatikan',
+    lockedBody:
+      'Pemberitahuan masuk dari perangkat baru selalu dikirim lewat aplikasi dan push. Email boleh dimatikan — itu salinannya, bukan peringatannya.',
+    perStoryNote:
+      'Sakelar notifikasi per cerita di Perpustakaan lebih spesifik daripada pengaturan ini: mematikan "Cerita" mematikan semuanya, menyalakannya tetap mengikuti sakelar tiap cerita.',
+    quietHours: (from: number, to: number) =>
+      `Jam tenang ${String(from).padStart(2, '0')}.00–${String(to).padStart(2, '0')}.00 — push ditahan, notifikasi tetap masuk daftar.`,
+    saved: 'Preferensi notifikasi disimpan.',
+    saveFailed: 'Preferensi gagal disimpan. Nilai sebelumnya dikembalikan.',
+    /** Lencana lonceng · FR-NOTIF-03. */
+    bell: (unread: number) => (unread > 0 ? `Notifikasi, ${unread} belum dibaca` : 'Notifikasi'),
+  },
+
   form: {
     required: 'Wajib diisi',
     charCount: (used: number, max: number) => `${used}/${max}`,
@@ -1666,6 +1973,7 @@ export const id = {
   },
 
   a11y: {
+    skipToContent: 'Lompat ke isi',
     starRating: (n: number) => `${n} dari 5 bintang`,
     unreadCount: (n: number) => `${n} pemberitahuan belum dibaca`,
     spoilerHidden: 'Spoiler — ketuk untuk melihat',

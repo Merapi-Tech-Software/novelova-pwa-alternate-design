@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import type { AuthorChapterParams, ScheduleChapterInput } from '@/api/contracts'
+import { mintaIzinPush } from '@/stores/pwa'
 
 /**
  * Daftar bab bagi penulisnya · FR-STUDIO-09.
@@ -45,5 +46,16 @@ export const usePublishChapter = () => useChapterMutation((id: string) => api.pu
 export const useUnscheduleChapter = () =>
   useChapterMutation((id: string) => api.unscheduleChapter(id))
 export const useDeleteChapter = () => useChapterMutation((id: string) => api.deleteChapter(id))
+/**
+ * Menjadwalkan bab · momen kedua yang boleh meminta izin push · FR-NOTIF-05.
+ *
+ * Penulis yang menaruh bab di jam tertentu jelas ingin tahu saat bab itu benar
+ * terbit — dan itu satu-satunya kabar yang datangnya tidak bisa ia tunggui.
+ * Ditaruh di hook karena dua halaman menjadwalkan lewat mutasi yang sama.
+ */
 export const useScheduleChapter = () =>
-  useChapterMutation((input: ScheduleChapterInput) => api.scheduleChapter(input))
+  useChapterMutation(async (input: ScheduleChapterInput) => {
+    const chapter = await api.scheduleChapter(input)
+    void mintaIzinPush()
+    return chapter
+  })

@@ -1,0 +1,24 @@
+# Novelova · https://novelova.merapiapp.my.id
+#
+# Tanpa berkas ini, permintaan /robots.txt jatuh ke fallback SPA dan dijawab
+# `index.html` — perayap membacanya sebagai robots.txt yang rusak, bukan sebagai
+# "tidak ada aturan". Lighthouse melaporkannya sebagai 52 baris tak terbaca.
+#
+# Yang ditutup adalah halaman yang **hanya berarti bagi pemiliknya**: rak,
+# dompet, studio, dan pengaturan. Semuanya di balik login, jadi perayap tidak
+# akan melihat isinya — tetapi URL-nya tetap bisa terindeks, dan hasil pencarian
+# yang mengarah ke halaman login bukan hasil yang berguna bagi siapa pun.
+
+User-agent: *
+Allow: /
+Disallow: /koin
+Disallow: /pustaka
+Disallow: /karya
+Disallow: /penulis
+Disallow: /notifikasi
+Disallow: /pengaturan
+Disallow: /profil/ubah
+Disallow: /hadiah
+Disallow: /dev/
+
+Sitemap: https://novelova.merapiapp.my.id/sitemap.xml

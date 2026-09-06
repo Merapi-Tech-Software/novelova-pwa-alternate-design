@@ -202,3 +202,127 @@ export const ReaderStatsSchema = z.object({
   reviewCount: z.number().int().nonnegative(),
 })
 export type ReaderStats = z.infer<typeof ReaderStatsSchema>
+
+// ── Fase 13 · profil publik, keamanan, ekspor, penghapusan ───────────────────
+
+/**
+ * Profil pengguna lain · FR-PROF-08 · FR-PROF-10.
+ *
+ * **Tab-nya ditentukan server, bukan disaring layar.** Kategori privasi yang
+ * dimatikan membuat tabnya **hilang**, bukan jadi tab kosong — dan yang tahu
+ * nilai sakelarnya cuma server. Layar yang menyaring sendiri akan merender tab
+ * yang isinya tidak pernah datang.
+ */
+export const PublicProfileTabSchema = z.enum(['activity', 'books', 'reviews'])
+export type PublicProfileTab = z.infer<typeof PublicProfileTabSchema>
+
+export const PublicProfileSchema = z.object({
+  user: UserRowSchema,
+  followerCount: z.number().int().nonnegative(),
+  followingCount: z.number().int().nonnegative(),
+  storiesRead: z.number().int().nonnegative(),
+  /** Tab yang benar-benar boleh dilihat orang lain. Bisa kosong seluruhnya. */
+  tabs: z.array(PublicProfileTabSchema),
+  activity: z.array(z.object({ id: IdSchema, text: z.string(), at: IsoDateTimeSchema })),
+  books: z.array(
+    z.object({ storyId: IdSchema, title: z.string(), coverUrl: z.string().nullable() }),
+  ),
+  reviews: z.array(
+    z.object({ id: IdSchema, storyTitle: z.string(), stars: z.number(), text: z.string() }),
+  ),
+  /**
+   * Keadaan nyata tiap kategori · FR-PROF-10 — dipakai tab Visibility supaya
+   * ia berhenti jadi teks statis. **Dompet selalu `false`** di sini: itu aturan
+   * platform, bukan preferensi.
+   */
+  visibility: z.object({
+    readingActivity: z.boolean(),
+    library: z.boolean(),
+    reviews: z.boolean(),
+    wallet: z.literal(false),
+  }),
+})
+export type PublicProfile = z.infer<typeof PublicProfileSchema>
+
+/** Ubah profil · FR-PROF-07. Nama wajib; sisanya boleh kosong. */
+export const ProfileUpdateSchema = z.object({
+  displayName: z.string().min(1, 'Nama tampilan wajib diisi').max(50),
+  username: z.string().min(3).max(20),
+  bio: z.string().max(160),
+  avatarUrl: z.string().nullable(),
+  penName: z.string().max(50),
+  authorBio: z.string().max(300),
+})
+export type ProfileUpdateInput = z.infer<typeof ProfileUpdateSchema>
+
+/**
+ * Rekap mingguan · FR-PROF-02.
+ *
+ * Diturunkan dari progres baca tujuh hari terakhir. Berlabel **"HANYA KAMU"**
+ * di layar karena ia tidak pernah tampil ke orang lain apa pun nilai sakelar
+ * privasinya — itu ringkasan, bukan aktivitas.
+ */
+export const WeeklyRecapSchema = z.object({
+  chapters: z.number().int().nonnegative(),
+  minutes: z.number().int().nonnegative(),
+  stories: z.number().int().nonnegative(),
+  /** Perbandingan dengan tujuh hari sebelumnya, dalam persen. */
+  changePct: z.number().int(),
+})
+export type WeeklyRecap = z.infer<typeof WeeklyRecapSchema>
+
+/** Satu saran keamanan · FR-SET-02 — **muncul dari keadaan nyata**, bukan daftar tetap. */
+export const SecurityTipSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  body: z.string(),
+  /** Berapa poin yang didapat kalau diikuti; `0` untuk saran tanpa bobot. */
+  points: z.number().int().nonnegative(),
+  actionLabel: z.string(),
+  actionLink: z.string().nullable(),
+})
+export type SecurityTip = z.infer<typeof SecurityTipSchema>
+
+export const SecurityOverviewSchema = z.object({
+  score: z.number().int().min(0).max(100),
+  level: z.enum(['kuat', 'sedang', 'lemah']),
+  factors: z.array(
+    z.object({ id: z.string(), label: z.string(), weight: z.number().int(), met: z.boolean() }),
+  ),
+  tips: z.array(SecurityTipSchema),
+  sessions: z.array(DeviceSessionSchema),
+})
+export type SecurityOverview = z.infer<typeof SecurityOverviewSchema>
+
+/** Empat kategori ekspor · FR-SET-05. */
+export const EXPORT_CATEGORIES = ['identitas', 'aktivitas', 'dompet', 'penulis'] as const
+export const ExportCategorySchema = z.enum(EXPORT_CATEGORIES)
+export type ExportCategory = z.infer<typeof ExportCategorySchema>
+
+export const DataExportSchema = z.object({
+  id: IdSchema,
+  categories: z.array(ExportCategorySchema),
+  status: z.enum(['processing', 'ready', 'expired']),
+  requestedAt: IsoDateTimeSchema,
+  /** Tautan berlaku terbatas dan hanya untuk pemilik akun · FR-SET-05. */
+  expiresAt: IsoDateTimeSchema.nullable(),
+})
+export type DataExport = z.infer<typeof DataExportSchema>
+
+/**
+ * Pemeriksaan sebelum penghapusan akun · FR-SET-05.
+ *
+ * Penghapusan **ditahan** bila masih ada penarikan diproses atau pesanan cetak
+ * berjalan. Alasannya dikirim, bukan sekadar bendera: penolakan tanpa alasan
+ * tidak bisa ditindaklanjuti.
+ */
+export const DeletionCheckSchema = z.object({
+  allowed: z.boolean(),
+  blockers: z.array(z.string()),
+  /** Konsekuensi yang wajib dibaca sebelum konfirmasi. */
+  consequences: z.array(z.string()),
+  graceDays: z.number().int().positive(),
+  /** Nama yang harus diketik ulang — pengaman terkuat di aplikasi ini. */
+  confirmPhrase: z.string(),
+})
+export type DeletionCheck = z.infer<typeof DeletionCheckSchema>

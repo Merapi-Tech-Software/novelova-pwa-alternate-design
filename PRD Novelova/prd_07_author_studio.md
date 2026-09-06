@@ -950,13 +950,26 @@ Modul terbesar aplikasi: seluruh perkakas penulis, dari membuat cerita sampai me
 **User story.** Sebagai penulis, saya ingin memahami bagaimana pembaca merespons, dari mana mereka datang, dan seberapa konsisten saya menerbitkan.
 
 **Aturan bisnis.**
-- **Sentimen komentar** — ringkasan nada dari total komentar pada rentang terpilih (prototype: 234 komentar).
+- **Sentimen komentar** — ringkasan nada yang **diturunkan dari bintang ulasan** cerita ini: empat bintang ke atas positif, tiga netral, dua ke bawah negatif. Keterangan di bawahnya menyebut **jumlah ulasan** yang menyusunnya, bukan jumlah komentar. Nol ulasan mendapat kalimatnya sendiri — kosong ≠ nol (FR-CORE-03).
+
+> **Revisi 5 September 2026 · sumber sentimen.** Versi lama menulis "ringkasan
+> nada dari total komentar", dan implementasinya memang mencetak *"Dari 234
+> komentar"* — padahal persentasenya diturunkan dari **bintang ulasan**. Pada
+> cerita yang ulasannya nol, layarnya berbunyi *"0% · 0% · 0% · Dari 10
+> komentar"*: angkanya benar, sumbernya salah, dan itu bentuk paling halus dari
+> berbohong di layar analitik. Diperbaiki di R9b.
+>
+> Bintang ulasan dipilih karena ia **satu-satunya sinyal nada yang benar-benar
+> dimiliki pembaca** — dan ia jujur, karena pembacanya sendiri yang memilihnya.
+> Batas atasnya diakui terang: ulasan bintang lima yang isinya keluhan tetap
+> terhitung positif. `architecture.md` §1.30.
 - **Asal pembaca** — sumber trafik dan waktu paling aktif.
 - **Aktivitas publish** — kalender bulanan (prototype: Mei 2026) yang menunjukkan hari-hari penerbitan.
 - Ketiganya bersifat tampilan; nilainya statis pada prototype.
 
 **Acceptance criteria.**
-- **Given** penulis menggulir ke bagian sentimen, **when** bagian dirender, **then** jumlah komentar yang dianalisis tampil.
+- **Given** penulis menggulir ke bagian sentimen, **when** bagian dirender, **then** jumlah **ulasan** yang menyusun persentasenya tampil.
+- **Given** cerita belum punya satu pun ulasan, **when** bagian sentimen dirender, **then** yang tampil kalimat "belum ada ulasan" — bukan tiga angka nol.
 - **Given** penulis menggulir ke aktivitas publish, **when** bagian dirender, **then** kalender bulan berjalan tampil.
 
 ---
@@ -999,7 +1012,16 @@ Modul terbesar aplikasi: seluruh perkakas penulis, dari membuat cerita sampai me
   | **Selesai** (softcopy) | Nama berkas, ukuran, masa unduh | Download ulang · Bagikan |
   | **Dibatalkan** (hardcopy) | **Alasan penolakan** | **Kembali ke Stories** (`my_stories.html`) · Hubungi Admin |
 
-- **Lini masa enam tahap:** Diajukan → Dikonfirmasi → Dibayar → **Dicetak** → Dikirim → Diterima, dengan penanda titik untuk tahap selesai, tahap saat ini, dan tahap yang belum dijalani, serta label posisi saat ini.
+- **Lini masa enam tahap:** Diajukan → Dikonfirmasi → Dibayar → **Dicetak** → Dikirim → Diterima. Tahap selesai **terisi tinta** dan bercentang, tahap kini **terisi emas**, tahap yang belum dijalani berupa lingkaran bergaris rambut. **Tidak ada garis penghubung sesudah tahap terakhir** — garis yang keluar dari tahap penutup menjanjikan tahap yang tidak ada.
+
+> **Revisi 5 September 2026 · tahap kini emas.** Versi lama hanya menyebut
+> "penanda titik" tanpa mengatakan apa yang membedakan ketiganya, dan
+> implementasinya memakai tinta untuk tahap selesai **maupun** tahap kini —
+> satu-satunya bedanya tinggal centang. Mockup `7o`–`7r` menggambarnya emas sejak
+> awal, dan `prd_01` §0.3 kini memuat "tahap aktif pelacak" sebagai peran keenam
+> emas. Diperbaiki di primitif `StageTrack`, jadi berlaku sekaligus untuk riwayat
+> cetak, riwayat pencairan, pengajuan pencairan, dan detail transaksi dompet.
+> `architecture.md` §1.28.
 - **Masa unduh softcopy: 30 hari** — konsisten dengan pesan pada FR-STUDIO-05.
 - Alasan penolakan bersifat konkret dan menyatakan kebijakan produk: **minimum 10 bab aktif agar layak dijilid**.
 - Keterangan halaman menyatakan bahwa softcopy tersimpan untuk diunduh ulang selama 30 hari dan hardcopy menampilkan proses administrasi dari pengajuan sampai diterima.

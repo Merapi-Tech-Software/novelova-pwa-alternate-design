@@ -23,6 +23,7 @@ beforeEach(async () => {
   await db.ratings.delete(`${CURRENT_USER_ID}-s1`)
   await db.progress.put({
     scrollByChapter: {},
+    finishedAt: {},
     id: `${CURRENT_USER_ID}-s1`,
     userId: CURRENT_USER_ID,
     storyId: 's1',
@@ -192,6 +193,7 @@ describe('integrasi misi, feed & visibilitas · FR-SOCIAL-08', () => {
 
     await db.progress.put({
       scrollByChapter: {},
+      finishedAt: {},
       id: `${CURRENT_USER_ID}-ms1`,
       userId: CURRENT_USER_ID,
       storyId: 'ms1',
@@ -278,6 +280,7 @@ describe('sentimen dari data nyata · FR-SOCIAL-08', () => {
   it('bintang ulasan menentukan pecahan nada, dan ketiganya berjumlah 100', async () => {
     await db.progress.put({
       scrollByChapter: {},
+      finishedAt: {},
       id: `${CURRENT_USER_ID}-${MINE}`,
       userId: CURRENT_USER_ID,
       storyId: MINE,

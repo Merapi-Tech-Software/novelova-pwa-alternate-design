@@ -27,6 +27,26 @@
 >
 > Lembar pengaturan section (`7s`) tetap sembilan baris, dan **kesembilannya tetap
 > terdaftar** walau section-nya sedang disembunyikan karena kosong.
+>
+> ### Revisi 6 September 2026 · lima kalimat di atas sudah dilewati R2b
+>
+> Blok ini merekam putaran 7 apa adanya. Permintaan produk 5 September mengubah
+> lima hal yang disebutnya, dan koreksinya baru masuk ke §2.1 dan FR-HOME-04 —
+> bukan ke sini, sehingga blok pembuka berkas ini **membantah isi berkasnya
+> sendiri** selama satu putaran:
+>
+> | Yang tertulis di atas | Yang berlaku |
+> |---|---|
+> | "**urutannya tidak berubah**" | tiga section prioritas naik ke paling atas, tab genre turun ke bawah banner (§2.1). Kesembilan **bloknya** memang tetap sembilan |
+> | kartu membawa `★ rating` dan jumlah baca | kartu beranda tinggal **sampul + judul**; nama pena, rating, dan jumlah baca pindah ke lapisan zoom sampul (FR-HOME-04) |
+> | Baru & Naik Cepat bergaris pertumbuhan emas | dicabut bersama bentuk kartu lebarnya |
+> | Editor's Picks membawa kutipan serif per cerita | dicabut bersama bentuk rel 160px |
+> | section tematik jadi daftar tegak bernomor | rel mendatar sampul 80px seperti section genre lain; nomor tinggal di Populer dan Paling Banyak Dibuka |
+>
+> Yang **tetap benar** dari daftar di atas: bentuk banner, tab teks bergaris bawah
+> 2px, anatomi kepala section, Lanjut Membaca sebagai daftar berbatang progres,
+> pita iklan garis rambut, FAB 48px di kiri bawah, dan sembilan baris lembar
+> pengaturan. `architecture.md` §1.22.
 ---
 
 ## 1. Ringkasan Modul
@@ -222,15 +242,29 @@ Beranda adalah layar pertama setelah masuk dan pusat penemuan cerita. Isinya sem
 **User story.** Sebagai penyelenggara, saya ingin menempatkan iklan di titik yang wajar dalam feed agar monetisasi berjalan tanpa merusak alur penemuan cerita.
 
 **Aturan bisnis.**
-- Slot 1 (`sec-ad1`): banner ramping, ditempatkan **setelah** Popular.
-- Slot 2 (`sec-ad2`): iklan native, ditempatkan **setelah** Editor's Picks.
+- Slot 1 (`sec-ad1`): banner ramping, ditempatkan **setelah section tematik pertama** — di bawah tab genre.
+- Slot 2 (`sec-ad2`): iklan native, ditempatkan **setelah section tematik kedua**.
+- **Tidak ada iklan sebelum banner.** Ketiga section prioritas di paling atas bersih dari slot iklan.
+
+> **Revisi 6 September 2026 · kedua slot iklan pindah ke bawah tab genre.** Versi
+> lama menaruh slot 1 setelah Popular dan slot 2 setelah Editor's Picks. Sejak
+> §1.22 menaikkan ketiga section prioritas ke paling atas, penempatan itu berarti
+> menyisipkan iklan **di antara tiga section teratas** — tepat di bidang yang
+> menentukan kesan pertama beranda. Jumlah slot di halaman tetap dua; yang
+> berubah hanya tidak ada lagi yang mendahului banner.
+>
+> Perpindahannya sudah tercatat di §2.1 sejak 5 September, tetapi aturan bisnis
+> di sini **tidak ikut disunting** pada giliran yang sama — dan dua bagian berkas
+> yang saling membantah lebih buruk daripada satu bagian yang usang.
+> `architecture.md` §1.22.
 - Keduanya memakai `role="complementary"` dan `aria-label` yang menyebut "Sponsored", sehingga pembaca layar dapat membedakannya dari konten.
 - Keduanya termasuk dalam kontrol visibilitas FR-HOME-06 — pengguna boleh menyembunyikan iklan.
 
 **Hook implementasi.** `home_tabs.html:978` (`.ad-slim#sec-ad1`), `home_tabs.html:1051` (`.ad-native#sec-ad2`).
 
 **Acceptance criteria.**
-- **Given** seluruh section aktif, **when** pengguna menggulir melewati Popular, **then** banner iklan tampil sebelum New & Trending.
+- **Given** seluruh section aktif, **when** pengguna menggulir melewati section tematik pertama, **then** banner iklan tampil sebelum section tematik berikutnya.
+- **Given** seluruh section aktif, **when** pengguna melihat tiga section teratas, **then** tidak ada slot iklan di antaranya.
 - **Given** pengguna mematikan switch "Ad", **when** popover ditutup, **then** slot iklan tersebut tidak lagi tampil di feed.
 - **Given** pembaca layar membaca feed, **when** mencapai slot iklan, **then** area diumumkan sebagai konten bersponsor.
 

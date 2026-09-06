@@ -238,6 +238,11 @@ export default function LibraryPage() {
             >
               {(data) => (
                 <>
+                  {/* Kartu rak memakai `<h3>` untuk judul cerita, dan tanpa
+                      `<h2>` di atasnya urutan judulnya melompat h1→h3 (axe
+                      `heading-order`). Judulnya memang tidak perlu terlihat —
+                      tabnya sudah mengatakannya — tetapi strukturnya perlu ada. */}
+                  <h2 className="sr-only">{t('library.listHeading')}</h2>
                   <ul className="divide-y divide-nv-line">
                     {data.items.map((item) => (
                       <LibraryCard

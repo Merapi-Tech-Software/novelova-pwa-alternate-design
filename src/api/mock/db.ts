@@ -12,6 +12,7 @@ import type {
   LocaleSettings,
   Notification,
   NotificationPrefs,
+  OfflineChapter,
   Ownership,
   PayMethod,
   PrintOrder,
@@ -19,9 +20,10 @@ import type {
   Rating,
   ReaderPrefs,
   ReadingProgress,
+  ReferralInvite,
   Review,
   ReviewQueueItem,
-  Reward,
+  RewardState,
   ScheduleEntry,
   Story,
   TopupOrder,
@@ -122,7 +124,9 @@ export class NovelovaDb extends Dexie {
   withdrawals!: EntityTable<Withdrawal, 'id'>
 
   // hadiah
-  rewards!: EntityTable<Reward, 'userId'>
+  rewards!: EntityTable<RewardState, 'userId'>
+  referralInvites!: EntityTable<ReferralInvite & { id: string; userId: string }, 'id'>
+  offlineChapters!: EntityTable<OfflineChapter & { id: string }, 'id'>
   vouchers!: EntityTable<Voucher, 'id'>
 
   // profil & pengaturan
@@ -192,6 +196,14 @@ export class NovelovaDb extends Dexie {
     // menyunting versi 1: peramban yang sudah memegang database lama harus bisa
     // ikut naik tanpa kehilangan isinya.
     this.version(2).stores({ readerPrefs: 'userId' })
+
+    // Undangan referral datang di Fase 12, alasan yang sama.
+    this.version(3).stores({ referralInvites: 'id, userId' })
+
+    // Bab tersimpan offline datang di Fase 14.
+    this.version(4).stores({
+      offlineChapters: 'id, userId, storyId, [userId+chapterId], lastOpenedAt',
+    })
   }
 }
 

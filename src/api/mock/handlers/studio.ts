@@ -16,6 +16,7 @@ import type {
 } from '../../contracts'
 import { ApiError, INTERNAL_CODES } from '../../errors'
 import { db } from '../db'
+import { emitNotification } from './notifications'
 import { currentUserId } from './session'
 
 /**
@@ -357,6 +358,15 @@ export const studioHandlers: Pick<
         'Waktu terbit sudah lewat. Pilih tanggal hari ini atau sesudahnya.',
       )
     }
+
+    // Pemicu FR-NOTIF-02: penjadwal cerita.
+    await emitNotification(userId, {
+      kind: 'cerita-terjadwal',
+      title: `${story.title} terjadwal terbit`,
+      body: 'Cerita berpindah dari draf ke terjadwal',
+      deepLink: '/karya',
+      groupKey: `sched-story-${story.id}`,
+    })
 
     await db.scheduleEntries.put({
       id: `sch-story-${story.id}`,

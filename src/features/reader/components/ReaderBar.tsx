@@ -1,10 +1,13 @@
-import { ChevronLeft, Headphones, Settings2, Square } from 'lucide-react'
+import { BookMarked, BookmarkPlus, ChevronLeft, Headphones, Settings2, Square } from 'lucide-react'
 import type { Chapter } from '@/api/contracts'
 import { CoinChip } from '@/components/patterns/CoinChip'
 import { IconButton } from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
+import { useOfflineChapters, useToggleOffline } from '@/hooks/useOffline'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
 import { useBackNavigation } from '@/lib/nav'
+import { OFFLINE_MAX } from '@/lib/offline'
 
 export interface ReaderBarProps {
   chapter: Chapter
@@ -59,6 +62,11 @@ export function ReaderBar({
 }: ReaderBarProps) {
   const goBack = useBackNavigation(`/cerita/${storyId}`)
   const wallet = useWallet()
+  const offline = useOfflineChapters()
+  const toggleOffline = useToggleOffline()
+  const toast = useToast()
+
+  const tersimpan = (offline.data ?? []).some((row) => row.chapterId === chapter.id)
 
   return (
     <header className="fixed inset-x-3 top-3 z-40 flex items-center gap-2 rounded-nv-lg border border-nv-line-soft bg-nv-card p-2 shadow-nv">
@@ -74,6 +82,42 @@ export function ReaderBar({
       </div>
 
       <CoinChip amount={wallet.data?.balance ?? 0} size="sm" />
+
+      {/*
+        Simpan offline · architecture.md §10.3 · FR-CORE-03.
+        **Hanya untuk bab yang dimiliki** — servernya menolak yang belum
+        dibayar, jadi tombolnya tidak digambar untuk bab terkunci: kontrol
+        yang pasti ditolak lebih buruk daripada kontrol yang tidak ada.
+      */}
+      {chapter.owned && (
+        <IconButton
+          label={tersimpan ? t('pwa.removeOffline') : t('pwa.saveOffline')}
+          size="sm"
+          disabled={toggleOffline.isPending}
+          onClick={() =>
+            toggleOffline.mutate(
+              { chapterId: chapter.id, simpan: !tersimpan },
+              {
+                onSuccess: (rows) => {
+                  toast.show(tersimpan ? t('pwa.saveOffline') : t('pwa.savedOffline'), {
+                    tone: 'success',
+                  })
+                  if (!tersimpan && rows.length >= OFFLINE_MAX) {
+                    toast.show(t('pwa.saveLimit')(OFFLINE_MAX), { tone: 'neutral' })
+                  }
+                },
+                onError: (error) => {
+                  toast.show(error instanceof Error ? error.message : t('failure.genericTitle'), {
+                    tone: 'danger',
+                  })
+                },
+              },
+            )
+          }
+        >
+          {tersimpan ? <BookMarked size={18} /> : <BookmarkPlus size={18} />}
+        </IconButton>
+      )}
 
       {locked && (
         <>

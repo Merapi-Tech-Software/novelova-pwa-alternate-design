@@ -90,13 +90,7 @@ async function entryOf(userId: string, storyId: string): Promise<LibraryEntry | 
 
 export const storyHandlers: Pick<
   NovelovaApi,
-  | 'getStory'
-  | 'getChapters'
-  | 'getChapter'
-  | 'toggleFollow'
-  | 'redeemVoucher'
-  | 'applyVoucher'
-  | 'listVouchers'
+  'getStory' | 'getChapters' | 'getChapter' | 'toggleFollow' | 'redeemVoucher' | 'applyVoucher'
 > = {
   /**
    * Satu bab beserta isinya · FR-READ-06.
@@ -146,6 +140,7 @@ export const storyHandlers: Pick<
         scrollPct: 0,
         scrollByChapter: {} as Record<string, number>,
         finishedChapterIds: [] as string[],
+        finishedAt: {} as Record<string, string>,
         updatedAt: new Date().toISOString(),
       }
       await db.progress.put(opened)
@@ -189,16 +184,6 @@ export const storyHandlers: Pick<
     }
   },
 
-  /** Voucher milik pengguna, yang belum kedaluwarsa dan masih punya sisa pakai. */
-  async listVouchers(): Promise<Voucher[]> {
-    const userId = currentUserId()
-    const all = await db.vouchers.toArray()
-
-    return all
-      .filter((v) => v.ownerId === userId)
-      .filter((v) => v.usedCount < v.maxUses)
-      .sort((a, b) => Date.parse(a.expiresAt) - Date.parse(b.expiresAt))
-  },
   async getStory(storyId: string): Promise<StoryDetail> {
     const userId = currentUserId()
     const story = await db.stories.get(storyId)
@@ -376,6 +361,29 @@ export const storyHandlers: Pick<
       })),
     )
     await db.vouchers.put({ ...voucher, usedCount: voucher.usedCount + 1 })
+
+    /*
+     * **Pemakaian voucher tercatat di buku besar** · FR-RWD-06.
+     *
+     * Nilainya nol koin, dan justru itu gunanya: pembaca yang menelusuri
+     * riwayat harus bisa menemukan bab mana yang terbuka lewat voucher. Tanpa
+     * barisnya, bab terbuka begitu saja tanpa jejak — dan satu-satunya
+     * kesimpulan yang masuk akal bagi pembaca adalah koinnya terpotong diam-diam.
+     */
+    if (fresh.length > 0) {
+      await db.transactions.add({
+        id: `tx-voucher-${voucher.id}-${Date.now().toString(36)}`,
+        userId,
+        kind: 'reward',
+        amount: 0,
+        title: `${voucher.title} · ${fresh.length} bab terbuka`,
+        refType: 'story',
+        refId: storyId,
+        method: 'voucher',
+        status: 'success',
+        createdAt: new Date().toISOString(),
+      })
+    }
 
     return {
       voucher,

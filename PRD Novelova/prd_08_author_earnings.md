@@ -117,8 +117,25 @@ Sisi bisnis dari peran penulis: melihat performa **seluruh karya** secara agrega
 **User story.** Sebagai penulis, saya ingin tahu berapa persen pembaca membuka bab premium saya dan pada hari apa pendapatan saya paling tinggi.
 
 **Aturan bisnis.**
-- **Tingkat buka** — persentase pembaca yang membuka bab premium (38%), disertai perubahan (+4,2%).
-- **Penggemar baru** — jumlah pengikut baru (6.812), disertai perubahan (+18%).
+- **Tingkat buka** — persentase pembaca yang membuka bab premium, disertai arah perubahannya. Angkanya **diturunkan dari tahap terakhir corong pembaca** (FR-EARN-04), bukan dihitung sendiri.
+- **Penggemar baru** — jumlah pengikut baru, disertai arah perubahannya.
+
+> **Revisi 5 September 2026 · persentase perubahan ikut diturunkan.** Angka
+> contoh prototipe (38% · +4,2% · 6.812 · +18%) tetap dicatat di atas sebagai
+> asal-usulnya, tetapi **tidak lagi dipatok**: sampai R9a, nilai tingkat buka
+> dihitung dari data sementara persentase perubahannya konstanta `4`, sehingga
+> layar bisa berbunyi **"0% · naik 4%"** — mustahil, karena tidak ada yang bisa
+> naik dari nol ke nol.
+>
+> Keduanya kini lewat satu fungsi `pct(sekarang, sebelumnya)` yang mengembalikan
+> **nol untuk nol lawan nol** — bentuk yang sama dengan analitik cerita. Batas
+> atasnya diakui terang: pembandingnya masih pecahan dari nilai sekarang, bukan
+> periode sebelumnya yang sungguhan, karena server tiruan tidak menyimpan agregat
+> harian.
+>
+> **Tidak ada test yang bisa menangkap cacat seperti ini**, karena kedua angka
+> benar sendiri-sendiri; yang salah cuma kalimat yang mereka bentuk bersama.
+> `architecture.md` §1.30.
 - **Kurva pendapatan** — grafik batang tujuh hari berlabel Sen–Min; tinggi tiap batang mewakili konversi koin hari itu (prototype: 46% · 58% · 42% · 76% · 64% · **92%** · 70%).
 - Grafik memakai `aria-label="Grafik pendapatan"`.
 - Puncak akhir pekan (Sabtu 92%) selaras dengan catatan aksi pada FR-EARN-05 — kedua bagian harus tetap konsisten satu sama lain.
@@ -142,7 +159,14 @@ Sisi bisnis dari peran penulis: melihat performa **seluruh karya** secara agrega
 - **Empat tahap berurutan** dengan persentase menurun: **Dibuka 94%** → **Bab 3 78%** → **Premium 49%** → **Bayar 38%**.
 - Setiap tahap ditampilkan sebagai batang horizontal berlabel dan berpersentase.
 - Corong dihitung untuk **satu cerita** (prototype: *The CEO's Secret Lover*), ditampilkan sebagai sub-judul kartu.
-- Persentase tahap terakhir (38%) sama dengan metrik "Tingkat buka" pada FR-EARN-03 — keduanya mengukur hal yang sama dan harus tetap konsisten.
+- Persentase tahap terakhir sama dengan metrik "Tingkat buka" pada FR-EARN-03 — keduanya mengukur hal yang sama dan harus tetap konsisten.
+
+> **Revisi 5 September 2026 · konsistensinya ditegakkan, bukan diperiksa.** Versi
+> lama menuntut kedua angka "tetap konsisten". Membandingkannya di test hanya
+> menangkapnya kalau datanya kebetulan membedakan; yang tidak bisa lapuk adalah
+> **memakai satu nilai di dua tempat**. `funnelOf()` mengembalikan `payPct`, dan
+> nilai itulah yang dipakai langsung sebagai tingkat buka — satu perhitungan, dua
+> tampilan. `architecture.md` §1.14.
 
 **Hook implementasi.** `author_analytics.html:83-90` — `.funnel`, `.stage`, `.track`.
 
@@ -341,6 +365,8 @@ Sisi bisnis dari peran penulis: melihat performa **seluruh karya** secara agrega
 - **Konversi koin → rupiah dinyatakan eksplisit**: analitik penulis memakai satuan koin sedangkan penarikan memakai rupiah, dan sampai sekarang tidak ada kurs yang terlihat di mana pun. Halaman menampilkan kurs berlaku beserta contoh perhitungan.
 - Bagi hasil **80% penulis / 20% platform** yang sudah dinyatakan di `chapter_access` (lihat [`prd_07_author_studio.md`](prd_07_author_studio.md) FR-STUDIO-25) ditampilkan ulang di sini agar penulis melihat rantai lengkapnya: pembaca membayar → potongan platform → koin penulis → rupiah.
 - Kurs dan bagi hasil diambil dari konfigurasi server, bukan konstanta.
+- **Tangga validasi pencairan ditegakkan dua kali dari satu berkas** (`lib/payout.ts`): di layar untuk mematikan tombol sebelum ditekan, dan di server untuk menolak layar yang dilewati. Satu berkas supaya keduanya tidak pernah berbeda. `architecture.md` §1.15.
+- **Saldo tersedia sudah dikurangi** pengajuan yang masih diproses, dan langsung ditahan begitu pengajuan berhasil — bukan setelah disetujui. `architecture.md` §1.13.
 - Penulis menerima notifikasi saat status penarikan berubah (lihat [`prd_11_search_notifications.md`](prd_11_search_notifications.md) FR-NOTIF-02).
 
 **Acceptance criteria.**

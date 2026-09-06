@@ -276,7 +276,12 @@ describe('ketuk sampul → sampul membesar · §1.22', () => {
 
     const sampul = screen.getAllByRole('button', { name: /^Perbesar sampul / })[0]
     expect(sampul).toBeDefined()
-    const judul = (sampul?.getAttribute('aria-label') ?? '').replace('Perbesar sampul ', '')
+    // Nama tombolnya kini memuat lencana peringkat juga (`… #1`), supaya teks
+    // yang terlihat di dalamnya ikut ke nama aksesibelnya — axe
+    // `label-content-name-mismatch`. Yang dicari di sini judulnya saja.
+    const judul = (sampul?.getAttribute('aria-label') ?? '')
+      .replace('Perbesar sampul ', '')
+      .replace(/\s+#\d+$/, '')
 
     /*
      * Judulnya tautan tersendiri — jalan ke ceritanya tidak hilang. Dicari lewat

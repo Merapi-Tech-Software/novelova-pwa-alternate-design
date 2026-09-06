@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import type { LibraryParams } from '@/api/contracts'
+import { mintaIzinPush } from '@/stores/pwa'
 
 /**
  * Rak pembaca · FR-LIB-11.
@@ -39,12 +40,26 @@ export function useShelfSummary() {
  * **Optimistis** — tidak menyentuh uang, dan kalau gagal keadaannya kembali
  * tanpa ada yang hilang (architecture.md §1.4). Sakelar yang menunggu jaringan
  * terasa rusak justru karena ia benar.
+ *
+ * **Di sinilah izin push diminta** · FR-NOTIF-05: menyalakan sakelar ini adalah
+ * kalimat "beri tahu saya", jadi dialog izin yang menyusul menjawab sesuatu yang
+ * baru saja diminta pengguna — bukan menyembur di kunjungan pertama.
+ *
+ * Ditaruh di hook, bukan di kartunya: dua halaman memanggil mutasi yang sama,
+ * dan penjaga yang dipasang di satu pemanggil meninggalkan pemanggil lain.
+ * `mintaIzinPush` sendiri hanya pernah membuka dialog sekali seumur perangkat.
  */
 export function useToggleNotify() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (storyId: string) => api.toggleNotify(storyId),
+    mutationFn: async (storyId: string) => {
+      const entry = await api.toggleNotify(storyId)
+      // Hanya saat **menyalakan**. Mematikannya lalu meminta izin memberi tahu
+      // adalah pertanyaan yang berlawanan dengan tindakannya.
+      if (entry.notify) void mintaIzinPush()
+      return entry
+    },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['library'] }),
   })
 }

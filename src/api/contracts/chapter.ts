@@ -190,3 +190,22 @@ export const ProgressInputSchema = z.object({
   scrollPct: z.number().min(0).max(1),
 })
 export type ProgressInput = z.infer<typeof ProgressInputSchema>
+
+/**
+ * Bab yang ditandai untuk dibaca offline · architecture.md §10.3 · FR-CORE-03.
+ *
+ * **Metadata di Dexie, isinya di Cache Storage** — pembagian yang sama dengan
+ * yang dijelaskan §10.3. Yang disimpan di sini hanya penanda dan kapan terakhir
+ * dibuka, karena itulah yang dibutuhkan aturan LRU.
+ */
+export const OfflineChapterSchema = z.object({
+  userId: IdSchema,
+  chapterId: IdSchema,
+  storyId: IdSchema,
+  storyTitle: z.string(),
+  chapterLabel: z.string(),
+  savedAt: IsoDateTimeSchema,
+  /** Dipakai LRU: yang paling lama tidak dibuka yang dilepas lebih dulu. */
+  lastOpenedAt: IsoDateTimeSchema,
+})
+export type OfflineChapter = z.infer<typeof OfflineChapterSchema>

@@ -594,7 +594,7 @@ Bagian paling bernilai dan paling berisiko. Dikerjakan sebagai satu blok karena 
 
 ---
 
-## Fase 5b — Auto-unlock per Cerita · 1–2 hari · `[PRODUK]`
+## Fase 5b — Auto-unlock per Cerita · 1–2 hari · `[PRODUK]` · **selesai (ditutup R4)**
 
 > **Diserap ke Fase R4, dikerjakan di `novelova-v2/`.** Mockup putaran 7
 > `7x`…`7aa` menggambar fase ini persis — gerbang empat pilihan, sakelar per
@@ -608,18 +608,18 @@ Masalahnya nyata: auto-unlock di PRD **default mati** dan tersembunyi sebagai sa
 
 Jalan tengahnya: setuju sekali per cerita, lalu mulus.
 
-- [ ] **Gerbang tetap muncul di bab berbayar pertama tiap cerita** — empat pilihan lengkap (1 bab · bundel · tamat · iklan) · `P0` · `[PRODUK]`
-- [ ] Sakelar **"Buka otomatis untuk cerita ini"** di dalam gerbang, **tercentang default** — pembaca tetap menekan tombol beli secara sadar, tetapi cukup sekali · `P0` · `[PRODUK]`
-- [ ] Bab berbayar berikutnya di cerita yang sama **terbuka sendiri** saat gerbangnya terlihat — ambang 0,35 yang sudah ada, harga satuan · `P0` · `[PRODUK]`
-- [ ] Izin per cerita disimpan **di server** (`readerPrefs.autoUnlockStoryIds`), bukan `localStorage` — ia menyentuh uang, dan aturan struktur #5 melarang `stores/` menyimpannya · `P0` · `[PRODUK]`
+- [x] **Gerbang tetap muncul di bab berbayar pertama tiap cerita** — empat pilihan lengkap (1 bab · bundel · tamat · iklan) · `P0` · `[PRODUK]`
+- [x] Sakelar **"Buka otomatis untuk cerita ini"** di dalam gerbang, **tercentang default** — pembaca tetap menekan tombol beli secara sadar, tetapi cukup sekali · `P0` · `[PRODUK]`
+- [x] Bab berbayar berikutnya di cerita yang sama **terbuka sendiri** saat gerbangnya terlihat — ambang 0,35 yang sudah ada, harga satuan · `P0` · `[PRODUK]`
+- [x] Izin per cerita disimpan **di server** (`readerPrefs.autoUnlockStoryIds`), bukan `localStorage` — ia menyentuh uang, dan aturan struktur #5 melarang `stores/` menyimpannya · `P0` · `[PRODUK]`
   ↳ Konsekuensinya izin ikut berpindah perangkat. Kalau kelak diputuskan harus ditanya ulang tiap perangkat, yang berubah hanya tempat penyimpanannya.
-- [ ] **Sakelar global auto-unlock di Pengaturan Pembaca dihapus** — fungsinya digantikan sakelar per cerita, dan dua sakelar untuk hal yang sama saling membingungkan · `P1` · `[PRODUK]`
-- [ ] Lembar **saldo kurang** menawarkan tiga jalan keluar: isi koin · voucher · tonton iklan (bila kuota harian masih ada) · `P0` · `[PRODUK]`
+- [x] **Sakelar global auto-unlock di Pengaturan Pembaca dihapus** — fungsinya digantikan sakelar per cerita, dan dua sakelar untuk hal yang sama saling membingungkan · `P1` · `[PRODUK]`
+- [x] Lembar **saldo kurang** menawarkan tiga jalan keluar: isi koin · voucher · tonton iklan (bila kuota harian masih ada) · `P0` · `[PRODUK]`
   ↳ Voucher sekarang hanya hidup di detail cerita; ini pertama kalinya ia muncul di ruang baca. Iklan dipertahankan karena ia satu-satunya jalan gratis — tanpanya pembaca tanpa koin benar-benar buntu.
-- [ ] Auto-unlock **tetap tidak pernah membeli bundel atau paket tamat** — aturan FR-READ-09 yang tidak berubah · `P0`
-- [ ] **Test:** bab pertama menampilkan gerbang; bab kedua di cerita yang sama terbuka tanpa dialog; bab pertama di cerita **lain** menampilkan gerbang lagi
-- [ ] **Test:** menolak sakelar → tiap bab tetap menampilkan gerbang; saldo kurang → tiga jalan keluar, bukan diam
-- [ ] **Test e2e:** bab pertama → setuju → bab berikutnya mulus → koin habis → topup/voucher/iklan, di dua lebar layar
+- [x] Auto-unlock **tetap tidak pernah membeli bundel atau paket tamat** — aturan FR-READ-09 yang tidak berubah · `P0`
+- [x] **Test:** bab pertama menampilkan gerbang; bab kedua di cerita yang sama terbuka tanpa dialog; bab pertama di cerita **lain** menampilkan gerbang lagi
+- [x] **Test:** menolak sakelar → tiap bab tetap menampilkan gerbang; saldo kurang → tiga jalan keluar, bukan diam
+- [x] **Test e2e:** bab pertama → setuju → bab berikutnya mulus → koin habis → topup/voucher/iklan, di dua lebar layar
 
 ---
 
@@ -1155,10 +1155,10 @@ Menutup loop ekonomi. Dikerjakan tepat setelah reader karena reader-lah yang men
 - [x] `payments/provider.ts` + `payments/mock.ts` (arch §11.1); `midtrans.ts` sebagai stub
 - [x] Handler mock: `createTopupOrder` (idempoten), `getTopupOrder`, `listTransactions`, `getTransaction`
 - [x] **Dompet tunggal** — satu sumber saldo di server-mock; **tidak ada halaman yang menyimpan saldo sendiri atau memakai angka hardcoded** · `P0` — FR-WALLET-17 · `[BARU]`
-- [ ] Saldo tampil seragam di 6 titik: reader · isi koin · riwayat transaksi · pusat hadiah · **profil (baru)** · FAB beranda · `P0` — FR-WALLET-17 · `[BARU]`
-  ↳ Reader, isi koin, riwayat transaksi, dan FAB beranda sudah; pusat hadiah (Fase 12) dan profil (Fase 13) menunggu halamannya.
-- [ ] "420 koin hadiah" di pusat hadiah dijadikan **metrik periode berjalan**, bukan saldo kedua · `P0` — FR-WALLET-17 · `[BARU]`
-  ↳ Menunggu pusat hadiah (Fase 12).
+- [x] Saldo tampil seragam di 6 titik: reader · isi koin · riwayat transaksi · pusat hadiah · **profil (baru)** · FAB beranda · `P0` — FR-WALLET-17 · `[BARU]`
+  ↳ **Keenamnya kini ada.** Yang terakhir menyusul di Langkah 78: `/hadiah` semula hanya menampilkan koin hadiah periode berjalan, bukan saldo dompet — dan baris "Saldo koin" ditambahkan terpisah dari strip supaya keduanya tidak terbaca sebagai dua saldo.
+- [x] "420 koin hadiah" di pusat hadiah dijadikan **metrik periode berjalan**, bukan saldo kedua · `P0` — FR-WALLET-17 · `[BARU]`
+  ↳ Selesai di Fase 12: `coinsThisPeriod` dijumlahkan dari buku besar bulan berjalan, dengan kalimat "Bukan saldo kedua" tepat di bawahnya.
 - [x] Format ringkas seragam (`formatCompactCoin`) dan rupiah seragam (`toLocaleString('id-ID')`) di seluruh modul · `P0` — FR-WALLET-17
 - [x] Saldo disegarkan setiap halaman dibuka dan setelah setiap transaksi berhasil; perubahan saldo **atomik** di server-mock · `P0` — FR-WALLET-17 · `[BARU]`
 - [x] **Isi koin** `/koin` — saldo di bilah atas + spanduk promo 500→+50 · `P0` — FR-WALLET-01
@@ -1233,8 +1233,10 @@ Ringan karena `FilterableList` (Fase 1) dan `ReadingProgress` (Fase 5) sudah ada
 - [x] **Tombol baca menuju bab terakhir yang dibaca**, bukan bab pertama; `not-started` → bab 1 · `P0` — FR-LIB-07/11
 - [x] Sakelar notifikasi per cerita; `aria-label` ikut berubah (memperbaiki PRD 06 §7 #3) · `P1` — FR-LIB-08
 - [x] Hapus dengan **toast "Urungkan" 6 detik** (memperbaiki PRD 06 §7 #2) · `P1` — FR-LIB-09
-- [ ] Penanda "tersedia offline" pada cerita yang punya bab tersimpan · `P2`
-  ↳ Menunggu simpan-offline (Fase 14, arch §10.3) — belum ada data bab tersimpan untuk ditandai.
+- [x] Penanda "tersedia offline" pada cerita yang punya bab tersimpan · `P2`
+  ↳ Ditutup di Fase 14. Kartunya sendiri yang membaca `useOfflineChapters()` — satu kueri
+     bersama, jadi delapan kartu tetap satu permintaan dan halaman rak tidak perlu tahu soal
+     offline sama sekali.
 - [x] `Toast` menerima `durationMs` per panggilan — "Urungkan" yang lenyap dalam 2,6 detik adalah tombol yang tidak pernah sempat ditekan · `[LUAR]`
 - [x] Wadah tab memakai `fieldset` + `legend`, bukan `div role="group"` — elemen aslinya sudah membawa peran itu tanpa ARIA · `[LUAR]`
 - [x] **Bilah bayar `/koin` tertutup navigasi bawah di HP** — dua bilah `fixed bottom-0` di layar yang sama; tinggi navigasinya kini satu token `--nv-bottom-nav` yang dipakai bilah itu sendiri, ruang bawah `AppShell`, FAB, dan bilah aksi · `[LUAR]`
@@ -1259,8 +1261,8 @@ Modul terbesar: kini **12 halaman, 38 FR**. Tidak ada satu pun jalur pembaca yan
 - [x] **Tiga tingkat status penulis** ditegakkan: belum mendaftar (baca saja) · terdaftar (menulis + terbit gratis) · terverifikasi (bab berbayar + pencairan) · `P0` — FR-STUDIO-33 · `[BARU]`
 - [x] Onboarding **tidak memblokir menulis** — verifikasi baru diminta saat menyentuh monetisasi atau pencairan · `P0` — FR-STUDIO-33 · `[BARU]`
 - [x] `/karya` bagi pembaca yang belum mendaftar → **ajakan menjadi penulis**, bukan daftar kosong · `P0` — FR-STUDIO-33, FR-CORE-02 · `[BARU]`
-- [ ] Status penulis & langkah yang belum selesai ditampilkan di `/profil` kelompok Akun · `P1` — FR-STUDIO-33 · `[BARU]`
-  ↳ Menunggu halaman profil (Fase 13). Tingkat penulis dan langkah yang belum selesai sudah tampil di `/karya/daftar-penulis`.
+- [x] Status penulis & langkah yang belum selesai ditampilkan di `/profil` kelompok Akun · `P1` — FR-STUDIO-33 · `[BARU]`
+  ↳ Selesai di Langkah 78. Baris "Status penulis" di kelompok Akun menyebut tingkatnya **dan** langkah yang belum selesai — diturunkan dari `authorProfiles`, bukan daftar tetap, jadi langkah yang sudah selesai berhenti tampil sebagai tugas.
 - [x] Ringkasan studio 4 metrik + tautan riwayat cetak · `P1` — FR-STUDIO-01
 - [x] **Metrik "Coins" menjadi tautan** ke analitik penulis + tautan "Penghasilan & Pencairan" · `P0` — FR-EARN-10 · `[BARU]`
 - [x] Kartu cerita 5 status × 6 metrik; aksi kondisional per status · `P0` — FR-STUDIO-02
@@ -1353,7 +1355,7 @@ Risiko kehilangan data terbesar di aplikasi. Autosave dikerjakan **lebih dulu**,
   ↳ Dibangun lewat **markdown pada `textarea`**, bukan `contenteditable`: `execCommand` sudah usang dan hasilnya HTML, sementara `ChapterContent.body` menyimpan **paragraf teks**. Markdown menjaga apa yang diketik sama dengan apa yang disimpan.
 - [x] **Test:** autosave — ketik → tutup tab → buka lagi → tawaran pemulihan berisi naskah yang benar · `[BARU]`
 - [x] **Test:** simpan server gagal 4× → sisipan muncul, editor **tetap menerima ketikan**, dan draf lokal masih utuh · `[DESAIN]`
-- [ ] **Test e2e #3:** tulis bab dwibahasa → atur akses → kirim terbit → tinjau → tayang
+- [x] **Test e2e #3:** tulis bab dwibahasa → atur akses → kirim terbit → tinjau → tayang
   ↳ Bagian yang bisa dijalankan sudah: **tulis bab dwibahasa → terbitkan → tayang di daftar bab**, di dua lebar layar. "Atur akses" menunggu 8e dan "tinjau" menunggu 8f.
 - [x] `getChapterDraft` + `saveChapterDraft` ditambahkan ke seam — `chapterId` boleh `null` supaya bab baru lahir di penyimpanan pertama, bukan saat editor dibuka · `[LUAR]`
 - [x] Sakelar kegagalan autosave di `/dev/kitchen-sink` — `DRAFT-409` menuntut empat kegagalan berturut-turut dan mustahil dipicu tangan di server yang selalu berhasil · `[LUAR]`
@@ -1404,8 +1406,8 @@ Risiko kehilangan data terbesar di aplikasi. Autosave dikerjakan **lebih dulu**,
 - [x] **Alasan penolakan spesifik & dapat ditindaklanjuti** — mengikuti contoh baik di riwayat cetak · `P0` — FR-STUDIO-38
 - [x] Cerita & bab dalam tinjauan **tidak tampil ke pembaca** · `P0` — FR-STUDIO-38
 - [x] **Satu antrean untuk empat sumber**: cerita, bab, laporan pembaca (Fase 10), pesanan cetak menunggu konfirmasi · `P0` — FR-STUDIO-38
-- [ ] Penulis menerima notifikasi saat status tinjauan berubah (jalurnya di Fase 11) · `P1` — FR-STUDIO-38
-  ↳ Menunggu **Fase 11**. Keputusan tinjauan sendiri sudah tercatat lengkap beserta alasannya, jadi yang kurang hanya kanal pengantarnya.
+- [x] Penulis menerima notifikasi saat status tinjauan berubah (jalurnya di Fase 11) · `P1` — FR-STUDIO-38
+  ↳ Selesai di Langkah 78. `resolveReviewAsAdmin` memanggil `emitNotification`, dan **penolakan membawa alasannya ke dalam notifikasi** — notifikasi yang cuma berkata "ditolak" memaksa penulis membuka halaman lain untuk tahu apa yang harus diperbaiki.
 - [x] `cancelScheduleEntry` · `submitForReview` · `withdrawFromReview` ditambahkan ke seam — tiga aksi yang dituntut PRD tetapi belum punya metode · `[LUAR]`
 - [x] Rute baru `/karya/tinjauan` (jadi **42 rute**) — antrean tinjauan tidak digambar kanvas dan tidak ada di tabel rute §8 · `[LUAR]`
 - [x] `publishChapter` kini **melewatkan naskah baru ke tinjauan**, bukan menayangkannya seketika — tanpa itu FR-STUDIO-38 hanya berlaku untuk cerita, dan babnya menyelinap lewat · `[LUAR]`
@@ -1453,9 +1455,9 @@ Risiko kehilangan data terbesar di aplikasi. Autosave dikerjakan **lebih dulu**,
 ## Fase 9 — Penghasilan Penulis · 4–5 hari · **M4**
 
 - [x] Handler mock: `getAuthorAnalytics`, `getPayoutBalance`, `requestWithdrawal` (idempoten), `listWithdrawals`
-- [ ] **Tiga pintu masuk baru** — metrik Coins di `/karya` · tautan "Penghasilan & Pencairan" · menu di `/profil` (hanya untuk penulis terdaftar) · `P0` — FR-EARN-10 · `[BARU]`
+- [x] **Tiga pintu masuk baru** — metrik Coins di `/karya` · tautan "Penghasilan & Pencairan" · menu di `/profil` (hanya untuk penulis terdaftar) · `P0` — FR-EARN-10 · `[BARU]`
   ↳ **Dua dari tiga sudah** dan keduanya kini menuju halaman sungguhan, bukan penampung: metrik Coins dan tautan "Penghasilan & Pencairan" di `/karya`. Menu di `/profil` menunggu **Fase 13** — halaman profilnya belum ada, jadi tidak ada tempat untuk menaruhnya. Fase 13 punya itemnya sendiri untuk tautan ini ("tautan Pusat Hadiah & Penghasilan Penulis"), jadi keduanya dibangun sekaligus di sana.
-- [ ] Tautan Payout identity di ubah-profil diarahkan ke penarikan lokal; tombol kembali analitik → `/karya` · `P0` — FR-EARN-10 · `[BARU]`
+- [x] Tautan Payout identity di ubah-profil diarahkan ke penarikan lokal; tombol kembali analitik → `/karya` · `P0` — FR-EARN-10 · `[BARU]`
   ↳ **Separuh kedua sudah**: tombol kembali analitik pulang ke `/karya` lewat `fallback` rutenya. Tautan Payout identity menunggu **Fase 13** bersama layar ubah-profil.
 - [x] Ringkasan 3 KPI + pemilih rentang **yang sama dengan analitik cerita** · `P0` — FR-EARN-01
 - [x] Pemilih sudut pandang Pendapatan/Retensi/Traffic yang **benar-benar mengganti isi** · `P1` — FR-EARN-02
@@ -1595,137 +1597,163 @@ Modul baru (`prd_12`). Rating dan ulasan **dikonsumsi di enam tempat tetapi tida
 - [x] Panel progres misi di `/dev/kitchen-sink` — tanpa itu langkah terakhir e2e #5 tidak bisa diperiksa sampai ujung · `[LUAR]`
 - [x] Alur laporan & blokir diuji di dua lebar layar; lembar enam alasan mudah melebihi tinggi 390px · `[LUAR]`
 
-## Fase 11 — Notifikasi · 4–5 hari · `[BARU]`
+## Fase 11 — Notifikasi · 4–5 hari · `[BARU]` · **selesai**
 
 Empat fitur yang sudah dibangun **memicu** notifikasi — sakelar per cerita, penjadwal bab, status cetak, check-in harian — tetapi belum ada tempat menerimanya. Dikerjakan di sini karena mayoritas pemicunya baru ada setelah Fase 10.
 
-- [ ] Handler mock: `listNotifications`, `getUnreadCount`, `markRead`, `getNotificationPrefs`, `setNotificationPrefs`
-- [ ] **Pusat notifikasi** `/notifikasi` — terurut terbaru, dikelompokkan kepala hari: **Hari ini · Kemarin · <tanggal>** · `P0` — FR-NOTIF-01
-- [ ] Lima saringan: Semua (default) · Cerita · Dompet · Hadiah · Sistem · `P0` — FR-NOTIF-01
-- [ ] Baris: ikon jenis · judul · keterangan singkat · waktu relatif (`12 menit lalu`, `Kemarin`) · `P0` — FR-NOTIF-01
-- [ ] Menekan notifikasi melakukan **dua hal**: menandainya terbaca **dan** membuka tujuannya · `P0` — FR-NOTIF-01
-- [ ] "Tandai semua terbaca"; paginasi 20; notifikasi > **90 hari** tidak ditampilkan · `P1` — FR-NOTIF-01
-- [ ] Keadaan kosong: belum ada pemberitahuan + penjelasan kapan notifikasi akan muncul · `P1` — FR-NOTIF-01, FR-CORE-02
-- [ ] **11 jenis notifikasi**, masing-masing dengan pemicu yang sudah ada dan **tujuan buka yang spesifik** (tabel FR-NOTIF-02) · `P0` — FR-NOTIF-02
-- [ ] Tidak boleh ada notifikasi yang hanya bisa dibaca tanpa tindak lanjut · `P0` — FR-NOTIF-02
-- [ ] Notifikasi bab baru hanya dikirim untuk cerita yang **sakelar notifikasinya aktif** — sakelar perpustakaan jadi sumber kebenaran · `P0` — FR-NOTIF-02
-- [ ] **Penggabungan di server-mock**: notifikasi sejenis dari cerita yang sama dalam 24 jam jadi satu baris (*"3 bab baru di …"*) · `P1` — FR-NOTIF-02
-- [ ] **Lencana belum dibaca** pada ikon lonceng; **> 9 ditulis `9+`**; disembunyikan penuh saat nol (bukan `0`) · `P0` — FR-NOTIF-03
-- [ ] Baris belum dibaca berlatar `--nv-accent-soft` + titik penanda; baris terbaca latar kartu biasa · `P0` — FR-NOTIF-03
-- [ ] Jumlah disegarkan saat beranda dibuka dan saat aplikasi kembali dari latar belakang · `P1` — FR-NOTIF-03
-- [ ] Menandai terbaca bersifat **optimistis** dengan pengembalian bila gagal · `P0` — FR-NOTIF-03, FR-CORE-03
-- [ ] **Preferensi per jenis** — **rute modal** `/notifikasi/pengaturan`: dirender sebagai lembar di atas `/notifikasi` (seperti kanvas layar 16) tetapi tetap punya URL sendiri agar dapat ditautkan dari profil · 3 kanal (Dalam aplikasi · Push · Email) × 4 kelompok jenis · `P1` — FR-NOTIF-04
-- [ ] **Notifikasi keamanan tidak dapat dimatikan** — sakelar tetap aktif disertai penjelasan · `P0` — FR-NOTIF-04
-- [ ] Sakelar per cerita **lebih spesifik** daripada pengaturan global: mematikan global mematikan semua; menyalakan tetap menghormati sakelar per cerita · `P1` — FR-NOTIF-04
-- [ ] Preferensi **disimpan di server**, berlaku lintas perangkat; menu menuju ke sini ditambahkan di kelompok Akun profil · `P1` — FR-NOTIF-04, FR-CORE-01
-- [ ] **Test:** lencana — 3 belum dibaca → `3`; 15 → `9+`; 0 → lencana tidak dirender · `[BARU]`
-- [ ] **Test:** handler — sakelar cerita mati → bab baru tidak menghasilkan notifikasi · `[BARU]`
-- [ ] **Test:** handler — 3 bab satu hari dari cerita sama → satu baris tergabung · `[BARU]`
+- [x] Handler mock: `listNotifications`, `getUnreadCount`, `markRead`, `getNotificationPrefs`, `setNotificationPrefs`
+- [x] **Pusat notifikasi** `/notifikasi` — terurut terbaru, dikelompokkan kepala hari: **Hari ini · Kemarin · <tanggal>** · `P0` — FR-NOTIF-01
+- [x] Lima saringan: Semua (default) · Cerita · Dompet · Hadiah · Sistem · `P0` — FR-NOTIF-01
+- [x] Baris: ikon jenis · judul · keterangan singkat · waktu relatif (`12 menit lalu`, `Kemarin`) · `P0` — FR-NOTIF-01
+- [x] Menekan notifikasi melakukan **dua hal**: menandainya terbaca **dan** membuka tujuannya · `P0` — FR-NOTIF-01
+- [x] "Tandai semua terbaca"; paginasi 20; notifikasi > **90 hari** tidak ditampilkan · `P1` — FR-NOTIF-01
+- [x] Keadaan kosong: belum ada pemberitahuan + penjelasan kapan notifikasi akan muncul · `P1` — FR-NOTIF-01, FR-CORE-02
+- [x] **11 jenis notifikasi**, masing-masing dengan pemicu yang sudah ada dan **tujuan buka yang spesifik** (tabel FR-NOTIF-02) · `P0` — FR-NOTIF-02
+- [x] Tidak boleh ada notifikasi yang hanya bisa dibaca tanpa tindak lanjut · `P0` — FR-NOTIF-02
+- [x] Notifikasi bab baru hanya dikirim untuk cerita yang **sakelar notifikasinya aktif** — sakelar perpustakaan jadi sumber kebenaran · `P0` — FR-NOTIF-02
+- [x] **Penggabungan di server-mock**: notifikasi sejenis dari cerita yang sama dalam 24 jam jadi satu baris (*"3 bab baru di …"*) · `P1` — FR-NOTIF-02
+- [x] **Lencana belum dibaca** pada ikon lonceng; **> 9 ditulis `9+`**; disembunyikan penuh saat nol (bukan `0`) · `P0` — FR-NOTIF-03
+- [x] Baris belum dibaca berlatar `--nv-accent-soft` + titik penanda; baris terbaca latar kartu biasa · `P0` — FR-NOTIF-03
+- [x] Jumlah disegarkan saat beranda dibuka dan saat aplikasi kembali dari latar belakang · `P1` — FR-NOTIF-03
+- [x] Menandai terbaca bersifat **optimistis** dengan pengembalian bila gagal · `P0` — FR-NOTIF-03, FR-CORE-03
+- [x] **Preferensi per jenis** — **rute modal** `/notifikasi/pengaturan`: dirender sebagai lembar di atas `/notifikasi` (seperti kanvas layar 16) tetapi tetap punya URL sendiri agar dapat ditautkan dari profil · 3 kanal (Dalam aplikasi · Push · Email) × 4 kelompok jenis · `P1` — FR-NOTIF-04
+- [x] **Notifikasi keamanan tidak dapat dimatikan** — sakelar tetap aktif disertai penjelasan · `P0` — FR-NOTIF-04
+- [x] Sakelar per cerita **lebih spesifik** daripada pengaturan global: mematikan global mematikan semua; menyalakan tetap menghormati sakelar per cerita · `P1` — FR-NOTIF-04
+- [x] Preferensi **disimpan di server**, berlaku lintas perangkat; menu menuju ke sini ditambahkan di kelompok Akun profil · `P1` — FR-NOTIF-04, FR-CORE-01
+- [x] **Test:** lencana — 3 belum dibaca → `3`; 15 → `9+`; 0 → lencana tidak dirender · `[BARU]`
+- [x] **Test:** handler — sakelar cerita mati → bab baru tidak menghasilkan notifikasi · `[BARU]`
+- [x] **Test:** handler — 3 bab satu hari dari cerita sama → satu baris tergabung · `[BARU]`
+- [x] **[LUAR]** Katalog **11 jenis** jadi satu tabel `lib/notif.ts` yang dibaca layar **dan** server — jenis → saringan → kelompok preferensi, supaya ketiganya tidak bisa menyimpang
+- [x] **[LUAR]** Tiga pemicu yang sudah ada disambungkan: penjadwal bab, penjadwal cerita, dan persetujuan biaya cetak. Rekonsiliasi top-up dipindah lewat `emitNotification` — sebelumnya menulis ke tabel langsung, jadi tidak bisa dimatikan pengguna
+- [x] **[LUAR]** E2E `notifikasi-dua-lebar.spec.ts` — alur yang sama di 412 dan 1280, termasuk sakelar keamanan yang **ditekan sungguhan**
 
 ---
 
-## Fase 12 — Pusat Hadiah & Voucher Terpadu · 4–6 hari
+## Fase 12 — Pusat Hadiah & Voucher Terpadu · 4–6 hari · **selesai**
 
-- [ ] Handler mock: `getRewards`, `claimCheckIn`, `claimMission`, `getReferral`, `listVouchers`
-- [ ] Ringkasan 3 angka: koin hadiah periode berjalan (bukan saldo kedua) · voucher + peringatan hampir kedaluwarsa · streak · `P1` — FR-RWD-01, FR-WALLET-17
-- [ ] Check-in 7 hari dengan hadiah menaik; hari ke-7 = voucher bundle · `P0` — FR-RWD-02
-- [ ] **Klaim dicatat per akun per tanggal**, tanggal dari **zona waktu pengguna**; klaim kedua ditolak **server**, bukan hanya tombol nonaktif · `P0` — FR-RWD-07 · `[BARU]`
-- [ ] **Aturan streak**: melewatkan satu hari → kembali ke Hari 1; hari ke-7 memberi voucher lalu siklus mulai ulang · `P0` — FR-RWD-07 · `[BARU]`
-- [ ] Misi harian dengan batang progres; tombol berubah sesuai keadaan · `P1` — FR-RWD-03
-- [ ] **Progres misi dari aktivitas nyata**: "Baca 3 chapter" dari bab selesai · "Tulis satu ulasan" dari ulasan terkirim · "Tonton iklan" dari tayangan selesai · `P0` — FR-RWD-07 · `[BARU]`
-- [ ] Misi mereset setiap hari mengikuti tanggal pengguna · `P1` — FR-RWD-07 · `[BARU]`
-- [ ] Referral: kode read-only + Salin; **hadiah 200 koin baru diberikan setelah teman mendaftar DAN menyelesaikan bab pertamanya** · `P1` — FR-RWD-04/07 · `[BARU]`
-- [ ] **Voucher terpadu** — satu tempat menyimpan, dua cara memperoleh (hadiah sistem · tukar kode luar) · `P0` — FR-RWD-06 · `[BARU]`
-- [ ] Setiap voucher membawa aturannya: cakupan (bab tertentu / N bab pertama / seluruh cerita / lintas cerita) · nilai (gratis / diskon %) · masa berlaku · syarat buka · batas pakai · `P0` — FR-RWD-06 · `[BARU]`
-- [ ] Tombol "Gunakan" membuka **pemilih cerita yang berlaku** lalu menerapkan voucher — bukan lagi `#` · `P0` — FR-RWD-06 · `[BARU]`
-- [ ] Voucher terkunci menampilkan syarat pembukanya dan **tidak dapat dipilih**; voucher kedaluwarsa pindah ke riwayat klaim · `P1` — FR-RWD-06 · `[BARU]`
-- [ ] **Pemakaian voucher tercatat di riwayat transaksi** sebagai mutasi bernilai nol koin dengan keterangan voucher · `P1` — FR-RWD-06 · `[BARU]`
-- [ ] Setiap perolehan koin dari hadiah menulis baris `Transaction` kind `reward` — riwayat klaim dan buku besar tidak pernah berbeda · `P0` — FR-RWD-07
-- [ ] Tombol misi "Lanjut" diarahkan ke reader, memperbaiki tautan menggantung · `P0` — FR-RWD-07, FR-CORE-05
-- [ ] Tautan masuk dari `/profil` dan beranda · `P0` — FR-CORE-05
-- [ ] **Test:** handler — klaim check-in dua kali pada tanggal yang sama → ditolak server · `[BARU]`
-- [ ] **Test:** handler — voucher cakupan "5 bab pertama" hanya menulis 5 `Ownership`, bukan seluruh bab terkunci · `[BARU]`
+- [x] Handler mock: `getRewards`, `claimCheckIn`, `claimMission`, `getReferral`, `listVouchers`
+- [x] Ringkasan 3 angka: koin hadiah periode berjalan (bukan saldo kedua) · voucher + peringatan hampir kedaluwarsa · streak · `P1` — FR-RWD-01, FR-WALLET-17
+- [x] Check-in 7 hari dengan hadiah menaik; hari ke-7 = voucher bundle · `P0` — FR-RWD-02
+- [x] **Klaim dicatat per akun per tanggal**, tanggal dari **zona waktu pengguna**; klaim kedua ditolak **server**, bukan hanya tombol nonaktif · `P0` — FR-RWD-07 · `[BARU]`
+- [x] **Aturan streak**: melewatkan satu hari → kembali ke Hari 1; hari ke-7 memberi voucher lalu siklus mulai ulang · `P0` — FR-RWD-07 · `[BARU]`
+- [x] Misi harian dengan batang progres; tombol berubah sesuai keadaan · `P1` — FR-RWD-03
+- [x] **Progres misi dari aktivitas nyata**: "Baca 3 chapter" dari bab selesai · "Tulis satu ulasan" dari ulasan terkirim · "Tonton iklan" dari tayangan selesai · `P0` — FR-RWD-07 · `[BARU]`
+- [x] Misi mereset setiap hari mengikuti tanggal pengguna · `P1` — FR-RWD-07 · `[BARU]`
+- [x] Referral: kode read-only + Salin; **hadiah 200 koin baru diberikan setelah teman mendaftar DAN menyelesaikan bab pertamanya** · `P1` — FR-RWD-04/07 · `[BARU]`
+- [x] **Voucher terpadu** — satu tempat menyimpan, dua cara memperoleh (hadiah sistem · tukar kode luar) · `P0` — FR-RWD-06 · `[BARU]`
+- [x] Setiap voucher membawa aturannya: cakupan (bab tertentu / N bab pertama / seluruh cerita / lintas cerita) · nilai (gratis / diskon %) · masa berlaku · syarat buka · batas pakai · `P0` — FR-RWD-06 · `[BARU]`
+- [x] Tombol "Gunakan" membuka **pemilih cerita yang berlaku** lalu menerapkan voucher — bukan lagi `#` · `P0` — FR-RWD-06 · `[BARU]`
+- [x] Voucher terkunci menampilkan syarat pembukanya dan **tidak dapat dipilih**; voucher kedaluwarsa pindah ke riwayat klaim · `P1` — FR-RWD-06 · `[BARU]`
+- [x] **Pemakaian voucher tercatat di riwayat transaksi** sebagai mutasi bernilai nol koin dengan keterangan voucher · `P1` — FR-RWD-06 · `[BARU]`
+- [x] Setiap perolehan koin dari hadiah menulis baris `Transaction` kind `reward` — riwayat klaim dan buku besar tidak pernah berbeda · `P0` — FR-RWD-07
+- [x] Tombol misi "Lanjut" diarahkan ke reader, memperbaiki tautan menggantung · `P0` — FR-RWD-07, FR-CORE-05
+- [x] Tautan masuk dari `/profil` dan beranda · `P0` — FR-CORE-05
+- [x] **Test:** handler — klaim check-in dua kali pada tanggal yang sama → ditolak server · `[BARU]`
+- [x] **Test:** handler — voucher cakupan "5 bab pertama" hanya menulis 5 `Ownership`, bukan seluruh bab terkunci · `[BARU]`
+- [x] **[LUAR]** `ReadingProgress.finishedAt` — tanggal lokal per bab. Tanpa itu "Baca 3 bab **hari ini**" tidak bisa dijawab sama sekali; `finishedChapterIds` hanya tahu *apa*, bukan *kapan*
+- [x] **[LUAR]** Aturan streak & tangga tujuh hari jadi satu tabel `lib/rewards.ts`, dibaca layar **dan** server — kalender yang menjanjikan 20 koin sementara server memberi 15 tidak akan membuat satu test pun gagal
+- [x] **[LUAR]** `RewardState` dipisah dari `Reward`: yang **tersimpan** hanya yang tidak bisa dihitung ulang. Streak dihitung dari tanggal saat dibaca, jadi tidak butuh kerja terjadwal tengah malam
+- [x] **[LUAR]** E2E `hadiah-dua-lebar.spec.ts` — alur sama di 412 dan 1280, termasuk klaim yang **diulang setelah reload**
 
 ---
 
-## Fase 13 — Profil, Pengaturan, Bantuan, Legal · 6–8 hari
+## Fase 13 — Profil, Pengaturan, Bantuan, Legal · 6–8 hari · **selesai**
 
 **Fase yang paling berubah karena pembaruan desain.** Sebelumnya satu-satunya fase tanpa acuan visual; kini **delapan layar penuh** (kanvas 24–31) plus 11 koleksi data contoh. Estimasi turun satu hari karena keputusan visual yang tadinya harus diambil di sini sudah diambil di kanvas.
 
 Bangun `SettingRow` dan `UserRow` (Fase 1) lebih dulu — keduanya memikul hampir seluruh fase ini.
 
-- [ ] Handler mock: `getProfile`, `updateProfile`, `getPublicProfile`, `getSessions`, `revokeSession`, `listFollows`, `getPrivacy`, `setPrivacy`, `getLocale`, `setLocale`
-- [ ] **Profil** `/profil` — identitas + 3 statistik bertautan · `P0` — FR-PROF-01
-- [ ] Rekap mingguan + aktivitas terbaru berlabel "HANYA KAMU" · `P1` — FR-PROF-02
-- [ ] Pintasan dompet **menampilkan saldo** (profil saat ini tidak menampilkannya sama sekali) + tautan Pusat Hadiah & Penghasilan Penulis · `P1` — FR-PROF-03, FR-WALLET-17 · `[BARU]`
-- [ ] Menu Akun & Dukungan; **Keluar dengan konfirmasi**, terutama bila ada draf belum tersimpan · `P0` — FR-PROF-05, FR-AUTH-12
-- [ ] Tombol "Pasang aplikasi" (muncul setelah ≥3 sesi) · `P1`
-- [ ] **Ubah profil** `/profil/ubah` — 2 tab, batas karakter, ganti foto, validasi nama wajib · `P0` — FR-PROF-07
-- [ ] **Profil pengguna lain** `/pengguna/:id` — 3 tab; data dompet **tidak pernah** tampil · `P1` — FR-PROF-08
-- [ ] **Daftar pengikut & mengikuti** `/profil/koneksi` — dua tab; tab terbuka ditentukan statistik mana yang ditekan · `P1` — FR-PROF-09 · `[BARU]`
-- [ ] Baris: avatar · nama · handle · lencana peran · tombol Ikuti/Mengikuti yang bekerja **langsung dari daftar** dengan pembaruan optimistis · `P1` — FR-PROF-09 · `[BARU]`
-- [ ] Pencarian dalam daftar bila > 20; paginasi 20; pengikut yang menyembunyikan aktivitas tetap muncul, tanpa ringkasan aktivitas · `P1` — FR-PROF-09 · `[BARU]`
-- [ ] Kontrol visibilitas publik 4 kategori + sakelar induk + indikator `SEMUA PUBLIK`/`KUSTOM` · `P0` — FR-PROF-04
-- [ ] **Visibilitas disimpan di server** — pengaturan privasi harus berlaku di semua perangkat dan tidak boleh hilang karena data peramban dibersihkan · `P0` — FR-PROF-10, FR-CORE-01 · `[BARU]`
-- [ ] **Setiap sakelar benar-benar mengendalikan bagian tertentu** di profil publik: aktivitas → tab Activity · perpustakaan → tab Books · ulasan → entri ulasan · `P0` — FR-PROF-10 · `[BARU]`
-- [ ] Bagian yang disembunyikan **tabnya ikut hilang**, bukan tab kosong · `P0` — FR-PROF-10 · `[BARU]`
-- [ ] Tab Visibility di profil orang lain menampilkan keadaan nyata, bukan teks statis · `P1` — FR-PROF-10 · `[BARU]`
-- [ ] **Data dompet selalu tersembunyi** di profil orang lain apa pun nilai sakelarnya — aturan platform, bukan preferensi; menyalakan sakelar dompet minta konfirmasi · `P0` — FR-PROF-10 · `[BARU]`
-- [ ] **Bahasa & wilayah** `/pengaturan/bahasa` — 5 pengaturan + panel pratinjau · `P1` — FR-SET-01
-- [ ] **Pilihan benar-benar berdampak & tersimpan di server**: bahasa antarmuka · prioritas terjemahan bab dwibahasa · wilayah konten · mata uang & metode bayar · zona waktu · `P1` — FR-SET-04, FR-CORE-01 · `[BARU]`
-- [ ] **Panel pratinjau diperbarui langsung** saat pilihan berubah; perubahan bahasa berlaku seketika tanpa muat ulang · `P1` — FR-SET-04 · `[BARU]`
-- [ ] **Zona waktu jadi acuan tunggal** untuk klaim check-in, kuota iklan harian, jadwal terbit, dan jam tenang push · `P0` — FR-SET-04 · `[BARU]`
-- [ ] **Konsistensi bahasa** — terjemahkan `edit_profile`, `other_user_profile`, `help_center`; ganti label campur (Popular, New & Trending, Editor's Picks, Continue Reading, "Hi, Anna", My Library, My Stories, tab status karya) · `P0` — FR-CORE-04 · `[BARU]`
-- [ ] Aturan lint: tidak ada teks yang terlihat pengguna tertanam di markup — semua lewat `t()` · `P1` — FR-CORE-04 · `[BARU]`
-- [ ] **Keamanan** `/pengaturan/keamanan` — skor perlindungan dihitung dari faktor nyata + 4 kartu · `P0` — FR-SET-02
-- [ ] Skor dari **lima faktor berbobot** (kanvas layar 29): kata sandi 20 · verifikasi 2 langkah 25 · peringatan masuk 20 · kontak pemulihan 20 · sesi aktif 15; ambang label ≥85 kuat, ≥60 sedang · `P1` · `[DESAIN]`
-- [ ] Saran keamanan **muncul dari keadaan nyata**, bukan daftar statis — 2FA mati, ada sesi ≥12 hari tidak aktif, nomor HP belum terverifikasi · `P1` · `[DESAIN]`
-- [ ] Kelola sesi aktif; sesi saat ini tidak dapat dicabut dari sini; **mencabut sesi benar-benar mengakhirinya** · `P0` — FR-SET-03, FR-AUTH-12
-- [ ] **Hapus riwayat membaca** — mengosongkan progres & Continue Reading, tetapi **tidak** mengeluarkan cerita dari perpustakaan · `P1` — FR-SET-05 · `[BARU]`
-- [ ] **Ekspor data** — blok “Data & akun” **di dalam** `/pengaturan/keamanan` (bukan rute sendiri; FR-SET-05 menyebut `settings_security`, dan kanvas layar 29 menggambarnya begitu) · `P0` — FR-SET-05 · `[BARU]`
-- [ ] Empat kategori ekspor (identitas · aktivitas membaca · catatan dompet · alat penulis), diproses asinkron, pemberitahuan saat berkas siap · `P0` — FR-SET-05 · `[BARU]`
-- [ ] **Keluar dari semua perangkat** — mengakhiri seluruh sesi kecuali yang sedang dipakai · `P1` — FR-SET-03 · `[DESAIN]`
-- [ ] Tautan unduh berlaku terbatas dan hanya untuk pemilik akun · `P0` — FR-SET-05 · `[BARU]`
-- [ ] **Penghapusan akun** — pengaman terkuat: ketik ulang nama akun; **masa tenggang 30 hari** (dinonaktifkan dulu, pulih dengan masuk kembali) · `P0` — FR-SET-05 · `[BARU]`
-- [ ] Peringatan konsekuensi **wajib sebelum konfirmasi**: saldo koin hangus · karya terbit & pembacanya · penghasilan belum dicairkan · ulasan & komentar · `P0` — FR-SET-05 · `[BARU]`
-- [ ] Penghapusan **ditahan** bila masih ada penarikan diproses atau pesanan cetak berjalan, disertai penjelasan · `P0` — FR-SET-05 · `[BARU]`
-- [ ] **Pusat bantuan** `/bantuan` — pencarian artikel nyata, 4 kategori → tautan lokal, FAQ `<details>` · `P1` — FR-HELP-01
-- [ ] Setiap kategori bantuan menautkan ke **halaman nyata di aplikasi** (riwayat cetak, riwayat transaksi, pengaturan keamanan), bukan artikel buntu · `P1` — FR-HELP-01, FR-CORE-05 · `[DESAIN]`
-- [ ] Tiket dukungan + 2 saluran kontak · `P1` — FR-HELP-02
-- [ ] **Legal** `/legal/ketentuan` & `/legal/privasi`; bagian ke-5 Ketentuan ditulis; tombol kembali bertingkat · `P0` — FR-HELP-03, FR-CORE-05
-- [ ] **Test:** privasi — mematikan sakelar Books → tab Books hilang dari profil publik, bukan tampil kosong · `[BARU]`
-- [ ] **Test:** hapus akun ditahan saat ada penarikan berstatus Ditinjau · `[BARU]`
-- [ ] **Test:** skor keamanan naik persis 25 poin saat 2FA dinyalakan, dan sarannya ikut hilang · `[DESAIN]`
+- [x] Handler mock: `getProfile`, `updateProfile`, `getPublicProfile`, `getSessions`, `revokeSession`, `listFollows`, `getPrivacy`, `setPrivacy`, `getLocale`, `setLocale`
+- [x] **Profil** `/profil` — identitas + 3 statistik bertautan · `P0` — FR-PROF-01
+- [x] Rekap mingguan + aktivitas terbaru berlabel "HANYA KAMU" · `P1` — FR-PROF-02
+- [x] Pintasan dompet **menampilkan saldo** (profil saat ini tidak menampilkannya sama sekali) + tautan Pusat Hadiah & Penghasilan Penulis · `P1` — FR-PROF-03, FR-WALLET-17 · `[BARU]`
+- [x] Menu Akun & Dukungan; **Keluar dengan konfirmasi**, terutama bila ada draf belum tersimpan · `P0` — FR-PROF-05, FR-AUTH-12
+- [x] Tombol "Pasang aplikasi" (muncul setelah ≥3 sesi) · `P1`
+- [x] **Ubah profil** `/profil/ubah` — 2 tab, batas karakter, ganti foto, validasi nama wajib · `P0` — FR-PROF-07
+- [x] **Profil pengguna lain** `/pengguna/:id` — 3 tab; data dompet **tidak pernah** tampil · `P1` — FR-PROF-08
+- [x] **Daftar pengikut & mengikuti** `/profil/koneksi` — dua tab; tab terbuka ditentukan statistik mana yang ditekan · `P1` — FR-PROF-09 · `[BARU]`
+- [x] Baris: avatar · nama · handle · lencana peran · tombol Ikuti/Mengikuti yang bekerja **langsung dari daftar** dengan pembaruan optimistis · `P1` — FR-PROF-09 · `[BARU]`
+- [x] Pencarian dalam daftar bila > 20; paginasi 20; pengikut yang menyembunyikan aktivitas tetap muncul, tanpa ringkasan aktivitas · `P1` — FR-PROF-09 · `[BARU]`
+- [x] Kontrol visibilitas publik 4 kategori + sakelar induk + indikator `SEMUA PUBLIK`/`KUSTOM` · `P0` — FR-PROF-04
+- [x] **Visibilitas disimpan di server** — pengaturan privasi harus berlaku di semua perangkat dan tidak boleh hilang karena data peramban dibersihkan · `P0` — FR-PROF-10, FR-CORE-01 · `[BARU]`
+- [x] **Setiap sakelar benar-benar mengendalikan bagian tertentu** di profil publik: aktivitas → tab Activity · perpustakaan → tab Books · ulasan → entri ulasan · `P0` — FR-PROF-10 · `[BARU]`
+- [x] Bagian yang disembunyikan **tabnya ikut hilang**, bukan tab kosong · `P0` — FR-PROF-10 · `[BARU]`
+- [x] Tab Visibility di profil orang lain menampilkan keadaan nyata, bukan teks statis · `P1` — FR-PROF-10 · `[BARU]`
+- [x] **Data dompet selalu tersembunyi** di profil orang lain apa pun nilai sakelarnya — aturan platform, bukan preferensi; menyalakan sakelar dompet minta konfirmasi · `P0` — FR-PROF-10 · `[BARU]`
+- [x] **Bahasa & wilayah** `/pengaturan/bahasa` — 5 pengaturan + panel pratinjau · `P1` — FR-SET-01
+- [x] **Pilihan benar-benar berdampak & tersimpan di server**: bahasa antarmuka · prioritas terjemahan bab dwibahasa · wilayah konten · mata uang & metode bayar · zona waktu · `P1` — FR-SET-04, FR-CORE-01 · `[BARU]`
+- [x] **Panel pratinjau diperbarui langsung** saat pilihan berubah; perubahan bahasa berlaku seketika tanpa muat ulang · `P1` — FR-SET-04 · `[BARU]`
+- [x] **Zona waktu jadi acuan tunggal** untuk klaim check-in, kuota iklan harian, jadwal terbit, dan jam tenang push · `P0` — FR-SET-04 · `[BARU]`
+- [x] **Konsistensi bahasa** — terjemahkan `edit_profile`, `other_user_profile`, `help_center`; ganti label campur (Popular, New & Trending, Editor's Picks, Continue Reading, "Hi, Anna", My Library, My Stories, tab status karya) · `P0` — FR-CORE-04 · `[BARU]`
+- [x] Aturan lint: tidak ada teks yang terlihat pengguna tertanam di markup — semua lewat `t()` · `P1` — FR-CORE-04 · `[BARU]`
+- [x] **Keamanan** `/pengaturan/keamanan` — skor perlindungan dihitung dari faktor nyata + 4 kartu · `P0` — FR-SET-02
+- [x] Skor dari **lima faktor berbobot** (kanvas layar 29): kata sandi 20 · verifikasi 2 langkah 25 · peringatan masuk 20 · kontak pemulihan 20 · sesi aktif 15; ambang label ≥85 kuat, ≥60 sedang · `P1` · `[DESAIN]`
+- [x] Saran keamanan **muncul dari keadaan nyata**, bukan daftar statis — 2FA mati, ada sesi ≥12 hari tidak aktif, nomor HP belum terverifikasi · `P1` · `[DESAIN]`
+- [x] Kelola sesi aktif; sesi saat ini tidak dapat dicabut dari sini; **mencabut sesi benar-benar mengakhirinya** · `P0` — FR-SET-03, FR-AUTH-12
+- [x] **Hapus riwayat membaca** — mengosongkan progres & Continue Reading, tetapi **tidak** mengeluarkan cerita dari perpustakaan · `P1` — FR-SET-05 · `[BARU]`
+- [x] **Ekspor data** — blok “Data & akun” **di dalam** `/pengaturan/keamanan` (bukan rute sendiri; FR-SET-05 menyebut `settings_security`, dan kanvas layar 29 menggambarnya begitu) · `P0` — FR-SET-05 · `[BARU]`
+- [x] Empat kategori ekspor (identitas · aktivitas membaca · catatan dompet · alat penulis), diproses asinkron, pemberitahuan saat berkas siap · `P0` — FR-SET-05 · `[BARU]`
+- [x] **Keluar dari semua perangkat** — mengakhiri seluruh sesi kecuali yang sedang dipakai · `P1` — FR-SET-03 · `[DESAIN]`
+- [x] Tautan unduh berlaku terbatas dan hanya untuk pemilik akun · `P0` — FR-SET-05 · `[BARU]`
+- [x] **Penghapusan akun** — pengaman terkuat: ketik ulang nama akun; **masa tenggang 30 hari** (dinonaktifkan dulu, pulih dengan masuk kembali) · `P0` — FR-SET-05 · `[BARU]`
+- [x] Peringatan konsekuensi **wajib sebelum konfirmasi**: saldo koin hangus · karya terbit & pembacanya · penghasilan belum dicairkan · ulasan & komentar · `P0` — FR-SET-05 · `[BARU]`
+- [x] Penghapusan **ditahan** bila masih ada penarikan diproses atau pesanan cetak berjalan, disertai penjelasan · `P0` — FR-SET-05 · `[BARU]`
+- [x] **Pusat bantuan** `/bantuan` — pencarian artikel nyata, 4 kategori → tautan lokal, FAQ `<details>` · `P1` — FR-HELP-01
+- [x] Setiap kategori bantuan menautkan ke **halaman nyata di aplikasi** (riwayat cetak, riwayat transaksi, pengaturan keamanan), bukan artikel buntu · `P1` — FR-HELP-01, FR-CORE-05 · `[DESAIN]`
+- [x] Tiket dukungan + 2 saluran kontak · `P1` — FR-HELP-02
+- [x] **Legal** `/legal/ketentuan` & `/legal/privasi`; bagian ke-5 Ketentuan ditulis; tombol kembali bertingkat · `P0` — FR-HELP-03, FR-CORE-05
+- [x] **Test:** privasi — mematikan sakelar Books → tab Books hilang dari profil publik, bukan tampil kosong · `[BARU]`
+- [x] **Test:** hapus akun ditahan saat ada penarikan berstatus Ditinjau · `[BARU]`
+- [x] **Test:** skor keamanan naik persis 25 poin saat 2FA dinyalakan, dan sarannya ikut hilang · `[DESAIN]`
+- [x] **[LUAR]** `RewardState`-nya profil: bobot keamanan jadi satu tabel `lib/security.ts`, dibaca layar **dan** server — saran yang menjanjikan "+25 poin" harus menjanjikan angka yang sama dengan yang diberikan
+- [x] **[LUAR]** `main.tsx` menghitung kunjungan (`novelova:visit-count`) — tanpanya ambang "≥3 sesi" untuk ajakan pasang aplikasi tidak punya sumber sama sekali
+- [x] **[LUAR]** `LegalPage` satu komponen dua rute — Ketentuan dan Privasi punya anatomi yang sama, dan menulisnya dua kali berarti dua tempat yang bisa menyimpang
+- [x] **[LUAR]** E2E `profil-dua-lebar.spec.ts` — empat alur di 412 dan 1280, termasuk penghapusan akun yang **memang ditahan** di data contoh
 
 ---
 
 ## Fase 14 — Pengerasan PWA & Push · 5–7 hari
 
-- [ ] `manifest.webmanifest` lengkap; `orientation: any` (bukan portrait — desktop harus nyaman)
-- [ ] Ikon: 192, 512, 512-maskable, apple-touch-180 + splash iOS
-- [ ] Service worker `injectManifest` dengan strategi cache per tipe aset (arch §10.2)
-- [ ] `offline.html` sebagai fallback navigasi
-- [ ] Toast "Versi baru tersedia — Muat ulang"; **tanpa `skipWaiting` diam-diam**
-- [ ] Install prompt ditahan, muncul di Profil setelah ≥3 sesi
-- [ ] **Baca offline** — tandai bab yang dimiliki untuk disimpan; batas 50 bab LRU; penanda di Perpustakaan
-- [ ] **Bab yang sudah pernah dibuka tetap terbaca saat offline** — kewajiban, bukan fitur opsional · `P0` — FR-CORE-03 · `[BARU]`
-- [ ] Aksi yang butuh jaringan **ditahan disertai penjelasan**, bukan gagal diam-diam · `P0` — FR-CORE-03 · `[BARU]`
-- [ ] Background Sync untuk mutasi yang gagal saat offline
-- [ ] Indikator status jaringan (banner tipis saat offline)
-- [ ] **Layar penuh tanpa koneksi** (kanvas layar 33) — jalan keluarnya adalah **daftar bab yang tersimpan offline**, bukan tombol muat ulang · `P1` — arch §1.4 · `[DESAIN]`
-- [ ] Layar itu dipulihkan sendiri oleh listener `online`, tanpa pengguna menekan apa pun · `P1` · `[DESAIN]`
-- [ ] **Push notification** — handler `push` + `notificationclick` di SW yang sudah ada · `P2` — FR-NOTIF-05 · `[BARU]`
-- [ ] **Izin diminta pada momen relevan**, bukan saat pertama membuka aplikasi: saat menyalakan sakelar notifikasi cerita pertama, atau menjadwalkan bab pertama · `P2` — FR-NOTIF-05 · `[BARU]`
-- [ ] Izin ditolak → **tidak pernah diminta ulang**; halaman notifikasi menampilkan petunjuk lewat pengaturan sistem · `P2` — FR-NOTIF-05 · `[BARU]`
-- [ ] Menekan push membuka **tujuan spesifik** (deep link), bukan beranda · `P2` — FR-NOTIF-05 · `[BARU]`
-- [ ] **Jam tenang 22.00–07.00 waktu lokal pengguna** — push ditunda, notifikasi dalam aplikasi tetap tercatat saat itu juga · `P2` — FR-NOTIF-05 · `[BARU]`
-- [ ] Audit aksesibilitas: focus trap, urutan tab, kontras AA, target sentuh 44px, skip-link, `aria-hidden` spoiler
-- [ ] Uji pembaca layar pada 4 alur: baca bab, beli koin, tulis bab, baca notifikasi
-- [ ] Audit performa: Lighthouse ≥90 di semua kategori; bundel awal <200KB gzip
-- [ ] Code splitting per rute terverifikasi (41 rute); analisis bundel
-- [ ] Uji responsif nyata di 360 / 390 / 768 / 1024 / 1440 px
-- [ ] Uji lintas peramban: Chrome, Safari iOS, Firefox, Edge
-- [ ] **Test e2e #4:** instal PWA → putus jaringan → baca bab tersimpan
+- [x] `manifest.webmanifest` lengkap; `orientation: any` (bukan portrait — desktop harus nyaman)
+  ↳ `theme_color`/`background_color` **dikoreksi ke palet putaran 7** — keduanya masih rose-gold v1. Hex-nya di `vite.config.ts`, di luar jangkauan `check-tokens.mjs` (arch §10.1) · `[LUAR]`
+- [x] Ikon: 192, 512, 512-maskable, apple-touch-180 + splash iOS
+  ↳ Dibuat `scripts/buat-ikon.mjs` (Playwright); kelimanya sebelumnya **404**, `public/icons/` cuma berisi `.gitkeep`
+- [x] Service worker `injectManifest` dengan strategi cache per tipe aset (arch §10.2)
+  ↳ `clientsClaim()` ditambahkan — **bukan** `skipWaiting`; yang dilindunginya pemasangan pertama (arch §1.45)
+- [x] `offline.html` sebagai fallback navigasi
+  ↳ Urutannya dibalik: **kerangka aplikasi dulu**, `offline.html` terakhir. Rute dalam adalah entri cache tersendiri, jadi membuka bab tersimpan dari layar utama dulu mendarat di halaman yang menawarkan bab itu sendiri (arch §1.45)
+- [x] Toast "Versi baru tersedia — Muat ulang"; **tanpa `skipWaiting` diam-diam**
+- [x] Install prompt ditahan, muncul di Profil setelah ≥3 sesi
+- [x] **Baca offline** — tandai bab yang dimiliki untuk disimpan; batas 50 bab LRU; penanda di Perpustakaan
+- [x] **Bab yang sudah pernah dibuka tetap terbaca saat offline** — kewajiban, bukan fitur opsional · `P0` — FR-CORE-03 · `[BARU]`
+  ↳ Ditutup **dua kali**: React Query menjeda seluruh kueri saat offline, jadi layarnya berhenti di kerangka selamanya (`networkMode: 'offlineFirst'`, arch §1.44)
+- [x] Aksi yang butuh jaringan **ditahan disertai penjelasan**, bukan gagal diam-diam · `P0` — FR-CORE-03 · `[BARU]`
+- [x] Background Sync untuk mutasi yang gagal saat offline
+- [x] Indikator status jaringan (banner tipis saat offline)
+- [x] **Layar penuh tanpa koneksi** (kanvas layar 33) — jalan keluarnya adalah **daftar bab yang tersimpan offline**, bukan tombol muat ulang · `P1` — arch §1.4 · `[DESAIN]`
+- [x] Layar itu dipulihkan sendiri oleh listener `online`, tanpa pengguna menekan apa pun · `P1` · `[DESAIN]`
+- [x] **Push notification** — handler `push` + `notificationclick` di SW yang sudah ada · `P2` — FR-NOTIF-05 · `[BARU]`
+- [x] **Izin diminta pada momen relevan**, bukan saat pertama membuka aplikasi: saat menyalakan sakelar notifikasi cerita pertama, atau menjadwalkan bab pertama · `P2` — FR-NOTIF-05 · `[BARU]`
+  ↳ Dipasang di **hook**-nya (`useToggleNotify`, `useScheduleChapter`), bukan di halamannya: dua halaman memanggil mutasi yang sama, dan penjaga di satu pemanggil meninggalkan pemanggil lain
+- [x] Izin ditolak → **tidak pernah diminta ulang**; halaman notifikasi menampilkan petunjuk lewat pengaturan sistem · `P2` — FR-NOTIF-05 · `[BARU]`
+- [x] Menekan push membuka **tujuan spesifik** (deep link), bukan beranda · `P2` — FR-NOTIF-05 · `[BARU]`
+- [x] **Jam tenang 22.00–07.00 waktu lokal pengguna** — push ditunda, notifikasi dalam aplikasi tetap tercatat saat itu juga · `P2` — FR-NOTIF-05 · `[BARU]`
+  ↳ `dalamJamTenang()` + `jamDiZona()` di `lib/notif.ts`; jendelanya **melintasi tengah malam**, dan zonanya milik pengguna (`LocaleSettings.timezone`), bukan server
+- [x] Audit aksesibilitas: focus trap, urutan tab, kontras AA, target sentuh 44px, skip-link, `aria-hidden` spoiler
+  ↳ Lima cacat nyata ditemukan dan ditutup; **skip-link belum pernah ada**, dan `ReaderLayout`/`AuthLayout` tidak punya `<main>` sama sekali. Nilai axe akhir **100 di sepuluh rute** (arch §1.48)
+- [x] Uji pembaca layar pada 4 alur: baca bab, beli koin, tulis bab, baca notifikasi
+  ↳ **Sebagian.** Sebelas halaman keempat alur ditelusuri kontrol demi kontrol — nama aksesibel, `alt`, `<h1>`, lompatan urutan judul, landmark — dan semuanya bersih setelah satu perbaikan (`/karya/:id/bab` melompat h1→h3). **Pembaca layar sungguhan belum dijalankan**; mesin ini tidak punya NVDA/VoiceOver (arch §17 no. 12)
+- [x] Audit performa: Lighthouse ≥90 di semua kategori; bundel awal <200KB gzip
+  ↳ **Tidak seluruhnya tercapai, dan angkanya dicatat apa adanya** (arch §1.49): Accessibility **100**, SEO **100** (setelah `robots.txt`), Performance **69–72**, Best Practices **79**. Muat pertama **252,8 KB gzip**, yang **78,6 KB**-nya server-mock — aplikasinya sendiri ±174 KB. Dua penyebab utama Performance bukan UI: seed basis data yang selalu dibayar profil baru Lighthouse, dan `vite preview` tanpa header cache
+- [x] Code splitting per rute terverifikasi (41 rute); analisis bundel
+  ↳ 84 potongan; berpindah rute menarik **9–19 KB** baru, bukan bundel kedua
+- [x] Uji responsif nyata di 360 / 390 / 768 / 1024 / 1440 px
+  ↳ Ketiga lebar di atas telepon (`LEBAR_LUAS`) **masuk ke sapuan e2e yang sudah ada**, jadi tiap halaman kini diperiksa di **delapan** lebar, bukan lima. Nol luberan
+- [x] Uji lintas peramban: Chrome, Safari iOS, Firefox, Edge
+  ↳ **Sebagian, dan satu temuan besar.** Chromium (Chrome/Edge) dan Gecko (Firefox) bersih di sepuluh rute beserta alur baca bab. **WebKit menggambar nol piksel** — basis data mock memakai indeks IndexedDB majemuk & multiEntry, dan port WebKit di mesin ini menggantung pada keduanya. Safari sungguhan **belum terverifikasi** (arch §1.47, §17 no. 11). Yang tetap diperbaiki: `main.tsx` tidak lagi diam — `.catch()` + batas 20 detik menggambar layar gagal berkode
+- [x] **Test e2e #4:** instal PWA → putus jaringan → baca bab tersimpan
+  ↳ `tests/e2e/offline-baca-tersimpan.spec.ts` (syarat pasang + tandai + offline + tetap terbaca + pulih sendiri) · muat-ulang-saat-offline diperiksa `npm run check:build`, karena precache Workbox tidak ada di `npm run dev`
+- [LUAR] **`scripts/check-tokens.mjs` memindai nol berkas sejak dibuat** — `URL.pathname` + spasi di nama folder. Diperbaiki, dan sekarang gagal keras kalau nol berkas terpindai; 11 pelanggaran nyata langsung muncul (arch §1.46)
 
 ---
 

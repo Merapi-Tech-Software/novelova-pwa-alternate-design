@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
 import { isApiError } from '@/api/errors'
+import { OfflineScreen } from '@/components/patterns/OfflineScreen'
+import { useOnline } from '@/hooks/useOnline'
+import { t } from '@/i18n/t'
 import { type FailureLevel, FailureNotice } from '../patterns/FailureNotice'
 import { Skeleton } from './Card'
 import { EmptyState, type EmptyStateProps } from './EmptyState'
@@ -42,8 +45,37 @@ export function AsyncState<T>({
   empty,
   children,
 }: AsyncStateProps<T>) {
+  const online = useOnline()
+
   if (loading) {
     return <>{skeleton ?? <Skeleton lines={4} />}</>
+  }
+
+  /*
+   * **Gagal karena tidak ada koneksi bukan gagal biasa** · FR-CORE-03 · §10.3.
+   *
+   * Pesan "permintaannya tidak sampai ke server" benar tetapi menyesatkan saat
+   * yang mati jaringannya: pembaca akan menyimpulkan servernya bermasalah dan
+   * menunggu, padahal yang perlu ia lakukan berbeda sama sekali.
+   *
+   * Di tingkat `fullscreen`, jalan keluarnya **daftar bab tersimpan** (kanvas
+   * layar 33). Di tingkat lain cukup pesan yang menyebut sebabnya — satu bagian
+   * yang gagal tidak boleh menjatuhkan seluruh layar.
+   *
+   * Keduanya **pulih sendiri**: `useOnline` merender ulang saat peristiwa
+   * `online` menyala, tanpa pengguna menekan apa pun.
+   */
+  if (error !== undefined && error !== null && !online) {
+    if (failureLevel === 'fullscreen') return <OfflineScreen />
+    return (
+      <FailureNotice
+        level={failureLevel}
+        title={t('state.offlineTitle')}
+        body={t('state.offlineBody')}
+        safety={t('state.offlineSafe')}
+        code="NET-OFFLINE"
+      />
+    )
   }
 
   if (error !== undefined && error !== null) {

@@ -115,6 +115,60 @@ try {
   }
   if (errors.length > 0) gagal.push(`error saat memuat: ${errors.join(' | ')}`)
 
+  /*
+   * **Baca offline pada bundel sungguhan** · Fase 14 · FR-CORE-03 · §10.3.
+   *
+   * Ini bagian alur kritis #4 yang tidak bisa diuji di `npm run dev`: di sana
+   * tiap modul adalah permintaan tersendiri dan precache Workbox kosong, jadi
+   * memuat ulang saat offline gagal karena mode dev-nya, bukan karena produknya.
+   * Yang membedakan di sini: `dist/` punya precache berisi kerangka dan seluruh
+   * potongan rutenya.
+   *
+   * Yang dibuktikan: pembaca yang menyimpan satu bab lalu kehilangan sinyal
+   * masih bisa **membuka URL bab itu langsung** — dari layar utama ponsel, dari
+   * riwayat, dari mana pun — dan mendapat aplikasinya, bukan layar error
+   * peramban dan bukan `offline.html` yang menawarkan bab yang sedang diminta.
+   */
+  const BAB = `${BASE}/cerita/s1/bab/s1-c5`
+  try {
+    const ctx = page.context()
+    await page.goto(BAB, { waitUntil: 'networkidle', timeout: 60_000 })
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null, {
+      timeout: 60_000,
+    })
+
+    // Kontrol ruang baca muncul lewat ketukan (§1.25); (5,5) itu padding
+    // `<article>` sendiri, jadi ketukannya tidak mendarat di tautan mana pun.
+    await page.locator('article').click({ position: { x: 5, y: 5 } })
+    await page.getByRole('button', { name: 'Simpan offline' }).click({ timeout: 15_000 })
+    await page
+      .getByRole('button', { name: 'Hapus dari offline' })
+      .waitFor({ state: 'visible', timeout: 15_000 })
+
+    await ctx.setOffline(true)
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 60_000 })
+    // `domcontentloaded` cuma berarti HTML-nya sampai. Yang diperiksa di sini
+    // apakah **aplikasinya** hidup, jadi yang ditunggu isinya — bukan dokumennya.
+    await page
+      .waitForFunction(() => (document.body.innerText.trim().length ?? 0) > 40, {
+        timeout: 30_000,
+      })
+      .catch(() => {})
+
+    const teks = await page.evaluate(() => document.body.innerText)
+    if (teks.includes('NET-OFFLINE')) {
+      gagal.push('muat ulang offline mendarat di offline.html, bukan di kerangka aplikasi')
+    } else if (!teks.includes('Dua Tanda Tangan')) {
+      gagal.push(`bab tersimpan tidak terbaca saat offline (${teks.slice(0, 80).trim()})`)
+    }
+
+    await ctx.setOffline(false)
+  } catch (error) {
+    gagal.push(
+      `baca offline: ${error instanceof Error ? error.message.split(String.fromCharCode(10))[0] : error}`,
+    )
+  }
+
   await browser.close()
 } catch (error) {
   gagal.push(String(error instanceof Error ? error.message : error))
@@ -126,7 +180,9 @@ if (gagal.length > 0) {
   for (const g of gagal) console.error(`✗ ${g}`)
   kode = 1
 } else {
-  console.log('✓ build: aplikasi terpasang dari dist/, halaman dev tidak ikut terkirim')
+  console.log(
+    '✓ build: aplikasi terpasang dari dist/, halaman dev tidak ikut terkirim, bab tersimpan terbaca offline',
+  )
 }
 
 process.exit(kode)

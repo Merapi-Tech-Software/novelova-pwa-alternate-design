@@ -177,7 +177,15 @@ export const unlockHandlers: Pick<
     const existing = await db.progress.get(id)
 
     const finished = new Set(existing?.finishedChapterIds ?? [])
-    if (input.scrollPct >= CHAPTER_DONE_PCT) finished.add(input.chapterId)
+    const finishedAt = { ...(existing?.finishedAt ?? {}) }
+    if (input.scrollPct >= CHAPTER_DONE_PCT) {
+      finished.add(input.chapterId)
+      // **Tanggal pertama kali selesai, bukan yang terakhir.** Membaca ulang bab
+      // yang sama besok tidak boleh menghitungnya lagi sebagai misi hari itu —
+      // kalau boleh, "Baca 3 bab hari ini" bisa diselesaikan dengan menggulir
+      // satu bab yang sama tiga kali.
+      finishedAt[input.chapterId] ??= todayLocalISO()
+    }
 
     await db.progress.put({
       id,
@@ -194,6 +202,7 @@ export const unlockHandlers: Pick<
         [input.chapterId]: input.scrollPct,
       },
       finishedChapterIds: [...finished],
+      finishedAt,
       updatedAt: new Date().toISOString(),
     })
   },

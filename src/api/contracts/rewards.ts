@@ -27,8 +27,25 @@ export const VoucherSchema = z.object({
   maxUses: z.number().int().positive(),
   usedCount: z.number().int().nonnegative(),
   expiresAt: IsoDateTimeSchema,
+  /**
+   * **Diturunkan server, bukan disimpan** · FR-RWD-06. Voucher dengan
+   * `unlockCond` tidak dapat dipilih sampai syaratnya terpenuhi — dan yang tahu
+   * apakah syaratnya terpenuhi hanya server (streak, bab selesai). Layar yang
+   * menghitungnya sendiri akan menghidupkan tombol yang servernya tolak.
+   */
+  locked: z.boolean().default(false),
 })
 export type Voucher = z.infer<typeof VoucherSchema>
+
+/** Cerita tempat sebuah voucher benar-benar berlaku · FR-RWD-06. */
+export const VoucherTargetSchema = z.object({
+  storyId: IdSchema,
+  title: z.string(),
+  coverUrl: z.string().nullable(),
+  /** Berapa bab terkunci yang akan terbuka bila voucher ini dipakai di sini. */
+  unlockCount: z.number().int().nonnegative(),
+})
+export type VoucherTarget = z.infer<typeof VoucherTargetSchema>
 
 export const RedeemResultSchema = z.object({
   voucher: VoucherSchema,
@@ -37,17 +54,52 @@ export const RedeemResultSchema = z.object({
 })
 export type RedeemResult = z.infer<typeof RedeemResultSchema>
 
+/**
+ * Jenis misi menentukan **dari mana progresnya dibaca** · FR-RWD-07.
+ *
+ * Disimpan, bukan ditebak dari judulnya: judul boleh diubah copywriter kapan
+ * saja, dan misi yang progresnya berhenti terbaca karena judulnya diperhalus
+ * adalah cacat yang tidak akan pernah dicurigai.
+ */
+export const MissionKindSchema = z.enum(['read', 'review', 'ad'])
+export type MissionKind = z.infer<typeof MissionKindSchema>
+
 export const MissionSchema = z.object({
   id: IdSchema,
+  kind: MissionKindSchema,
   title: z.string(),
   description: z.string(),
   progress: z.number().int().nonnegative(),
   target: z.number().int().positive(),
   rewardCoins: z.number().int().positive(),
   claimedAt: IsoDateTimeSchema.nullable(),
+  /** Ke mana tombolnya membawa saat misi belum selesai · FR-RWD-07, FR-CORE-05. */
+  actionLink: z.string(),
+  actionLabel: z.string(),
 })
+export type Mission = z.infer<typeof MissionSchema>
 
-export const RewardSchema = z.object({
+/** Satu hari di kalender check-in · FR-RWD-02. */
+export const CheckInDaySchema = z.object({
+  day: z.number().int().min(1).max(7),
+  coins: z.number().int().nonnegative(),
+  voucherTitle: z.string().nullable(),
+  claimed: z.boolean(),
+  /** Hari yang bisa diklaim sekarang — tepat satu, atau tidak ada sama sekali. */
+  claimable: z.boolean(),
+})
+export type CheckInDay = z.infer<typeof CheckInDaySchema>
+
+/**
+ * Bentuk yang **tersimpan** — hanya yang tidak bisa dihitung ulang.
+ *
+ * Dipisah dari `Reward` yang dibaca layar karena selisihnya seluruhnya turunan:
+ * streak yang berlaku, kalender tujuh hari, progres misi, dan ringkasan tiga
+ * angka semuanya dihitung dari tanggal hari ini dan dari aktivitas nyata. Kalau
+ * turunan ikut disimpan, ia akan basi tanpa ada yang tahu — dan streak yang
+ * basi berarti hadiah yang bisa diambil dua kali (`architecture.md` §1.38).
+ */
+export const RewardStateSchema = z.object({
   userId: IdSchema,
   checkInStreak: z.number().int().nonnegative(),
   /**
@@ -58,7 +110,75 @@ export const RewardSchema = z.object({
   missions: z.array(MissionSchema),
   referralCode: z.string(),
 })
+export type RewardState = z.infer<typeof RewardStateSchema>
+
+export const RewardSchema = RewardStateSchema.extend({
+  /**
+   * **Koin hadiah periode berjalan, bukan saldo kedua** · FR-RWD-01,
+   * FR-WALLET-17. Dijumlahkan dari buku besar (`kind: 'reward'`) bulan ini —
+   * angka kedua yang mengaku saldo adalah cara tercepat membuat pengguna
+   * berhenti mempercayai keduanya.
+   */
+  coinsThisPeriod: z.number().int().nonnegative(),
+  voucherCount: z.number().int().nonnegative(),
+  /** Berapa voucher yang tinggal beberapa hari lagi · FR-RWD-01. */
+  expiringSoon: z.number().int().nonnegative(),
+  /** Kalender tujuh hari, sudah dihitung server · FR-RWD-02. */
+  checkIn: z.array(CheckInDaySchema),
+  claimedToday: z.boolean(),
+})
 export type Reward = z.infer<typeof RewardSchema>
+
+/**
+ * Program referral · FR-RWD-04 · FR-RWD-07.
+ *
+ * Tiap undangan membawa **keadaannya**, bukan cuma namanya: hadiah baru
+ * diberikan setelah teman mendaftar **dan** menyelesaikan bab pertamanya, dan
+ * daftar yang tidak menunjukkan bedanya membuat syarat itu terasa seperti
+ * penolakan sewenang-wenang.
+ */
+export const ReferralInviteSchema = z.object({
+  /**
+   * Id **yang diundang**, bukan yang mengundang.
+   *
+   * Semula kolomnya bernama `userId`, dan itu satu nama untuk dua arti: baris
+   * Dexie memakai `userId` sebagai pemilik (indeksnya), sementara isinya
+   * seharusnya orang yang bergabung. Akibatnya ketiga undangan memakai id yang
+   * sama, dan React mengeluh soal kunci ganda — gejala yang muncul di layar,
+   * bukan di typecheck, karena kedua arti itu sama-sama `string`.
+   */
+  inviteeId: IdSchema,
+  name: z.string(),
+  joinedAt: IsoDateTimeSchema,
+  readFirstChapter: z.boolean(),
+  rewardedCoins: z.number().int().nonnegative(),
+})
+export type ReferralInvite = z.infer<typeof ReferralInviteSchema>
+
+export const ReferralSchema = z.object({
+  code: z.string(),
+  rewardCoins: z.number().int().positive(),
+  condition: z.string(),
+  invites: z.array(ReferralInviteSchema),
+  earnedCoins: z.number().int().nonnegative(),
+  pendingCount: z.number().int().nonnegative(),
+})
+export type Referral = z.infer<typeof ReferralSchema>
+
+/**
+ * Riwayat klaim · FR-RWD-05.
+ *
+ * **Diturunkan dari buku besar**, bukan tabel kedua: riwayat klaim dan dompet
+ * yang dihitung terpisah akan berbeda, dan yang salah tidak akan ketahuan
+ * sampai ada yang menjumlahkan keduanya.
+ */
+export const RewardHistoryEntrySchema = z.object({
+  id: IdSchema,
+  title: z.string(),
+  coins: z.number().int(),
+  at: IsoDateTimeSchema,
+})
+export type RewardHistoryEntry = z.infer<typeof RewardHistoryEntrySchema>
 
 export const WithdrawStatusSchema = z.enum(['submitted', 'review', 'transferred', 'rejected'])
 

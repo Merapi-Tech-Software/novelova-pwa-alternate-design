@@ -23,7 +23,11 @@ export function AuthLayout() {
           <p className="font-display text-page font-bold">{t('app.name')}</p>
           <p className="mt-1 text-body text-nv-muted">{t('app.tagline')}</p>
         </header>
-        <Outlet />
+        {/* Landmark juga di sini: formulirnya pendek, tetapi "di luar wilayah
+            bernama" tetap berlaku untuk halaman pendek. */}
+        <main id="konten" tabIndex={-1}>
+          <Outlet />
+        </main>
       </div>
     </div>
   )

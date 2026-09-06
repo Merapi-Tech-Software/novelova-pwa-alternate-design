@@ -4,6 +4,7 @@ import type { ReviewQueueItem, ReviewTarget, ScheduleEntry, Story } from '../../
 import { ApiError, INTERNAL_CODES } from '../../errors'
 import { db } from '../db'
 import { bestDayLabel } from './analytics'
+import { emitNotification } from './notifications'
 import { currentUserId } from './session'
 
 /**
@@ -340,6 +341,7 @@ export async function resolveReviewAsAdmin(
       review: decision === 'approve' ? 'published' : 'rejected',
       rejectReason: decision === 'approve' ? null : reason,
     })
+    await beritahuPenulis(story.id, decision, story.title, decision === 'approve' ? null : reason)
     return
   }
 
@@ -350,6 +352,42 @@ export async function resolveReviewAsAdmin(
     review: decision === 'approve' ? 'published' : 'rejected',
     state: decision === 'approve' ? 'published' : chapter.state,
     publishAt: decision === 'approve' ? new Date().toISOString() : chapter.publishAt,
+  })
+
+  await beritahuPenulis(
+    chapter.storyId,
+    decision,
+    `Bab ${chapter.number} · ${chapter.title}`,
+    decision === 'approve' ? null : reason,
+  )
+}
+
+/**
+ * Memberi tahu penulis saat status tinjauan berubah · FR-STUDIO-38.
+ *
+ * Jalurnya baru ada sejak Fase 11, dan tanpa pemicu ini keputusan tinjauan
+ * adalah satu-satunya kabar penting di aplikasi yang **tidak pernah sampai**
+ * kecuali penulisnya kebetulan membuka antreannya sendiri.
+ *
+ * **Penolakan membawa alasannya ke dalam notifikasi.** Notifikasi yang cuma
+ * berkata "ditolak" memaksa penulis membuka halaman lain untuk tahu apa yang
+ * harus diperbaiki — dan alasannya sudah ada di tangan saat baris ini ditulis.
+ */
+async function beritahuPenulis(
+  storyId: string,
+  decision: 'approve' | 'reject',
+  label: string,
+  reason: string | null,
+): Promise<void> {
+  const story = await db.stories.get(storyId)
+  if (!story) return
+
+  await emitNotification(story.authorId, {
+    kind: 'cetak-status',
+    title: decision === 'approve' ? `${label} disetujui dan tayang` : `${label} perlu diperbaiki`,
+    body: reason ?? story.title,
+    deepLink: `/karya/${storyId}/bab`,
+    groupKey: `review-${storyId}`,
   })
 }
 

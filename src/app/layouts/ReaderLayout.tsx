@@ -8,8 +8,10 @@ import { Outlet } from 'react-router'
  */
 export function ReaderLayout() {
   return (
-    <div className="min-h-dvh bg-nv-paper">
+    // `<main>`, bukan `<div>`: tanpa landmark, seluruh ruang baca berada di luar
+    // wilayah bernama, dan pembaca layar tidak punya cara melompat ke isinya.
+    <main id="konten" tabIndex={-1} className="min-h-dvh bg-nv-paper">
       <Outlet />
-    </div>
+    </main>
   )
 }

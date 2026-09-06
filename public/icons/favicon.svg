@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Novelova">
+  <title>Novelova</title>
+  <rect width="64" height="64" rx="14.08" fill="#f4f2ef"/>
+  <text x="50%" y="40.6016" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-weight="600"
+        font-size="33.331199999999995" fill="#1c1a18">N</text>
+  <rect x="20.7104" y="49.203199999999995" width="22.579199999999997" height="2.4192"
+        rx="1.18272" fill="#b68235"/>
+</svg>

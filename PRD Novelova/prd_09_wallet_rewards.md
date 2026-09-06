@@ -498,10 +498,19 @@ Check-in harian (streak 7 hari) · menyelesaikan misi · mengundang teman lewat 
 
   | Jenis | Tanda | Contoh |
   |---|---|---|
-  | Isi ulang | `+` hijau | Paket Nilai Terbaik +1.200 (QRIS, Berhasil) |
-  | Keluar | `−` merah | Buka Chapter 18 −120 · Bundle lima chapter −520 |
+  | Isi ulang | `+` **tinta** | Paket Nilai Terbaik +1.200 (QRIS, Berhasil) |
+  | Keluar | `−` **tinta** | Buka Chapter 18 −120 · Bundle lima chapter −520 |
   | Hadiah | `+` | Hadiah misi harian +55 (Diklaim) |
   | Menunggu | `+` dengan pil menunggu | Isi ulang transfer bank +500 |
+
+> **Revisi 5 September 2026 · nominal buku besar memakai tinta.** Versi lama
+> menulis isi ulang `+` **hijau** dan keluar `−` **merah**. Sejak putaran 7,
+> `prd_01` §0 menetapkan destruktif tidak pernah memakai isi berwarna — dan buku
+> besar yang penuh baris hijau-merah terbaca sebagai daftar peringatan, padahal
+> tidak ada satu baris pun di sana yang berbahaya. Yang membedakan masuk dari
+> keluar tetap **tandanya** (`+` / `−`), dan itu sudah cukup. Merah tetap
+> dipakai, tetapi hanya di lencana status transaksi yang memang gagal — di sana
+> ia berarti sesuatu. Diterapkan di R8c. `architecture.md` §1.29.
 
 - Setiap baris membawa keterangan kontekstual (metode pembayaran, judul cerita, alasan diskon).
 - Baris transaksi top-up berupa tautan menuju halaman detail; baris pengeluaran tidak.

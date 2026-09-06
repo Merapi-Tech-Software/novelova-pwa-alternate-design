@@ -77,7 +77,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       tone: options?.tone ?? 'neutral',
       ...(options?.action ? { action: options.action } : {}),
     })
-    timer.current = window.setTimeout(() => setToast(null), options?.durationMs ?? TOAST_MS)
+    /*
+     * `durationMs: 0` berarti **menetap sampai pengguna menutupnya**.
+     *
+     * Dipakai toast pembaruan aplikasi: yang menutupnya harus keputusan
+     * pengguna, bukan lima detik yang lewat sementara ia sedang membaca bab.
+     * `setTimeout(…, 0)` justru kebalikannya — ia menutupnya seketika.
+     */
+    const ms = options?.durationMs ?? TOAST_MS
+    if (ms > 0) timer.current = window.setTimeout(() => setToast(null), ms)
   }, [])
 
   /*

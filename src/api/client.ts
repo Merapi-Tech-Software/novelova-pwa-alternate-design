@@ -19,7 +19,10 @@ import type {
   Comment,
   CommentInput,
   CommentParams,
+  DataExport,
+  DeletionCheck,
   DeviceSession,
+  ExportCategory,
   HomeFeed,
   LibraryEntry,
   LibraryItem,
@@ -31,6 +34,7 @@ import type {
   Notification,
   NotificationPrefs,
   NotifParams,
+  OfflineChapter,
   Paged,
   PayMethod,
   PayoutAccount,
@@ -39,13 +43,16 @@ import type {
   PrintOrderInput,
   PrintOrderParams,
   PrivacySettings,
+  ProfileUpdateInput,
   ProgressInput,
+  PublicProfile,
   Rating,
   ReactTarget,
   ReaderPrefs,
   ReaderStats,
   ReadingProgress,
   RedeemResult,
+  Referral,
   RegisterInput,
   ReportInput,
   ResetRequest,
@@ -56,6 +63,7 @@ import type {
   ReviewQueueItem,
   ReviewTarget,
   Reward,
+  RewardHistoryEntry,
   ScheduleChapterInput,
   ScheduleEntry,
   ScheduleStoryInput,
@@ -63,6 +71,7 @@ import type {
   SearchResult,
   SectionId,
   SectionParams,
+  SecurityOverview,
   Session,
   Story,
   StoryAnalytics,
@@ -82,7 +91,9 @@ import type {
   UnlockResult,
   UserRowData,
   Voucher,
+  VoucherTarget,
   Wallet,
+  WeeklyRecap,
   Withdrawal,
   WithdrawInput,
 } from './contracts'
@@ -416,7 +427,15 @@ export interface NovelovaApi {
   // ── hadiah · prd_09 E ─────────────────────────────────────────────────────
   getRewards(): Promise<Reward>
   claimCheckIn(): Promise<Reward>
+  /** Klaim satu misi harian · FR-RWD-03. Progresnya diperiksa ulang server. */
+  claimMission(missionId: string): Promise<Reward>
+  /** Kode undangan beserta keadaan tiap temannya · FR-RWD-04. */
+  getReferral(): Promise<Referral>
   listVouchers(): Promise<Voucher[]>
+  /** Cerita tempat sebuah voucher berlaku · FR-RWD-06 — pengganti tombol `#`. */
+  listVoucherTargets(voucherId: string): Promise<VoucherTarget[]>
+  /** Riwayat klaim, diturunkan dari buku besar · FR-RWD-05. */
+  listRewardHistory(): Promise<RewardHistoryEntry[]>
 
   // ── profil & pengaturan · prd_10 ──────────────────────────────────────────
   listConnections(kind: 'followers' | 'following', params: ListParams): Promise<Paged<UserRowData>>
@@ -425,8 +444,40 @@ export interface NovelovaApi {
   setPrivacySettings(settings: PrivacySettings): Promise<PrivacySettings>
   getLocaleSettings(): Promise<LocaleSettings>
   setLocaleSettings(settings: LocaleSettings): Promise<LocaleSettings>
-  requestDataExport(categories: string[]): Promise<{ id: string }>
+  requestDataExport(categories: ExportCategory[]): Promise<DataExport>
   requestAccountDeletion(): Promise<{ purgeAt: string }>
+
+  // ── Fase 13 · profil, keamanan, bantuan ───────────────────────────────────
+  /** Ubah profil · FR-PROF-07. Nama wajib; server memeriksanya lagi. */
+  updateProfile(input: ProfileUpdateInput): Promise<UserRowData>
+  /**
+   * Profil pengguna lain · FR-PROF-08 · FR-PROF-10.
+   *
+   * Tab yang boleh dilihat **ditentukan di sini**, bukan disaring layar: yang
+   * tahu nilai sakelar privasi pemiliknya cuma server.
+   */
+  getPublicProfile(userId: string): Promise<PublicProfile>
+  /** Rekap tujuh hari · FR-PROF-02. Diturunkan, bukan penghitung tersimpan. */
+  getWeeklyRecap(): Promise<WeeklyRecap>
+  /** Skor, saran, dan sesi dalam satu panggilan · FR-SET-02 · FR-SET-03. */
+  getSecurityOverview(): Promise<SecurityOverview>
+  /**
+   * Hapus riwayat membaca · FR-SET-05.
+   *
+   * Mengosongkan progres dan Lanjut Baca, **tetapi tidak** mengeluarkan cerita
+   * dari perpustakaan — dua hal berbeda yang prototipe campurkan.
+   */
+  clearReadingHistory(): Promise<void>
+  /** Apakah akun boleh dihapus, dan kalau tidak — kenapa · FR-SET-05. */
+  getDeletionCheck(): Promise<DeletionCheck>
+
+  // ── Fase 14 · baca offline · arch §10.3 ───────────────────────────────────
+  listOfflineChapters(): Promise<OfflineChapter[]>
+  /** Menandai bab untuk dibaca offline. Batas 50, LRU, ditegakkan server. */
+  saveChapterOffline(chapterId: string): Promise<OfflineChapter[]>
+  removeChapterOffline(chapterId: string): Promise<OfflineChapter[]>
+  /** Menggerakkan LRU — dipanggil tiap bab tersimpan dibuka. */
+  touchOfflineChapter(chapterId: string): Promise<void>
 }
 
 /**

@@ -242,6 +242,20 @@ export const ReadingProgressSchema = z.object({
    * menuntut pencarian linear pada cerita 120 bab.
    */
   scrollByChapter: z.record(IdSchema, z.number().min(0).max(1)).default({}),
+  /**
+   * Tanggal lokal saat tiap bab **selesai** dibaca · FR-RWD-07.
+   *
+   * `finishedChapterIds` menjawab *"bab mana yang sudah selesai"*; kolom ini
+   * menjawab *"kapan"* — dan misi harian "Baca 3 bab hari ini" tidak bisa
+   * dijawab tanpanya. Ditambahkan dengan cara yang sama seperti
+   * `scrollByChapter` di R7: kolom baru berpendamping default, bukan mengganti
+   * yang lama, supaya seluruh pembaca `finishedChapterIds` tetap benar.
+   *
+   * Tanggal lokal, bukan stempel waktu: yang menentukan "hari ini" adalah
+   * kalender pengguna (FR-RWD-07), dan menyimpan UTC di sini akan menolak misi
+   * yang sah setiap pagi di WIB.
+   */
+  finishedAt: z.record(IdSchema, LocalDateSchema).default({}),
 })
 export type ReadingProgress = z.infer<typeof ReadingProgressSchema>
 

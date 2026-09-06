@@ -11,6 +11,9 @@ import { AppShell } from '@/app/layouts/AppShell'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { ReaderLayout } from '@/app/layouts/ReaderLayout'
 import { TopBarLayout } from '@/app/layouts/TopBarLayout'
+import { PwaBridge } from '@/app/PwaBridge'
+import { OfflineBanner } from '@/components/patterns/OfflineBanner'
+import { SkipLink } from '@/components/patterns/SkipLink'
 import { EmptyState } from '@/components/ui/EmptyState'
 import ProfilePage from '@/features/profile/pages/ProfilePage'
 import { RequireAuth, RequireAuthor, RequireGuest } from './guards'
@@ -46,6 +49,18 @@ export interface RouteDef {
 const HomePage = lazy(() => import('@/features/home/pages/HomePage'))
 const BrowsePage = lazy(() => import('@/features/home/pages/BrowsePage'))
 const SearchPage = lazy(() => import('@/features/search/pages/SearchPage'))
+const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'))
+const RewardsPage = lazy(() => import('@/features/rewards/pages/RewardsPage'))
+const EditProfilePage = lazy(() => import('@/features/profile/pages/EditProfilePage'))
+const ConnectionsPage = lazy(() => import('@/features/profile/pages/ConnectionsPage'))
+const PublicProfilePage = lazy(() => import('@/features/profile/pages/PublicProfilePage'))
+const LocalePage = lazy(() => import('@/features/profile/pages/LocalePage'))
+const SecurityPage = lazy(() => import('@/features/profile/pages/SecurityPage'))
+const HelpPage = lazy(() => import('@/features/profile/pages/HelpPage'))
+const LegalPage = lazy(() => import('@/features/profile/pages/LegalPage'))
+const NotificationPrefsPage = lazy(
+  () => import('@/features/notifications/pages/NotificationPrefsPage'),
+)
 const StoryDetailPage = lazy(() => import('@/features/story/pages/StoryDetailPage'))
 const ReviewsPage = lazy(() => import('@/features/story/pages/ReviewsPage'))
 const CommentsPage = lazy(() => import('@/features/story/pages/CommentsPage'))
@@ -93,15 +108,25 @@ export const ROUTES: RouteDef[] = [
   // ── discovery ─────────────────────────────────────────────────────────────
   { path: '/', title: 'Beranda', layout: 'shell', guard: 'auth', element: <HomePage /> },
   { path: '/cari', title: 'Pencarian', layout: 'shell', guard: 'auth', element: <SearchPage /> },
-  { path: '/notifikasi', title: 'Notifikasi', layout: 'topbar', guard: 'auth' },
   {
-    // Fase 11 mengubahnya jadi rute modal di atas `/notifikasi`; sampai lembarnya
-    // ada, halaman biasa dengan URL yang sama sudah cukup untuk ditautkan.
+    path: '/notifikasi',
+    title: 'Notifikasi',
+    layout: 'topbar',
+    guard: 'auth',
+    element: <NotificationsPage />,
+  },
+  {
+    // **Rute modal** (Fase 11): lembar preferensi di atas `/notifikasi`, tetapi
+    // dengan URL sendiri supaya bisa ditautkan dari kelompok "Akun" di profil.
+    // Halamannya merender pusat notifikasi di bawah lembarnya sendiri — dibuka
+    // langsung dari profil, lembar yang melayang di atas layar kosong dan
+    // menutup ke halaman putih bukan modal, itu halaman yang salah gambar.
     path: '/notifikasi/pengaturan',
     title: 'Preferensi notifikasi',
     layout: 'topbar',
     guard: 'auth',
     fallback: '/notifikasi',
+    element: <NotificationPrefsPage />,
   },
   {
     path: '/jelajah/:kategori',
@@ -168,7 +193,14 @@ export const ROUTES: RouteDef[] = [
     fallback: '/koin/transaksi',
     element: <TransactionDetailPage />,
   },
-  { path: '/hadiah', title: 'Pusat hadiah', layout: 'topbar', guard: 'auth', fallback: '/koin' },
+  {
+    path: '/hadiah',
+    title: 'Pusat hadiah',
+    layout: 'topbar',
+    guard: 'auth',
+    fallback: '/koin',
+    element: <RewardsPage />,
+  },
 
   // ── author studio ─────────────────────────────────────────────────────────
   { path: '/karya', title: 'Karya saya', layout: 'shell', guard: 'auth', element: <StudioPage /> },
@@ -299,6 +331,7 @@ export const ROUTES: RouteDef[] = [
     layout: 'topbar',
     guard: 'auth',
     fallback: '/profil',
+    element: <EditProfilePage />,
   },
   {
     path: '/profil/koneksi',
@@ -306,14 +339,22 @@ export const ROUTES: RouteDef[] = [
     layout: 'topbar',
     guard: 'auth',
     fallback: '/profil',
+    element: <ConnectionsPage />,
   },
-  { path: '/pengguna/:userId', title: 'Profil pengguna', layout: 'topbar', guard: 'auth' },
+  {
+    path: '/pengguna/:userId',
+    title: 'Profil pengguna',
+    layout: 'topbar',
+    guard: 'auth',
+    element: <PublicProfilePage />,
+  },
   {
     path: '/pengaturan/bahasa',
     title: 'Bahasa & wilayah',
     layout: 'topbar',
     guard: 'auth',
     fallback: '/profil',
+    element: <LocalePage />,
   },
   {
     path: '/pengaturan/keamanan',
@@ -321,6 +362,7 @@ export const ROUTES: RouteDef[] = [
     layout: 'topbar',
     guard: 'auth',
     fallback: '/profil',
+    element: <SecurityPage />,
   },
   {
     path: '/bantuan',
@@ -328,9 +370,24 @@ export const ROUTES: RouteDef[] = [
     layout: 'topbar',
     guard: 'auth',
     fallback: '/profil',
+    element: <HelpPage />,
   },
-  { path: '/legal/ketentuan', title: 'Ketentuan Layanan', layout: 'topbar', guard: 'none' },
-  { path: '/legal/privasi', title: 'Kebijakan Privasi', layout: 'topbar', guard: 'none' },
+  {
+    path: '/legal/ketentuan',
+    title: 'Ketentuan Layanan',
+    layout: 'topbar',
+    guard: 'none',
+    fallback: '/bantuan',
+    element: <LegalPage kind="terms" />,
+  },
+  {
+    path: '/legal/privasi',
+    title: 'Kebijakan Privasi',
+    layout: 'topbar',
+    guard: 'none',
+    fallback: '/bantuan',
+    element: <LegalPage kind="privacy" />,
+  },
 ]
 
 /**
@@ -453,6 +510,16 @@ function Root() {
   return (
     <>
       <ScrollRestoration />
+      {/*
+        Keduanya di sini, bukan di `App.tsx`: `PwaBridge` butuh `useNavigate`
+        (deep link push), dan `OfflineBanner` harus berada di atas **setiap**
+        layout — termasuk ruang baca dan halaman auth yang tidak memakai
+        `AppShell`.
+      */}
+      <PwaBridge />
+      {/* Tab pertama di halaman mana pun mengenainya · WCAG 2.4.1. */}
+      <SkipLink />
+      <OfflineBanner />
       <Outlet />
     </>
   )

@@ -1,9 +1,10 @@
-import { Trash2 } from 'lucide-react'
+import { BookMarked, Trash2 } from 'lucide-react'
 import { Link } from 'react-router'
 import type { LibraryItem } from '@/api/contracts'
 import { IconButton } from '@/components/ui/Button'
 import { Badge, type BadgeTone } from '@/components/ui/Chip'
 import { Switch } from '@/components/ui/Switch'
+import { useOfflineChapters } from '@/hooks/useOffline'
 import { t } from '@/i18n/t'
 import { cx } from '@/lib/cx'
 
@@ -38,6 +39,14 @@ const READ_LABEL: Record<LibraryItem['state'], string> = {
 }
 
 export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps) {
+  /*
+   * Dibaca **di kartunya**, bukan diteruskan sebagai prop dari halaman:
+   * `useOfflineChapters` satu kueri bersama, jadi delapan kartu tetap satu
+   * permintaan — dan halaman tidak perlu tahu soal offline sama sekali.
+   */
+  const tersimpan = useOfflineChapters()
+  const offline = (tersimpan.data ?? []).some((row) => row.storyId === item.story.id)
+
   const { story } = item
   const status = STATUS[story.status]
   const readTo = item.continueChapterId
@@ -93,6 +102,18 @@ export function LibraryCard({ item, onToggleNotify, onRemove }: LibraryCardProps
         <p className="truncate pt-0.5 text-caption text-nv-muted">
           {story.penName} · {story.genres.join(' · ')} · ★ {story.stats.rating.toFixed(1)}
         </p>
+
+        {/*
+          Penanda **tersedia offline** · §10.3. Ikon plus kata, bukan ikon saja:
+          penanda yang hanya bentuk menuntut pengguna sudah tahu artinya, dan
+          satu-satunya tempat ia bisa belajar adalah layar yang sama.
+        */}
+        {offline && (
+          <p className="flex items-center gap-1.5 pt-1 text-caption text-nv-gold">
+            <BookMarked size={12} aria-hidden className="shrink-0" />
+            {t('pwa.offlineAvailable')}
+          </p>
+        )}
 
         <div className="flex items-center gap-2 pt-2.5">
           <span

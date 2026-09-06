@@ -190,10 +190,18 @@ Ini adalah satu-satunya halaman reader yang aktif — seluruh tautan bab, gratis
   | Nilai | Hasil | Contoh |
   |---|---|---|
   | ≥ 1.000.000 | satu desimal + `jt`, `.0` dibuang | `1500000` → `1.5jt`, `2000000` → `2jt` |
-  | ≥ 1.000 | satu desimal + `rb`, `.0` dibuang | `15300` → `15.3rb`, `12000` → `12rb` |
+  | ≥ 1.000 | satu desimal + `rb`, `,0` dibuang | `15300` → **`15,3rb`**, `12000` → `12rb` |
   | < 1.000 | angka apa adanya | `800` → `800` |
 
-- **Empat titik tampilan** diperbarui bersamaan setiap saldo berubah: nilai di chip atas, chip bonus (`+23`), nilai di gerbang terkunci (`"15.3rb koin"`), dan bonus di gerbang (`"+23 bonus"`).
+- **Empat titik tampilan** diperbarui bersamaan setiap saldo berubah: nilai di chip atas, chip bonus (`+23`), nilai di gerbang terkunci (`"15,3rb koin"`), dan bonus di gerbang (`"+23 bonus"`).
+
+> **Revisi 5 September 2026 · pemisah desimal.** Versi lama menulis `15.3rb`
+> dengan **titik**. Di Indonesia titik adalah pemisah **ribuan**, jadi `15.3rb`
+> terbaca sebagai lima belas ribu tiga ratus ribu — dan mockup `7a` serta `7i`
+> sendiri mencetak `15,3rb`. Kodenya yang meleset, bukan mockup-nya; diperbaiki
+> di R8 pada satu fungsi (`formatCompactCoin`), sehingga seluruh chip koin,
+> jumlah baca, dan angka rating ikut benar sekaligus. Aturan `,0` dibuang tidak
+> berubah: `12000` tetap `12rb`. `architecture.md` §1.29.
 - Bonus bersifat **tetap** — tidak ikut berkurang saat bab dibeli.
 - Setiap pembacaan elemen dijaga null-check (`if (element)`), sehingga menghapus salah satu tampilan saldo tidak merusak halaman.
 
@@ -210,7 +218,8 @@ Ini adalah satu-satunya halaman reader yang aktif — seluruh tautan bab, gratis
 > sesi baca menerus melewati keduanya: tawaran bundel di bab ke-10, lalu saldo
 > habis di bab ke-12 beserta lembar isi koinnya. **Ketiga mockup itu jadi usang
 > pada angka saldonya**, dan itu diterima.
-- **Given** saldo 12.000, **when** dirender, **then** hasilnya `12rb` (bukan `12.0rb`).
+- **Given** saldo 12.000, **when** dirender, **then** hasilnya `12rb` (bukan `12,0rb`).
+- **Given** saldo 15.300, **when** dirender, **then** hasilnya `15,3rb` — **koma, bukan titik**.
 - **Given** saldo 800, **when** dirender, **then** hasilnya `800` tanpa satuan.
 - **Given** pembaca membeli bab seharga 1.500, **when** transaksi berhasil, **then** kedua tampilan saldo berubah menjadi `13.8rb` secara bersamaan.
 - **Given** saldo berubah, **when** dirender ulang, **then** angka bonus tetap `+23`.

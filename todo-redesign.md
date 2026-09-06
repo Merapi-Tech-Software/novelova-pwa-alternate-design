@@ -106,11 +106,11 @@ dulu menahan **setiap** halaman — sudah ditutup di primitifnya sejak R7.
 | E · Dompet | 3 | 0 | 3 |
 | F · Author studio | 12 | **6** | 12 |
 | G · Penghasilan penulis | 3 | 0 | 3 |
-| H · Profil & pengaturan | 6 | **1** | 0 |
-| I · Sosial, notifikasi, hadiah | 3 | 0 | 0 |
-| J · Bantuan & legal | 3 | 0 | 0 |
+| H · Profil & pengaturan | 6 | **1** | **6** |
+| I · Sosial, notifikasi, hadiah | 3 | 0 | **3** |
+| J · Bantuan & legal | 3 | 0 | **3** |
 | K · Dev & 404 | 2 | — | 2 |
-| **Total** | **42** (+2) | **14** | **30** |
+| **Total** | **42** (+2) | **14** | **42** |
 
 **Dua pertiga rute tidak punya mockup.** 27 PNG putaran 7 hanya menutup 14 dari
 42 rute — dan yang tidak tergambar justru berisi hal yang paling mahal kalau
@@ -840,64 +840,78 @@ membangunnya nanti berarti membangunnya dua kali.
 
 ## `/profil/ubah` — Ubah profil · `PENAMPUNG` · tanpa mockup
 
-- [ ] Kalau dibangun: input garis bawah, unggah avatar mengikuti pola pengunggah
+- [x]  input garis bawah, unggah avatar mengikuti pola pengunggah
       sampul `7k`
 
 ## `/profil/koneksi` — Pengikut & mengikuti · `PENAMPUNG` · tanpa mockup
 
-- [ ] Kalau dibangun: dua tab teks + daftar `UserRow` berpembatas
+- [x]  dua tab teks + daftar `UserRow` berpembatas
 
 ## `/pengguna/:userId` — Profil pengguna · `PENAMPUNG` · tanpa mockup
 
-- [ ] Kalau dibangun: anatomi `7i` tanpa panel koin dan tanpa daftar `AKUN`
+- [x]  anatomi `7i` tanpa panel koin dan tanpa daftar `AKUN`
 
 ## `/pengaturan/bahasa` — Bahasa & wilayah · `PENAMPUNG` · tanpa mockup
 
-- [ ] Kalau dibangun: daftar pilihan berpembatas, bukan kartu
+- [x]  daftar pilihan berpembatas, bukan kartu
 
-## `/pengaturan/keamanan` — Keamanan · `PENAMPUNG` · tanpa mockup
+## `/pengaturan/keamanan` — Keamanan · **ADA** · Fase 13 · **selesai**
 
-- [ ] Kalau dibangun: blok "Data & akun" tetap **di dalam halaman ini**, bukan
-      rute sendiri
-- [ ] Hapus akun tetap lewat pola ketik-ulang, **tanpa isi merah**
+- [x] Blok "Data & akun" tetap **di dalam halaman ini**, bukan rute sendiri
+- [x] Hapus akun lewat pola ketik-ulang nama akun, **tanpa isi merah** —
+      `Button variant="danger"` bergaris `#9a4a3c` dengan latar transparan, dan
+      judulnya teks merah. Merah hidup sebagai garis dan teks, tidak pernah
+      sebagai bidang (brief §1)
 
 ---
 
-# I · Sosial, notifikasi & hadiah — 3 halaman, semuanya `PENAMPUNG`
+# I · Sosial, notifikasi & hadiah — 3 halaman, **ketiganya sudah ada**
 
-Tidak ada frame putaran 7 dan belum pernah dibangun. Bukan pekerjaan Fase R —
-dicatat di sini supaya tidak ada yang membangunnya dengan palet lama.
+Tidak ada frame putaran 7. Ketiganya dibangun di Fase 11 dan 12 **langsung dengan
+bahasa putaran 7**, persis seperti yang dicatat di sini.
 
-## `/notifikasi` — Notifikasi · `PENAMPUNG` · Fase 11
+## `/notifikasi` — Notifikasi · **ADA** · Fase 11 · **selesai**
 
-- [ ] Kalau dibangun: daftar berpembatas, penanda belum-dibaca berupa **titik
-      emas**, bukan latar berwarna
+- [x] Daftar berpembatas, penanda belum-dibaca berupa titik emas — **dan latar
+      `--nv-accent-soft`**
 
-## `/notifikasi/pengaturan` — Preferensi notifikasi · `PENAMPUNG` · Fase 11
+  > **Petunjuk di atas ditimpa `prd_11` FR-NOTIF-03**, yang menuntut **keduanya**:
+  > *"latar aksen lembut (`--accent-soft`) **dan** titik penanda"*. Catatan ini
+  > ditulis saat halamannya masih penampung, sebagai preferensi gaya putaran 7.
+  >
+  > PRD yang dimenangkan, dan bukan cuma karena ia PRD: latar aksen lembut hanya
+  > beda **6 % kecerahan**, dan titik emas 8px sendirian terlalu kecil untuk
+  > jadi satu-satunya pembeda. Dua penanda lemah yang saling menguatkan lebih
+  > terbaca daripada satu penanda lemah — terutama bagi mata yang membedakan
+  > warna dengan susah.
 
-- [ ] Kalau dibangun: baris sakelar seperti lembar `7s`
+## `/notifikasi/pengaturan` — Preferensi notifikasi · **ADA** · Fase 11 · **selesai**
 
-## `/hadiah` — Pusat hadiah · `PENAMPUNG` · Fase 12
+- [x] Baris sakelar seperti lembar `7s`, dikelompokkan `<fieldset>` + `<legend>`
+      (`architecture.md` §1.37)
 
-- [ ] Kalau dibangun: "420 koin hadiah" jadi **metrik periode berjalan**, bukan
-      saldo kedua
-- [ ] Saldo di sini adalah **titik ke-6** dari enam yang dijanjikan FR-WALLET-17
+## `/hadiah` — Pusat hadiah · **ADA** · Fase 12 · **selesai**
+
+- [x] "420 koin hadiah" jadi **metrik periode berjalan**, bukan saldo kedua —
+      dijumlahkan dari buku besar (`kind: 'reward'`) bulan berjalan, dan
+      keterangannya menyebut itu terang tepat di bawah stripnya
+- [x] Saldo di sini adalah **titik ke-6** dari enam yang dijanjikan FR-WALLET-17
 
 ---
 
 # J · Bantuan & legal — 3 halaman, semuanya `PENAMPUNG`
 
-## `/bantuan` — Pusat bantuan · `PENAMPUNG` · Fase 13
+## `/bantuan` — Pusat bantuan · **ADA** · Fase 13 · **selesai**
 
-- [ ] Kalau dibangun: daftar FAQ buka-tutup berpembatas, isi jawaban **serif**
+- [x]  daftar FAQ buka-tutup berpembatas, isi jawaban **serif**
 
-## `/legal/ketentuan` — Ketentuan Layanan · `PENAMPUNG` · Fase 13
+## `/legal/ketentuan` — Ketentuan Layanan · **ADA** · Fase 13 · **selesai**
 
-- [ ] Kalau dibangun: satu kolom teks **serif**, lebar terkendali
+- [x]  satu kolom teks **serif**, lebar terkendali
 
-## `/legal/privasi` — Kebijakan Privasi · `PENAMPUNG` · Fase 13
+## `/legal/privasi` — Kebijakan Privasi · **ADA** · Fase 13 · **selesai**
 
-- [ ] Kalau dibangun: sama dengan `/legal/ketentuan`
+- [x]  sama dengan `/legal/ketentuan`
 
 ---
 

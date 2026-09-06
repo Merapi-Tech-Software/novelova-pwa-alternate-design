@@ -188,29 +188,51 @@ export default function StudioPage() {
         sama dengan strip detail cerita dan profil, jadi pembaca mengenalinya
         sebagai "angka tentang sesuatu", bukan sebagai empat kartu.
       */}
+      {/*
+        Tiap sel dibungkus `<div>` berisi `<dt>` lalu `<dd>` — satu-satunya
+        pengelompokan yang sah di dalam `<dl>`. Sebelumnya `<Link>` jadi anak
+        langsung `<dl>`, dan itu dua pelanggaran sekaligus (axe
+        `definition-list` + `dlitem`): `<a>` tidak boleh jadi anak `<dl>`, dan
+        `<dt>`/`<dd>` di dalamnya jadi yatim.
+        Urutan tampilnya tetap angka-di-atas lewat `flex-col-reverse`, jadi yang
+        berubah cuma strukturnya — bukan yang dilihat pembaca.
+      */}
       <dl className="mx-4 mt-4 grid grid-cols-4 gap-x-2 rounded-nv-lg bg-nv-card p-4">
         {stats.map((stat) => {
-          const body = (
-            <>
-              <dd
-                className={cx(
-                  'font-display font-bold text-section tabular-nums',
-                  // **Koin emas**, sisanya tinta. Emas dijatah untuk uang
-                  // (brief §6); memakainya untuk keempatnya menghapus artinya.
-                  stat.gold ? 'text-nv-gold' : 'text-nv-text',
-                )}
-              >
-                {formatCompactCoin(stat.value)}
-              </dd>
-              <dt className="nv-section-label pt-1">{stat.label}</dt>
-            </>
+          const nilai = (
+            <span
+              className={cx(
+                'font-display font-bold text-section tabular-nums',
+                // **Koin emas**, sisanya tinta. Emas dijatah untuk uang
+                // (brief §6); memakainya untuk keempatnya menghapus artinya.
+                stat.gold ? 'text-nv-gold' : 'text-nv-text',
+              )}
+            >
+              {formatCompactCoin(stat.value)}
+            </span>
           )
-          return stat.to ? (
-            <Link key={stat.label} to={stat.to} className="block">
-              {body}
-            </Link>
-          ) : (
-            <div key={stat.label}>{body}</div>
+          return (
+            <div key={stat.label} className="flex flex-col-reverse">
+              <dt className="nv-section-label pt-1">{stat.label}</dt>
+              <dd>
+                {stat.to ? (
+                  // Namanya **label + angka**, bukan angka saja: sejak selnya
+                  // dipecah jadi `dt`/`dd`, tautannya hanya membungkus angkanya,
+                  // dan tautan bernama "1,2rb" tidak mengatakan apa pun. Angka
+                  // yang terlihat tetap ada di dalam namanya, jadi perintah
+                  // suara atas teks yang terbaca tetap menemukannya.
+                  <Link
+                    to={stat.to}
+                    aria-label={`${stat.label} ${formatCompactCoin(stat.value)}`}
+                    className="block"
+                  >
+                    {nilai}
+                  </Link>
+                ) : (
+                  nilai
+                )}
+              </dd>
+            </div>
           )
         })}
       </dl>
@@ -304,6 +326,9 @@ export default function StudioPage() {
                         Kartu putih per cerita membuat delapan karya terlihat
                         sebagai delapan objek terpisah; yang dicari penulis
                         adalah satu daftar yang bisa dipindai. */}
+                    {/* Sama seperti di rak: `<h3>` kartu butuh `<h2>` di
+                        atasnya supaya urutan judul tidak melompat h1→h3. */}
+                    <h2 className="sr-only">{t('studio.listHeading')}</h2>
                     <ul className="divide-y divide-nv-line">
                       {data.items.map((item) => (
                         <li key={item.story.id}>

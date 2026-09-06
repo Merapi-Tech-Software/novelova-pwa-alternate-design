@@ -1,6 +1,5 @@
-import { todayLocalISO } from '@/lib/date'
 import type { NovelovaApi } from '../../client'
-import type { ActivityEntry, ReportInput, Reward } from '../../contracts'
+import type { ActivityEntry, ReportInput } from '../../contracts'
 import { ApiError, INTERNAL_CODES } from '../../errors'
 import { db } from '../db'
 import { currentUserId } from './session'
@@ -27,11 +26,10 @@ import { currentUserId } from './session'
 const REPORT_THRESHOLD = 3
 
 /** Misi ulasan · FR-SOCIAL-08. Diselesaikan **sekali per hari**, bukan per cerita. */
-const REVIEW_MISSION_ID = 'm2'
 
 export const moderationHandlers: Pick<
   NovelovaApi,
-  'report' | 'hasReported' | 'blockUser' | 'listBlocks' | 'listActivity' | 'getRewards'
+  'report' | 'hasReported' | 'blockUser' | 'listBlocks' | 'listActivity'
 > = {
   async hasReported(targetType: ReportInput['targetType'], targetId: string): Promise<boolean> {
     const userId = currentUserId()
@@ -107,42 +105,6 @@ export const moderationHandlers: Pick<
         createdAt: review.editedAt ?? review.createdAt,
       }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  },
-
-  /**
-   * Pusat hadiah · FR-SOCIAL-08 (layarnya di Fase 12).
-   *
-   * Progres misi ulasan **diturunkan dari ulasan hari ini**, bukan dari angka
-   * yang disimpan: misi yang menyimpan progresnya sendiri akan tetap 100% pada
-   * hari berikutnya. Batas satu kali per hari mencegah ulasan asal demi koin.
-   */
-  async getRewards(): Promise<Reward> {
-    const userId = currentUserId()
-    const stored = await db.rewards.get(userId)
-    if (!stored) throw new ApiError(INTERNAL_CODES.NOT_FOUND, 'Data hadiah belum ada.')
-
-    const today = todayLocalISO()
-    const wroteToday = (await db.reviews.toArray()).some(
-      (r) => r.userId === userId && todayLocalISO(new Date(r.editedAt ?? r.createdAt)) === today,
-    )
-
-    return {
-      ...stored,
-      missions: stored.missions.map((mission) =>
-        mission.id === REVIEW_MISSION_ID
-          ? {
-              ...mission,
-              progress: wroteToday ? mission.target : 0,
-              // Klaim kemarin tidak menghalangi klaim hari ini, dan klaim hari
-              // ini tidak bisa diulang — keduanya dari tanggal yang sama.
-              claimedAt:
-                mission.claimedAt && todayLocalISO(new Date(mission.claimedAt)) === today
-                  ? mission.claimedAt
-                  : null,
-            }
-          : mission,
-      ),
-    }
   },
 
   async listBlocks(): Promise<string[]> {

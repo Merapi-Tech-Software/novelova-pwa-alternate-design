@@ -1,10 +1,11 @@
-import { Bell, Search } from 'lucide-react'
+import { Gift, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { Story } from '@/api/contracts'
 import { AdSlot } from '@/components/patterns/AdSlot'
 import { CoinChip } from '@/components/patterns/CoinChip'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
+import { NotificationBell } from '@/components/patterns/NotificationBell'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
@@ -141,14 +142,21 @@ export default function HomePage() {
             >
               <Search size={18} aria-hidden />
             </Link>
+            {/*
+              Pintu masuk pusat hadiah dari beranda · FR-CORE-05. Ikon, bukan
+              teks: baris ini sudah memikul chip saldo dan tiga kontrol, dan di
+              320px setiap piksel yang diambil dari sapaan membuat `<h1>`
+              halaman terpotong.
+            */}
             <Link
-              to="/notifikasi"
-              aria-label={t('home.notifications')}
-              title={t('home.notifications')}
+              to="/hadiah"
+              aria-label={t('rewards.title')}
+              title={t('rewards.title')}
               className={ICON_LINK}
             >
-              <Bell size={18} aria-hidden />
+              <Gift size={18} aria-hidden />
             </Link>
+            <NotificationBell className={ICON_LINK} />
             <SectionSettings />
           </div>
         </div>
@@ -184,8 +192,15 @@ export default function HomePage() {
         September. Kedua slotnya pindah ke bawah tab genre; jumlahnya di halaman
         tetap dua, hanya tidak ada lagi yang mendahului banner.
       */}
-      {prioritas.map((section) => (
-        <StorySection key={section.id} section={section} tab={tab} onCoverClick={buka} />
+      {prioritas.map((section, i) => (
+        <StorySection
+          key={section.id}
+          section={section}
+          tab={tab}
+          onCoverClick={buka}
+          // Section teratas saja: sampulnyalah yang jadi elemen LCP beranda.
+          priority={i === 0}
+        />
       ))}
 
       {banner && <BannerCarousel stories={banner.stories} />}

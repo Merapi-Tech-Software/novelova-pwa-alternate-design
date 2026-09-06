@@ -21,7 +21,7 @@ export function TopBarLayout() {
   return (
     <>
       <TopBar title={handle?.title ?? ''} fallback={handle?.fallback ?? '/'} />
-      <main className="mx-auto max-w-3xl px-4 pt-5 pb-24 lg:pb-8">
+      <main id="konten" tabIndex={-1} className="mx-auto max-w-3xl px-4 pt-5 pb-24 lg:pb-8">
         <Outlet />
       </main>
     </>

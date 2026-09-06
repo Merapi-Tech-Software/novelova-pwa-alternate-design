@@ -3,12 +3,56 @@ import { IdSchema, IsoDateTimeSchema } from './common'
 
 /** prd_11 · FR-NOTIF-* */
 
+/**
+ * **Saringan** di pusat notifikasi · FR-NOTIF-01. Lima tab: Semua + keempat ini.
+ *
+ * Sengaja **bukan** daftar jenisnya: jenis ada sebelas (`NotifKind`), dan
+ * sebelas tab tidak muat di 320px. Pemetaan jenis → saringan hidup di
+ * `lib/notif.ts`, satu tabel yang dibaca layar **dan** server-mock.
+ */
 export const NotifTypeSchema = z.enum(['cerita', 'dompet', 'hadiah', 'sistem'])
 export type NotifType = z.infer<typeof NotifTypeSchema>
+
+/**
+ * **Sebelas jenis notifikasi** · FR-NOTIF-02 — satu baris per baris tabel PRD.
+ *
+ * Masing-masing punya pemicu yang **sudah ada di aplikasi** dan tujuan buka yang
+ * spesifik; tidak ada notifikasi yang hanya bisa dibaca. Jenisnya disimpan
+ * (bukan diturunkan dari `deepLink`) karena tiga hal bergantung padanya dan
+ * ketiganya harus sepakat: ikon barisnya, saringan mana yang memuatnya, dan
+ * kelompok preferensi mana yang bisa mematikannya.
+ */
+export const NotifKindSchema = z.enum([
+  'bab-baru',
+  'bab-terjadwal',
+  'cerita-terjadwal',
+  'cetak-status',
+  'topup',
+  'checkin',
+  'voucher-kedaluwarsa',
+  'ulasan-komentar',
+  'pengikut-baru',
+  'penarikan',
+  'keamanan',
+])
+export type NotifKind = z.infer<typeof NotifKindSchema>
+
+/**
+ * **Empat kelompok preferensi** · FR-NOTIF-04.
+ *
+ * Berbeda dari `NotifType`, dan perbedaannya disengaja: saringan menjawab *"apa
+ * yang ingin saya lihat sekarang"*, kelompok preferensi menjawab *"apa yang
+ * boleh mengganggu saya"*. Notifikasi penarikan disaring sebagai **Dompet**
+ * tetapi dimatikan bersama **Karya saya** — dan menyatukan kedua sumbu itu
+ * memaksa salah satunya salah.
+ */
+export const NotifPrefGroupSchema = z.enum(['cerita', 'dompetHadiah', 'karya', 'sistem'])
+export type NotifPrefGroup = z.infer<typeof NotifPrefGroupSchema>
 
 export const NotificationSchema = z.object({
   id: IdSchema,
   userId: IdSchema,
+  kind: NotifKindSchema,
   type: NotifTypeSchema,
   title: z.string(),
   body: z.string(),
@@ -25,22 +69,26 @@ export const NotificationSchema = z.object({
 })
 export type Notification = z.infer<typeof NotificationSchema>
 
-const ChannelSchema = z.object({
+export const NotifChannelSchema = z.object({
   inApp: z.boolean(),
   push: z.boolean(),
   email: z.boolean(),
 })
+export type NotifChannel = z.infer<typeof NotifChannelSchema>
 
 /**
- * Preferensi per jenis. Kanal **keamanan terkunci `true`** — pengguna tidak
- * boleh mematikan pemberitahuan masuk dari perangkat baru (FR-NOTIF-04).
+ * Preferensi per **kelompok**, tiga kanal masing-masing · FR-NOTIF-04.
+ *
+ * Kanal keamanan terkunci `true` untuk Dalam aplikasi dan Push — pengguna tidak
+ * boleh mematikan pemberitahuan masuk dari perangkat baru. Email tetap boleh
+ * dimatikan: ia bukan jalur peringatannya, ia salinannya.
  */
 export const NotificationPrefsSchema = z.object({
   userId: IdSchema,
-  cerita: ChannelSchema,
-  dompet: ChannelSchema,
-  hadiah: ChannelSchema,
-  sistem: ChannelSchema.extend({
+  cerita: NotifChannelSchema,
+  dompetHadiah: NotifChannelSchema,
+  karya: NotifChannelSchema,
+  sistem: NotifChannelSchema.extend({
     inApp: z.literal(true),
     push: z.literal(true),
   }),

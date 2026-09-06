@@ -10,8 +10,12 @@ import { earningsHandlers } from './handlers/earnings'
 import { homeHandlers } from './handlers/home'
 import { libraryHandlers } from './handlers/library'
 import { moderationHandlers } from './handlers/moderation'
+import { notificationHandlers } from './handlers/notifications'
+import { offlineHandlers } from './handlers/offline'
 import { onboardingHandlers } from './handlers/onboarding'
 import { printHandlers } from './handlers/print'
+import { profileHandlers } from './handlers/profile'
+import { rewardHandlers } from './handlers/rewards'
 import { reviewHandlers, scheduleHandlers } from './handlers/schedule'
 import { searchHandlers } from './handlers/search'
 import { ensureSeedSession, sessionHandlers } from './handlers/session'
@@ -62,6 +66,14 @@ const handlers: Partial<NovelovaApi> = {
   // Fase 10 → rating & ulasan.
   ...socialHandlers,
   ...moderationHandlers,
+  // Fase 11 → notifikasi.
+  ...notificationHandlers,
+  // Fase 12 → pusat hadiah & voucher.
+  ...rewardHandlers,
+  // Fase 13 → profil, koneksi, privasi, keamanan.
+  ...profileHandlers,
+  // Fase 14 → baca offline.
+  ...offlineHandlers,
 }
 
 export const api = withNotImplemented<NovelovaApi>(handlers, 'mock')

@@ -280,6 +280,11 @@ export default function ManageChaptersPage() {
           >
             {(data) => (
               <>
+                {/* Baris bab memakai `<h3>` untuk judul bab; tanpa `<h2>` di
+                    atasnya urutan judulnya melompat h1→h3. Judulnya tidak perlu
+                    terlihat — kepala halaman sudah menyebut ceritanya — tetapi
+                    strukturnya perlu ada. */}
+                <h2 className="sr-only">{t('studio.chapterListHeading')}</h2>
                 <div className="border-nv-line border-t">
                   {data.items.map((chapter) => (
                     <ChapterRow

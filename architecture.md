@@ -1275,6 +1275,90 @@ termasuk `rejected`, yang jelas-jelas punya babnya. `AuthorChapter` belum membaw
 alasan penolakan, jadi yang ditulis langkah berikutnya, bukan alasan yang
 dikarang.
 
+### 1.34 PRD diselaraskan penuh ke kode — 13 dari 13
+
+**Aturan bawaannya dilonggarkan lagi, dan kali ini menyeluruh.** Sampai sekarang
+PRD hanya disunting bila diminta eksplisit, dan itu sudah terjadi dua kali:
+FR-READ-09 (Langkah 40) dan enam berkas di Langkah 66. Sisanya sengaja dibiarkan,
+dengan penimpaannya hidup di §1.x ini.
+
+Atas permintaan pengguna 5 September 2026, **ketiga belas berkas PRD kini membawa
+catatan revisi bertanggal** dan cocok dengan kode yang benar-benar dibangun
+(R1–R9).
+
+| Berkas | Yang ditarik masuk |
+|---|---|
+| `prd_01` | peran **keenam** emas (tahap aktif pelacak) + garis grafik — §1.28 |
+| `prd_02` | **pengenalan tidak pernah tampil ke akun baru**, diperbaiki di penjaga rute — §1.27 |
+| `prd_04` | catatan silang: ruang baca yang ditujunya kini menerus, dan gerbang hanya sekali per cerita — §1.21, §1.25 |
+| `prd_05` | pemisah desimal `15.3rb` → **`15,3rb`** — §1.29 |
+| `prd_06` | posisi baca dipulihkan **per bab** — §1.24 |
+| `prd_07` | pelacak cetak tahap kini emas (§1.28); **sumber sentimen** ulasan, bukan komentar (§1.30) |
+| `prd_08` | persentase perubahan **diturunkan**, bukan dipatok (§1.30); satu nilai dua tampilan (§1.14); tangga validasi ditegakkan dua kali (§1.15); saldo ditahan (§1.13) |
+| `prd_09` | nominal buku besar **tinta**, bukan hijau/merah — §1.29 |
+| `prd_11` | **diperiksa, tidak ada yang salah**; dua perilaku yang sudah dibangun tetapi belum tertulis dicatat sebagai tambahan |
+| `prd_12` | lencana penulis jadi pil garis rambut (R9c); empat aturan utas & moderasi ditarik dari §1.17 |
+
+`prd_00` dan `prd_10` sudah selaras sejak Langkah 66.
+
+**Koreksi 6 September 2026 — `prd_03` ternyata belum.** Kalimat di atas semula
+ikut menyebutnya. Sapuan Langkah 71 memeriksa `prd_03` terhadap **peta §1.x**,
+bukan terhadap `HomePage.tsx` — dan §1.22 memang tercatat "sudah diterapkan",
+jadi berkasnya dilewati tanpa dibuka. Yang tidak terlihat dari peta: §1.22 hanya
+masuk ke **dua** tempat di berkas itu (§2.1 dan tabel FR-HOME-04), sementara dua
+tempat lain tetap menulis versi sebelum R2b:
+
+| Tempat | Yang masih tertulis | Yang berlaku |
+|---|---|---|
+| Blok "Anatomi v2" di kepala berkas | "urutannya **tidak berubah**"; kartu ber-`★ rating` + jumlah baca; garis pertumbuhan emas; kutipan serif; section tematik daftar tegak bernomor | lima-limanya sudah dilewati R2b |
+| FR-HOME-05 | slot iklan **setelah Popular** dan **setelah Editor's Picks** | keduanya di bawah tab genre — setelah section tematik pertama dan kedua |
+
+Keduanya **membantah catatan revisi di berkasnya sendiri**, dan itu bentuk paling
+buruk: dua bagian satu berkas yang saling meniadakan lebih menyesatkan daripada
+satu berkas yang seluruhnya usang, karena pembacanya tidak punya cara memilih
+mana yang benar. Diperbaiki 6 September dengan dua catatan revisi bertanggal.
+
+**Pelajarannya untuk sapaan PRD berikutnya:** peta §1.x menjawab "aturan ini
+sudah diterapkan?", **bukan** "seluruh tempat di PRD yang menyebut aturan ini
+sudah ikut?". Satu §1.x bisa punya empat pijakan di satu berkas. Yang menutup
+celah itu hanya membuka berkasnya dan membandingkannya dengan kodenya.
+
+**Yang tetap hanya di sini, dan itu disengaja:** §1.32 (seam API tanpa top-level
+`await`) dan §1.33 (halaman dev tidak ikut bundel publik). Keduanya aturan
+**teknis**, bukan requirement produk — menaruhnya di PRD akan membuat PRD
+menjelaskan bundler.
+
+### 1.35 Folder `design-system/` — potret, bukan sumber kebenaran
+
+`novelova-v2/design-system/` merekam bahasa visual putaran 7 apa adanya per
+5 September 2026: 40 token warna, dua muka huruf, sembilan ukuran, radius,
+bayangan, 35 komponen, sembilan aturan lintas halaman, dan sembilan tangkapan
+layar.
+
+**Ia turunan, bukan sumber.** Yang berlaku tetap `src/styles/tokens.css` dan
+`base.css`; folder itu ikut usang begitu keduanya berubah, dan tidak ada yang
+membacanya saat aplikasi dibangun.
+
+Alasannya ada satu: umpan balik produk *"masih terlalu renggang jadi putihnya
+dominan"*, dan rencana redesign putaran 8 ke arah **terang tapi rapat**. Sebuah
+perubahan tanpa garis dasar tidak bisa dibela dan tidak bisa dibatalkan.
+
+**Yang diukur, bukan dikira** — enam layar di 390×844, per piksel:
+
+| | Porsi layar |
+|---|---|
+| Putih `#ffffff` | 20,0 % |
+| Kertas `#f4f2ef` | 61,7 % |
+| Isi (tinta, sampul, sisanya) | **18,3 %** |
+
+Pengukuran itu **mengoreksi diagnosisnya**: yang memenuhi layar bukan putih,
+melainkan kertas — dan keduanya nyaris tidak terbedakan karena hanya terentang
+**5 poin kecerahan**. Menukar `#ffffff` saja tidak akan menghilangkan keluhannya;
+62 % layar tidak tersentuh.
+
+Angka kedua yang paling telak: **baris pustaka 177px → hanya 4,8 baris per
+layar**. Aplikasi novel modern umumnya memuat 6–8.
+
 ### 1.32 Seam API tidak boleh memakai top-level `await`
 
 Ditemukan saat menyiapkan deploy pertama lewat Cloudflare Tunnel — **build
@@ -1345,6 +1429,352 @@ kini ada **di dalam** cabang `DEV`-nya. Precache turun 87 → 79 entri, dan
 
 
 ---
+
+### 1.36 Notifikasi punya **dua sumbu**, dan menyatukannya memaksa salah satunya salah
+
+Fase 11 menemukan tabrakan yang tidak terlihat sampai kedua layarnya ditulis:
+`prd_11` FR-NOTIF-01 menetapkan **lima saringan** (Semua · Cerita · Dompet ·
+Hadiah · Sistem), sementara FR-NOTIF-04 menetapkan **empat kelompok preferensi**
+(Cerita · Dompet & Hadiah · Karya saya · Sistem & Keamanan). Keduanya bukan
+daftar yang sama, dan bukan salah satunya yang keliru — keduanya benar untuk
+pertanyaan yang berbeda:
+
+| Sumbu | Menjawab |
+|---|---|
+| Saringan (`NotifType`, 4) | *"apa yang ingin saya lihat sekarang"* |
+| Kelompok preferensi (`NotifPrefGroup`, 4) | *"apa yang boleh mengganggu saya"* |
+
+Contoh yang membuktikan keduanya harus terpisah: **notifikasi penarikan disaring
+sebagai Dompet, tetapi dimatikan bersama Karya saya.** Satu daftar tidak bisa
+melakukan keduanya.
+
+Karena itu kontraknya membawa **tiga** enum, bukan satu: `NotifKind` (sebelas
+jenis, tabel FR-NOTIF-02), `NotifType` (empat saringan), `NotifPrefGroup` (empat
+kelompok). Pemetaannya hidup di **satu tabel**, `src/lib/notif.ts` — pola yang
+sama dengan `lib/payout.ts`: dibaca layar **dan** server-mock, karena ikon baris,
+saringan yang memuatnya, dan sakelar yang mematikannya harus sepakat. Dihitung
+terpisah, ketiganya akan menyimpang, dan gejalanya paling halus: notifikasi yang
+muncul di saringan "Dompet" tetapi ikut mati saat pengguna mematikan "Cerita".
+
+**Kontrak lamanya salah, dan diganti.** `NotificationPrefs` semula berkunci
+`cerita/dompet/hadiah/sistem` — yaitu keempat *saringan*. Itu tebakan Fase 2 yang
+ditulis sebelum halamannya ada.
+
+Tiga aturan lain yang ditetapkan di sini:
+
+1. **Penggabungan terjadi saat menulis, bukan saat membaca.** Notifikasi sejenis
+   dari cerita yang sama dalam 24 jam menaikkan `groupCount` baris yang sudah
+   ada. Menggabung saat membaca berarti tiap saringan dan tiap halaman harus
+   menggabung ulang — dan penghitung belum-dibaca akan berbeda dari yang terlihat.
+2. **Baris yang digabung kembali jadi belum dibaca.** Bab ketiga yang terbit
+   sesudah pembaca membuka barisnya adalah kabar baru, bukan kabar yang sama.
+3. **Pemicu tidak boleh menulis ke tabel langsung.** Semuanya lewat
+   `emitNotification`, karena di situlah preferensi diperiksa — dan rekonsiliasi
+   top-up di `wallet.ts` sudah melanggarnya sejak Fase 6: ia menulis
+   `db.notifications.put(...)` sendiri, sehingga notifikasi yang tidak bisa
+   dimatikan pengguna. Dipindahkan di Fase 11.
+
+**Urutan pemeriksaan mengikat:** kelompok global dulu, sakelar per cerita
+kemudian. "Lebih spesifik" (FR-NOTIF-04) hanya berlaku ke arah **mempersempit** —
+mematikan kelompok "Cerita" menghentikan semuanya, termasuk cerita yang sakelar
+pribadinya menyala.
+
+### 1.37 Satu cacat yang hanya `<fieldset>` yang menyelesaikannya
+
+Panel preferensi punya **empat kelompok × tiga kanal**. Supaya tiap sakelar tidak
+ambigu bagi pembaca layar, versi pertamanya memberi tiap sakelar nama lengkapnya
+sendiri (`"Dompet & Hadiah · Push"`) — dan hasilnya dua belas baris yang
+mengulang judul yang tepat berada di atasnya, membuat panel terbaca dua kali
+lebih panjang daripada isinya.
+
+`<fieldset>` + `<legend>` menyelesaikan keduanya sekaligus: konteksnya diumumkan
+sekali saat masuk kelompok, dan sakelarnya cukup bernama `"Push"`. Ini
+satu-satunya tempat di aplikasi ini yang `<fieldset>`-nya dipakai untuk alasan
+aslinya, dan jebakan `min-inline-size` sudah dinetralkan sekali di `base.css`
+sejak Fase 4.
+
+### 1.38 Yang bisa dihitung ulang **tidak disimpan** — dan itulah yang membuat streak benar
+
+Fase 12 memisahkan `RewardState` (tersimpan) dari `Reward` (dibaca layar).
+Selisihnya seluruhnya turunan: streak yang berlaku, kalender tujuh hari, progres
+misi, dan ringkasan tiga angka.
+
+Pemisahan itu bukan kerapian — ia yang membuat aturan FR-RWD-07 *"melewatkan satu
+hari mengembalikan streak ke Hari 1"* benar **tanpa kerja terjadwal tengah
+malam**. Streak yang basi tidak perlu dibersihkan; ia cukup **tidak dihitung**
+saat dibaca berikutnya (`streakStateOf` di `lib/rewards.ts`). Kalau turunannya
+ikut disimpan, ada dua kemungkinan dan keduanya buruk: ada kerja tengah malam
+yang bisa gagal diam-diam, atau streak basi yang berarti hadiah bisa diambil dua
+kali.
+
+**Tiga sumber progres misi, dan tidak satu pun disimpan di baris misinya**
+(FR-RWD-07):
+
+| Misi | Dibaca dari |
+|---|---|
+| Baca 3 bab hari ini | `ReadingProgress.finishedAt` — tanggal lokal per bab |
+| Tulis satu ulasan | `reviews` yang dikirim hari ini |
+| Tonton satu iklan | `adQuotas.used` hari ini |
+
+`finishedAt` **kolom baru**, ditambahkan dengan cara yang sama seperti
+`scrollByChapter` di R7: berpendamping dan berdefault, bukan mengganti
+`finishedChapterIds`. Tanpa kolom itu pertanyaan *"berapa bab hari ini"* tidak
+bisa dijawab sama sekali — yang lama hanya tahu **apa**, bukan **kapan**. Dan
+tanggal pertama kali selesai yang dicatat, bukan yang terakhir: kalau yang
+terakhir, satu bab yang sama bisa digulir ulang tiga kali untuk menuntaskan misi.
+
+**Klaim ditolak server, bukan hanya dicegah tombol.** Prototipe bisa diklaim
+ulang cukup dengan menyegarkan halaman (PRD 09 §7 #8). Tombol yang mati di layar
+tidak menghentikan permintaan yang dikirim langsung, jadi `claimCheckIn` dan
+`claimMission` memeriksa ulang tanggal **dan** progresnya sendiri.
+
+### 1.39 Satu pemicu yang menulis sendiri adalah pemicu yang tidak bisa dimatikan
+
+Ditemukan dua kali dalam dua fase berturut-turut, dan keduanya bentuk yang sama:
+
+| Fase | Yang menulis langsung | Akibat |
+|---|---|---|
+| 11 | rekonsiliasi top-up → `db.notifications.put(...)` | notifikasi yang preferensi pengguna tidak bisa hentikan |
+| 12 | `applyVoucher` **tidak** menulis apa pun ke buku besar | bab terbuka tanpa jejak — dan satu-satunya kesimpulan yang masuk akal bagi pembaca adalah koinnya terpotong diam-diam |
+
+Aturannya sekarang eksplisit: **setiap perolehan dan setiap pemakaian lewat satu
+pintu**. Hadiah koin lewat `kreditHadiah` (saldo + baris `kind: 'reward'` dalam
+satu transaksi Dexie); pemakaian voucher menulis baris **bernilai nol koin**
+dengan `method: 'voucher'`.
+
+Nol koin justru gunanya: pembaca yang menelusuri riwayat harus bisa menemukan bab
+mana yang terbuka lewat voucher, dan riwayat klaim di `/hadiah` **diturunkan dari
+buku besar yang sama** — dua daftar yang dihitung terpisah akan berbeda, dan
+yang salah tidak akan ketahuan sampai ada yang menjumlahkan keduanya.
+
+### 1.40 Satu nama untuk dua arti, dan typecheck tidak bisa melihatnya
+
+`ReferralInvite` semula punya kolom `userId`, dan baris Dexie-nya juga memakai
+`userId` sebagai indeks pemilik. Dua arti, satu nama, **keduanya `string`** —
+jadi seluruh seed lolos typecheck dengan ketiga undangan memakai id yang sama.
+
+Gejalanya baru muncul di peramban, sebagai keluhan React soal **kunci ganda** —
+bukan di `tsc`, bukan di satu pun dari 635 test. Kolomnya kini `inviteeId`, dan
+namanya yang mencegahnya terulang.
+
+Pelajaran yang sama dengan §1.36: nama kolom yang bisa dibaca dua cara adalah
+cacat yang menunggu, dan tipe primitif tidak akan menolongnya.
+
+### 1.41 Privasi ditegakkan dengan **tidak mengirim**, bukan dengan menyembunyikan
+
+FR-PROF-10 menuntut kategori yang dimatikan membuat **tabnya hilang**, bukan tab
+kosong. Itu memaksa satu keputusan bentuk: **daftar tab dikirim server**, bukan
+disaring layar.
+
+Kalau layar yang menyaring, ia harus lebih dulu menerima isinya untuk tahu
+apakah kosong — dan pada saat itu data pribadinya sudah sampai ke klien.
+"Disembunyikan di layar" bukan disembunyikan. Jadi `getPublicProfile` hanya
+mengambil isi tab yang memang boleh tampil; sisanya larik kosong yang tidak
+pernah dibaca siapa pun.
+
+**Dompet dijepit di dua tempat**, dan itu disengaja:
+
+| Tempat | Yang dilakukan |
+|---|---|
+| `setPrivacySettings` | memaksa `wallet: false` sebelum menyimpan |
+| `PublicProfileSchema` | `wallet: z.literal(false)` — tipenya sendiri menolak nilai lain |
+
+Aturan platform yang hanya dijaga layar adalah aturan yang bisa dilewati satu
+permintaan. Sakelarnya **tetap dirender** di halaman ubah profil, mati permanen:
+sakelar yang hilang sama sekali membuat pengguna mencarinya di tempat yang tidak
+ada.
+
+### 1.42 Skor keamanan: satu tabel bobot, dua pembaca
+
+`lib/security.ts` menyimpan lima faktor berbobot (20 · 25 · 20 · 20 · 15), dan
+`SECURITY_MAX` **dijumlahkan dari daftarnya** alih-alih ditulis `100` sebagai
+konstanta kedua — angka yang ditulis tangan akan berselisih pada perubahan bobot
+pertama, dan skor 105 dari 100 tidak akan ketahuan sampai ada yang melihatnya di
+layar.
+
+Pola yang sama dengan `lib/payout.ts`, `lib/notif.ts`, `lib/rewards.ts`. Kali ini
+yang dipertaruhkan kalimat sarannya: layar menjanjikan *"+25 poin"* dan server
+memberi 25 karena keduanya membaca angka yang sama.
+
+**Sarannya lahir dari keadaan, bukan daftar tetap.** Tiga pemicunya nyata — 2FA
+mati, sesi tidak aktif ≥12 hari, kontak pemulihan belum terverifikasi — jadi
+tidak mungkin ada saran yang menyarankan sesuatu yang sudah menyala. Daftar saran
+yang tidak melihat keadaan adalah daftar yang pengguna belajar abaikan.
+
+### 1.43 Hapus riwayat ≠ kosongkan rak
+
+FR-SET-05 memisahkan keduanya, dan pemisahan itu gampang hilang saat
+diimplementasikan: `clearReadingHistory` menghapus `progress` dan **tidak
+menyentuh `libraryEntries`**.
+
+Rak adalah pilihan pembaca; riwayat adalah jejaknya. Menghapus jejak tidak boleh
+mengosongkan pilihan — dan pembaca yang kehilangan rak setelah menekan "hapus
+riwayat" tidak akan menekan tombol apa pun lagi di halaman itu.
+
+**Penghapusan akun ditahan, dengan alasan yang dikirim.** Penarikan yang masih
+diproses atau pesanan cetak berjalan menghentikannya, dan `DeletionCheck`
+membawa daftar alasannya — bukan sekadar bendera. Penolakan tanpa alasan tidak
+bisa ditindaklanjuti. Data contoh sengaja memuat satu pengajuan berstatus
+Ditinjau, jadi keadaan itu bisa dilihat tanpa menyiapkan apa pun.
+
+### 1.44 Offline bukan "tidak ada data" — ia "data dari tempat lain"
+
+React Query bawaannya `networkMode: 'online'`, dan itu **menjeda** setiap kueri
+begitu peramban melapor offline. Bukan menggagalkan — menjeda: tidak ada data,
+tidak ada error, dan layar berhenti di kerangka pemuatan selamanya.
+
+Untuk aplikasi ini itu salah dua kali. Server-nya ada di perangkat (Dexie), dan
+di produksi service worker bisa menjawab dari cache; keduanya tidak butuh
+jaringan sama sekali. Gejalanya terukur dan menyesatkan: ruang baca yang dibuka
+saat offline menampilkan tombol **"Simpan offline" untuk bab yang sudah
+tersimpan**, karena daftar bab offline-nya tidak pernah sempat dibaca. Kotak
+`P0` "bab yang sudah pernah dibuka tetap terbaca saat offline" lulus di Chromium
+hanya karena babnya kebetulan masih ada di memori React Query.
+
+`networkMode: 'offlineFirst'` di `QueryProvider` — satu tempat, seluruh
+aplikasi. Kegagalan sungguhan tetap jadi error biasa, dan `AsyncState` sudah
+membedakan "tidak ada koneksi" dari "server bermasalah" (§1.4, FR-CORE-03).
+
+**Mutasi sengaja tidak ikut.** Menahan tulisan sampai jaringan kembali memang
+yang diinginkan; `useNetworkGuard` yang menjelaskannya ke pengguna.
+
+### 1.45 Navigasi offline jatuh ke **kerangka aplikasi**, bukan ke `offline.html`
+
+`NavigationRoute` memakai `NetworkFirst`, dan cache-nya per URL. Rute dalam
+seperti `/cerita/s1/bab/s1-c5` karena itu adalah entri tersendiri — jadi membuka
+bab tersimpan **langsung dari layar utama ponsel**, cara paling wajar
+memakainya, dulu berakhir di `offline.html`: halaman yang menawarkan "buka bab
+tersimpan" padahal bab itulah yang sedang diminta.
+
+`setCatchHandler` sekarang mencoba `matchPrecache('/index.html')` lebih dulu.
+Kerangkanya ada di precache, routernya sendiri yang menangani URL-nya, dan layar
+offline aplikasi bisa menyebut bab mana saja yang tersimpan. `offline.html`
+tetap ada untuk keadaan terakhir: SW terpasang tetapi kerangkanya tidak ada.
+
+**`clientsClaim()` ditambahkan, dan itu bukan `skipWaiting`.** Service worker
+baru tetap menunggu sampai pengguna menekan "Muat ulang" — janji §10.2 utuh.
+Yang berubah cuma pemasangan **pertama**: tanpa itu ia baru mengendalikan apa
+pun pada kunjungan berikutnya, jadi pembaca yang memasang aplikasi lalu langsung
+kehilangan sinyal tidak dilindungi apa pun.
+
+### 1.46 Pemeriksaan yang memindai nol berkas **bukan** pemeriksaan yang bersih
+
+`scripts/check-tokens.mjs` — penjaga aturan struktur #1, dirujuk §3 dan
+dijalankan tiap `npm run check` — memindai **nol dari 256 berkas**, dan sudah
+begitu sejak ia dibuat. Penyebabnya satu baris:
+
+```js
+const ROOT = new URL('..', import.meta.url).pathname
+// → "/C:/Novelova/Mobile%20app%20module%20selection/novelova-v2/"
+```
+
+Spasi di nama folder proyek ini ter-persen-encode, dan garis miring di depan
+membuatnya bukan path Windows. Sebagai `cwd` untuk `glob` itu direktori yang
+tidak ada — dan `glob` atas direktori yang tidak ada tidak melempar, ia cuma
+tidak menghasilkan apa-apa. Skripnya lalu melaporkan tanda centang.
+
+Dua perbaikan, dan yang kedua lebih penting daripada yang pertama:
+
+1. `fileURLToPath()` menggantikan `.pathname`.
+2. **Nol berkas terpindai sekarang keluar dengan kode 1.** Pemeriksaan yang
+   tidak menemukan apa pun untuk diperiksa harus berteriak, bukan menghijau.
+
+Setelah diperbaiki: 11 pelanggaran nyata muncul seketika. Dua di antaranya
+memperlihatkan bahwa regex-nya perlu dua pengecualian yang komentarnya sudah
+menjanjikan tetapi tidak pernah ada — fragment URL (`#bab-12`) dan baris
+komentar yang memang membicarakan sebuah hex.
+
+Pelajaran yang berlaku di luar berkas ini: **setiap penjaga otomatis butuh angka
+yang membuktikan ia bekerja.** "256 berkas" mengatakan sesuatu; centang saja
+tidak.
+
+### 1.47 WebKit: aplikasi tidak menyala sama sekali, dan diamnya total
+
+Audit lintas peramban Fase 14 menjalankan Chromium, Gecko, dan WebKit terhadap
+hasil build. Chromium dan Gecko bersih di sepuluh rute. **WebKit menggambar nol
+piksel di kesepuluhnya**, dengan nol error di konsol, nol permintaan gagal, dan
+CSS yang terpasang normal.
+
+Penyebabnya ditelusuri sampai ke dasar: `seedIfNeeded()` menggantung, dan yang
+menggantung ternyata **setiap tulis IndexedDB ke basis data kami** — sementara
+transaksi `readwrite` IndexedDB mentah dan Dexie kecil sama-sama lulus di mesin
+yang sama. Yang membedakan basis data kami: indeks **majemuk**
+(`[userId+storyId]`, dipakai 12 tabel) dan **multiEntry** (`*genres`, `*tags`).
+Keduanya diuji sendiri-sendiri di WebKit, dan keduanya menggantung.
+
+Safari 16 ke atas mendukung keduanya, jadi ini **hampir pasti keterbatasan port
+WebKit milik Playwright di Windows, bukan cacat Safari** — tetapi itu tidak bisa
+dibuktikan dari mesin ini, dan karena itu tidak boleh ditulis sebagai "sudah
+diuji di Safari". Yang berlaku: **belum terverifikasi di Safari sungguhan**, dan
+itu pemeriksaan wajib sebelum rilis.
+
+Yang tetap diperbaiki, terlepas dari penyebabnya: `main.tsx` tidak lagi boleh
+diam. Seam API-nya kini punya `.catch()` **dan** batas waktu 20 detik, dan
+keduanya menggambar layar gagal berkode (`APP-INIT-FAILED`, `APP-INIT-TIMEOUT`)
+dengan tiga kalimat §1.4. Layar putih tanpa satu pun pesan adalah kegagalan
+terburuk yang mungkin — §1.32 sudah pernah membiarkannya hidup sefase penuh.
+
+### 1.48 Lima cacat aksesibilitas yang hanya audit yang menemukannya
+
+Sepuluh rute dijalankan lewat axe (via Lighthouse). Nilai awalnya 93–100, dan
+kelima temuannya nyata:
+
+| Temuan | Di mana | Perbaikan |
+|---|---|---|
+| `<a>` jadi anak langsung `<dl>`; `dt`/`dd` jadi yatim | strip metrik `/karya` | tiap sel dibungkus `<div><dt><dd>`, urutan tampil dibalik `flex-col-reverse` |
+| Kontras 3,01:1 | `+n bonus` di `CoinChip` memakai emas **garis** pada 12px | emas **teks** (`--nv-gold`) |
+| Kontras 4,35:1 | `--nv-muted` di atas baris notifikasi belum dibaca | `--nv-text-2` khusus baris belum dibaca |
+| Urutan judul melompat h1→h3 | `/pustaka`, `/karya`, `/karya/:id/bab` | `<h2 className="sr-only">` di atas daftarnya |
+| Nama aksesibel tidak memuat teks yang terlihat | tombol zoom sampul (lencana `#1` di dalamnya) | lencananya ikut ke `aria-label` |
+
+Dua hal yang **tidak** ditemukan axe dan hanya ketahuan dengan membaca DOM-nya:
+`ReaderLayout` dan `AuthLayout` tidak punya `<main>` sama sekali, dan tidak ada
+satu pun **skip-link** di seluruh aplikasi. Keduanya ditambahkan; `SkipLink`
+digeser keluar layar dengan `translate`, bukan `sr-only`, karena
+`focus:not-sr-only` juga menyetel `padding: 0` dan mengembalikan tautannya
+setinggi 22px — dan target 22px melanggar aturan 44px yang dijaga §1.23.
+
+Sesudahnya: **100 di kesepuluh rute.** Satu regresi yang lahir dari perbaikan
+sendiri ikut tercatat: memecah sel metrik membuat tautannya cuma membungkus
+angkanya, jadi namanya jadi "1,2rb" — tautan yang tidak mengatakan apa pun.
+`aria-label` mengembalikan labelnya, di depan angkanya.
+
+### 1.49 Angka performa, beserta bagian yang bukan milik aplikasinya
+
+Lighthouse (mobile, CPU 4×) terhadap hasil build:
+
+| | Nilai |
+|---|---|
+| Performance | **69–72** |
+| Accessibility | **100** |
+| Best Practices | **79** |
+| SEO | **92 → 100** setelah `public/robots.txt` ada |
+
+Muat pertama `/` diukur di peramban: **252,8 KB gzip**, dan **78,6 KB di
+antaranya server-mock** (Dexie + seed) yang ada hanya karena belum ada backend —
+dengan `VITE_API_MODE=http` potongan itu tidak pernah diminta. Aplikasinya
+sendiri **±174 KB gzip**, di bawah target 200 KB; totalnya tidak.
+
+Pembagian rutenya sehat: 84 potongan, dan berpindah ke `/pustaka`, `/koin`,
+`/karya`, atau `/notifikasi` menarik **9–19 KB** baru, bukan bundel kedua.
+
+Dua angka menjelaskan Performance 69–72, dan keduanya bukan tentang UI:
+
+- **Seed basis data dibayar sekali, dan Lighthouse selalu membayarnya.** Profil
+  Lighthouse selalu baru, jadi tiap pengukuran menyemai 25 koleksi sebelum React
+  menggambar. Terukur tanpa throttle: FCP **1100 ms** pada muat pertama,
+  **460 ms** pada muat kedua dan ketiga.
+- `vite preview` tidak mengirim header cache, jadi `uses-long-cache-ttl` dan
+  `cache-insight` bernilai nol di sini. nginx produksi mengirimnya.
+
+Best Practices 79 datang dari **satu cookie pihak ketiga** (`__cf_bm`) yang
+dipasang CDN gambar contoh, bukan dari kode kami.
+
+Satu perbaikan performa nyata tetap dikerjakan: elemen LCP beranda adalah sampul
+rel pertama, dan ia `loading="lazy"` — penundaan murni untuk gambar yang sudah
+pasti terlihat. `Cover` kini punya `priority`, dipakai **hemat**: tiga sampul
+pertama section teratas saja.
+
 
 ## 2. Stack
 
@@ -2056,8 +2486,8 @@ name         Novelova
 short_name   Novelova
 display      standalone
 orientation  any            ← bukan portrait; desktop harus nyaman
-theme_color  #d09a93
-background   #f4efea
+theme_color  #f4f2ef        <- kertas putaran 7 (§1.20), bukan rose-gold v1
+background   #f4f2ef        <- sama; ia mengecat layar sebelum React menggambar
 start_url    /
 scope        /
 icons        192 · 512 · 512-maskable · apple-touch-180
@@ -2192,7 +2622,19 @@ Yang **ditambahkan**:
 - **Tingkat kegagalan menentukan cara mengumumkannya** (§1.4): `toast` dan `inset` memakai `aria-live="polite"`; `fullscreen` memindahkan fokus ke judulnya. Pesan gagal yang tidak terdengar pembaca layar sama saja dengan tidak ada — dan di layar bayar, itu berarti pengguna bisa membayar dua kali.
 - **Kolom pencarian terfokus otomatis saat halaman pencarian dibuka** (FR-SRCH-01), tetapi fokus tidak dicuri kembali saat hasil dimuat.
 - Kontras minimum AA untuk seluruh teks (§9.1).
-- Skip-link ke konten utama.
+- Skip-link ke konten utama — **`SkipLink` di `Root()`, jadi ia ada di keempat layout**, dan sasarannya `<main id="konten" tabIndex={-1}>`. `tabIndex` itu bukan hiasan: tanpanya Firefox dan Safari hanya memindahkan titik awal Tab, tidak memindahkan fokus.
+
+**Diaudit di Fase 14, bukan diasumsikan** (§1.48): sepuluh rute lewat axe, dan
+empat alur (baca bab · beli koin · tulis bab · baca notifikasi) ditelusuri
+kontrol demi kontrol — nama aksesibel, `alt`, jumlah `<h1>`, lompatan urutan
+judul, dan keberadaan landmark. Hasil akhir **100 di kesepuluh rute** dan bersih
+di kesebelas halaman keempat alur itu.
+
+Yang **belum** dilakukan, dan disebut apa adanya: tidak ada pembaca layar
+sungguhan (NVDA, VoiceOver, TalkBack) yang dijalankan — mesin ini tidak
+memilikinya. Yang diperiksa adalah pohon aksesibilitas yang dibaca pembaca
+layar, bukan pengalaman mendengarkannya. Keduanya tidak sama, dan uji dengan
+perangkat sungguhan tetap wajib sebelum rilis.
 
 ---
 
@@ -2341,3 +2783,5 @@ Dinyatakan terbuka supaya tidak dianggap sudah selesai:
 8. **Push notification disimulasikan.** Izin, jam tenang, deep link, dan preferensi per jenis semuanya nyata dan berjalan; pengirimannya dari server-mock, bukan Web Push berVAPID (§10.4).
 9. **Rekonsiliasi pembayaran disimulasikan.** Status `pending_reconciliation` (§1.4, layar 34) berubah sendiri setelah timer 10 menit di server-mock, bukan karena webhook penyedia. Bentuk keadaan dan penguncian tombol bayar-ulang sudah benar; yang belum nyata adalah yang mengonfirmasinya.
 10. **Pencarian memakai pencocokan sederhana.** Server-mock mencari substring pada judul, penulis, tag, genre, dan sinopsis dengan bobot tetap. Peringkat relevansi yang sebenarnya adalah pekerjaan backend, bukan frontend.
+11. **Safari belum terverifikasi.** WebKit yang tersedia di mesin pengembangan (port Playwright di Windows) tidak bisa membuat indeks IndexedDB majemuk maupun multiEntry, dan basis data mock memakai keduanya — akibatnya aplikasi tidak menggambar apa pun di sana (§1.47). Safari 16+ mendukung keduanya, jadi ini hampir pasti keterbatasan mesin ujinya; **hampir pasti bukan sudah diuji**, dan pemeriksaan di perangkat Apple sungguhan wajib sebelum rilis.
+12. **Tidak ada uji pembaca layar sungguhan.** Pohon aksesibilitasnya diperiksa dan bersih (§13, §1.48), tetapi NVDA/VoiceOver/TalkBack belum pernah dijalankan atas aplikasi ini.

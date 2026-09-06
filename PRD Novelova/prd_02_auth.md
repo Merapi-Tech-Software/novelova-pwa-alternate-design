@@ -79,7 +79,7 @@ Modul gerbang masuk aplikasi. Pengguna baru mendaftar, pengguna lama masuk, dan 
 | FR-AUTH-08 | Kirim tautan reset kata sandi | `forgot_password` | P0 |
 | FR-AUTH-09 | Umpan balik kesalahan inline | `login`, `register` | P0 |
 | FR-AUTH-10 | Navigasi antar halaman autentikasi | ketiganya | P1 |
-| FR-AUTH-11 | **[BARU]** Onboarding pembaca baru | setelah `register` | P1 |
+| FR-AUTH-11 | **[BARU]** Onboarding pembaca baru | setelah `register` | P1 · **[REVISI 5 Sep 2026]** penjaga rute yang mengantar ke sana |
 | FR-AUTH-12 | **[BARU]** Sesi, penjaga rute & keluar | lintas halaman | P0 |
 
 ---
@@ -343,6 +343,25 @@ Modul gerbang masuk aplikasi. Pengguna baru mendaftar, pengguna lama masuk, dan 
 - **Given** pengguna menekan "Lewati" pada langkah pertama, **when** aksi dijalankan, **then** beranda terbuka dengan urutan section bawaan.
 - **Given** pengguna mencoba memilih genre keenam, **when** aksi dijalankan, **then** pilihan diabaikan.
 - **Given** pengguna sudah menyelesaikan onboarding, **when** masuk lagi di lain waktu, **then** onboarding tidak tampil lagi.
+- **Given** akun baru selesai dibuat, **when** pendaftaran berhasil, **then** pengenalan **benar-benar tampil** — bukan beranda.
+
+> **Revisi 5 September 2026 · pengenalan tidak pernah tampil, dan itu cacat.**
+> Requirement ini benar sejak awal; yang salah implementasinya. `RegisterPage`
+> memanggil `navigate('/mulai')`, tetapi React Query menunggu `onSuccess` milik
+> mutasinya lebih dulu — dan di sanalah sesi diset. Jadi sesi sudah
+> `authenticated` satu render **sebelum** navigasinya jalan, penjaga rute
+> `RequireGuest` menyala, dan pendaftar baru dilempar ke beranda. Akibatnya
+> **tidak ada satu pun akun baru yang pernah melihat pengenalan tiga langkah**.
+>
+> Diperbaiki di R8a, **di penjaga rutenya** — bukan di halaman daftar: yang
+> memutuskan ke mana pengguna yang sudah masuk pergi memang `RequireGuest`, dan
+> aturan "yang belum melewati pengenalan mendarat di `/mulai`" adalah aturan
+> requirement ini. Menambal halaman daftar hanya menutup satu dari dua pintu —
+> yang meninggalkan pengenalan di tengah lalu membuka `/masuk` lagi tetap
+> terlempar ke beranda. `architecture.md` §1.27.
+>
+> **Kriteria terakhir di atas ditambahkan supaya cacat ini tidak bisa kembali
+> diam-diam**; penjaganya sapuan e2e yang mendaftar akun baru sungguhan.
 - **Given** pengguna menyimpan cerita pada langkah ketiga, **when** membuka perpustakaan, **then** cerita itu sudah ada di koleksinya.
 
 ---

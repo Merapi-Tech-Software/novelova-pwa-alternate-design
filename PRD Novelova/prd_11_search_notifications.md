@@ -108,6 +108,20 @@ Akibatnya dua alur besar tidak menutup:
 **Aturan bisnis.**
 - **Cakupan pencarian:** judul cerita · nama penulis / pen name · tag · genre · sinopsis (bobot terendah).
 - **Pengelompokan hasil:** Cerita · Penulis · Tag. Kelompok kosong tidak ditampilkan.
+- **Seluruh keadaan pencarian hidup di URL** — kueri, tiga saringan, dan urutan. Halaman hasil karena itu bisa dibagikan apa adanya.
+- **Dua keadaan kosong yang berbeda:** belum mengetik apa pun, dan sudah mencari tetapi tidak ada hasil. Keduanya bukan pesan gagal (FR-CORE-03).
+
+> **Catatan 5 September 2026 · diperiksa, dua butir ditambahkan.** Seluruh
+> requirement pencairan di berkas ini **cocok dengan yang dibangun** — pengelompokan,
+> jeda ketik 300 ms, ambang dua huruf, dan muat bertahap 20 semuanya berjalan; tidak
+> ada yang perlu dikoreksi.
+>
+> Dua butir di atas adalah **tambahan**, bukan perbaikan: keduanya dibangun di R2–R3
+> dan tidak pernah tertulis di sini. Dicatat sekarang supaya PRD ini tidak diam soal
+> perilaku yang sudah dijanjikan aplikasi kepada pembacanya.
+>
+> Bagian **notifikasi** di berkas ini belum dibangun sama sekali — rutenya hidup,
+> isinya masih penampung, dan pekerjaannya dijadwalkan di Fase 11.
 - Tidak peka huruf besar-kecil; spasi tepi diabaikan — konsisten dengan `my_library` (lihat [`prd_06_library.md`](prd_06_library.md) FR-LIB-03).
 - **Minimum 2 karakter** sebelum kueri dikirim, untuk mencegah permintaan berlebihan.
 - Kueri dikirim dengan penundaan **300 ms** setelah ketikan terakhir (*debounce*).

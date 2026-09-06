@@ -13,6 +13,16 @@ export interface CoverProps {
   title: string
   /** Ditempel di pojok kiri atas — badge peringkat, `Rising`, `Hot`. */
   badge?: ReactNode
+  /**
+   * Sampul yang **ada di layar sejak awal** · Lighthouse `lcp-lazy-loaded`.
+   *
+   * `loading="lazy"` menunda permintaannya sampai tata letak selesai dihitung,
+   * dan untuk gambar yang sudah pasti terlihat itu murni penundaan: beranda
+   * mengukur LCP-nya pada sampul rel pertama, dan penundaan itu masuk penuh ke
+   * angkanya. Dipakai **hemat** — menandai semuanya prioritas sama dengan tidak
+   * menandai apa pun, dan satu layar beranda memuat ~30 sampul.
+   */
+  priority?: boolean
   className?: string
 }
 
@@ -28,7 +38,7 @@ export interface CoverProps {
  * Rasio 2:3 di sini adalah rasio yang sama yang divalidasi saat penulis
  * mengunggahnya (toleransi ±0,12, `architecture.md` §1.5) — bukan kebetulan.
  */
-export function Cover({ src, title, badge, className }: CoverProps) {
+export function Cover({ src, title, badge, priority = false, className }: CoverProps) {
   /*
    * **Sampul yang gagal dimuat jatuh ke jaket hurufnya, bukan ke ikon rusak.**
    * Sampul contoh adalah URL jarak jauh, dan sejak beranda memakai sampul 80px
@@ -58,7 +68,8 @@ export function Cover({ src, title, badge, className }: CoverProps) {
         <img
           src={image}
           alt=""
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
           onError={() => setGagal(image)}
           className="size-full object-cover"
         />

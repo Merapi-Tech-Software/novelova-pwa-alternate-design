@@ -17,6 +17,7 @@ import type {
 import { ApiError, INTERNAL_CODES, VISIBLE_CODES } from '../../errors'
 import { SERVER_CONFIG } from '../config'
 import { db } from '../db'
+import { emitNotification } from './notifications'
 import { currentUserId } from './session'
 
 /**
@@ -274,6 +275,16 @@ export const chapterStudioHandlers: Pick<
       publishAt: at.toISOString(),
       publishTz: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }
+
+    // Pemicu FR-NOTIF-02: penjadwal bab. Digabung per cerita — menjadwalkan
+    // lima bab sekaligus adalah satu kabar, bukan lima.
+    await emitNotification(currentUserId(), {
+      kind: 'bab-terjadwal',
+      title: `Bab ${chapter.number} terjadwal terbit`,
+      body: story.title,
+      deepLink: `/karya/${story.id}/bab`,
+      groupKey: `sched-chapter-${story.id}`,
+    })
 
     await db.transaction('rw', db.chapters, db.scheduleEntries, async () => {
       await db.chapters.put(next)

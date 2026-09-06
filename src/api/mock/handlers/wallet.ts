@@ -14,6 +14,7 @@ import type {
 } from '../../contracts'
 import { ApiError, INTERNAL_CODES, VISIBLE_CODES } from '../../errors'
 import { db } from '../db'
+import { emitNotification } from './notifications'
 import { currentUserId } from './session'
 
 /**
@@ -111,17 +112,15 @@ async function reconcilePending(userId: string): Promise<void> {
     if (Date.parse(order.reconcileAt as string) > Date.now()) continue
 
     const paid = await settlePaid(order)
-    await db.notifications.put({
+    // Lewat `emitNotification`, bukan tulis langsung ke tabel: di situlah
+    // preferensi per kelompok diperiksa (FR-NOTIF-04). Pemicu yang menulis
+    // sendiri adalah pemicu yang tidak bisa dimatikan pengguna.
+    await emitNotification(userId, {
       id: `notif-topup-${order.id}`,
-      userId,
-      type: 'dompet',
+      kind: 'topup',
       title: 'Isi koin berhasil dipastikan',
       body: `${paid.coins + paid.bonus} koin sudah masuk ke saldomu.`,
       deepLink: `/koin/transaksi/${PENDING_TX_PREFIX}${order.id}`,
-      groupKey: null,
-      groupCount: 1,
-      readAt: null,
-      createdAt: new Date().toISOString(),
     })
   }
 }

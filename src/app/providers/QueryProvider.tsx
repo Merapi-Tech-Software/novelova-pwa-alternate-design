@@ -39,6 +39,31 @@ export function QueryProvider({ children }: { children: ReactNode }) {
         mutationCache: new MutationCache({ onError: handleGlobalFailure }),
         defaultOptions: {
           queries: {
+            /*
+             * **Kueri tetap jalan saat `navigator.onLine` bilang mati** ·
+             * FR-CORE-03 · architecture.md §10.3.
+             *
+             * Bawaan React Query (`networkMode: 'online'`) *menjeda* setiap
+             * kueri begitu peramban melapor offline — bukan menggagalkannya,
+             * **menjedanya**: tidak ada data, tidak ada error, dan layar berhenti
+             * di kerangka pemuatan selamanya.
+             *
+             * Untuk aplikasi ini itu salah dua kali. Server-nya ada di perangkat
+             * (Dexie), dan di produksi service worker bisa menjawab dari cache —
+             * keduanya tidak butuh jaringan sama sekali. Akibatnya terukur:
+             * ruang baca yang dibuka saat offline menampilkan tombol "Simpan
+             * offline" untuk bab yang **sudah** tersimpan, karena daftarnya tidak
+             * pernah sempat dibaca.
+             *
+             * `offlineFirst` mencoba dulu, lalu gagal seperti kegagalan biasa —
+             * dan kegagalan biasa sudah punya jalurnya sendiri di `AsyncState`,
+             * yang membedakan "tidak ada koneksi" dari "server bermasalah".
+             *
+             * Mutasi **tidak** ikut: menjeda tulisan sampai jaringan kembali
+             * memang yang diinginkan, dan `useNetworkGuard` yang menjelaskannya
+             * ke pengguna.
+             */
+            networkMode: 'offlineFirst',
             staleTime: 30_000,
             gcTime: 5 * 60_000,
             refetchOnWindowFocus: false,

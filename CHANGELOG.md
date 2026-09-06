@@ -5,6 +5,755 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-06 · Langkah 79 — Fase 14 selesai: pengerasan PWA, push, dan tiga audit
+
+> "oke sekarang yang perlu anda lakukan adalah kerjakan todo.md di phase 14.
+> Semua todo di phase tersebut dikerjakan. Dan pastikan saat test selalu lakukan
+> test preview mobile di semua ukuran layar (xl, l , m, s) untuk memcegah
+> fitur/tampilan yang tidak sesuai dan kurang bagus. Begitu juga saat test
+> preview di dekstop"
+
+Ke-27 kotak Fase 14 dikerjakan. Tiga di antaranya **tidak sepenuhnya tercapai**,
+dan angkanya ditulis apa adanya di bawah — bukan dibulatkan supaya kotaknya
+hijau.
+
+### Yang dibangun
+
+**PWA.** Manifest dilengkapi dan warnanya dikoreksi ke palet putaran 7 (`#d09a93`
+rose-gold v1 masih terpasang). Sembilan berkas ikon dibuat lewat
+`scripts/buat-ikon.mjs` — kelima ikon manifest sebelumnya **404**, `public/icons/`
+cuma berisi `.gitkeep`. Service worker `injectManifest` dengan strategi per tipe
+aset, `offline.html`, toast "Versi baru tersedia" tanpa `skipWaiting` diam-diam,
+dan ajakan pasang setelah tiga kunjungan.
+
+**Baca offline.** Tandai bab yang dimiliki, batas 50 bab LRU (yang dilepas
+adalah yang **paling lama tidak dibuka**, bukan yang paling lama disimpan),
+penanda "Tersedia offline" di rak, bilah status jaringan, layar penuh tanpa
+koneksi yang jalan keluarnya daftar bab tersimpan, dan pemulihan sendiri lewat
+`online` — tanpa pengguna menekan apa pun.
+
+**Push.** Handler `push` + `notificationclick` yang membuka **tujuan spesifik**,
+izin yang hanya diminta pada dua momen relevan, penolakan yang tidak pernah
+diminta ulang, dan **jam tenang 22.00–07.00 menurut zona waktu pengguna**.
+Jendelanya melintasi tengah malam, dan yang ditunda **hanya push**: notifikasi
+dalam aplikasi tetap tercatat saat itu juga — menahan keduanya berarti kabar
+pukul 23.00 baru punya jejak pukul 07.00.
+
+Izin dipasang di **hook**-nya (`useToggleNotify`, `useScheduleChapter`), bukan di
+halamannya: dua halaman memanggil mutasi yang sama, dan penjaga yang dipasang di
+satu pemanggil meninggalkan pemanggil lain.
+
+### Empat cacat yang audit temukan, dan tiga di antaranya lebih tua dari fase ini
+
+1. **React Query menjeda seluruh kueri saat offline** (arch §1.44). Bawaan
+   `networkMode: 'online'` bukan menggagalkan — menjeda: tanpa data, tanpa
+   error, layar berhenti di kerangka selamanya. Terukur sebagai ruang baca yang
+   menawarkan **"Simpan offline" untuk bab yang sudah tersimpan**. Kotak `P0`
+   "bab yang pernah dibuka tetap terbaca saat offline" lulus sebelumnya hanya
+   karena babnya kebetulan masih ada di memori. `offlineFirst`, satu tempat.
+2. **Navigasi offline mendarat di `offline.html`, bukan di aplikasinya**
+   (arch §1.45). Rute dalam adalah entri cache tersendiri, jadi membuka bab
+   tersimpan langsung dari layar utama ponsel — cara paling wajar memakainya —
+   dijawab halaman yang menawarkan bab yang sedang diminta itu sendiri.
+3. **`scripts/check-tokens.mjs` memindai nol dari 256 berkas, sejak ia dibuat**
+   (arch §1.46). `new URL('..', import.meta.url).pathname` menghasilkan path
+   ber-persen-encode karena nama folder proyek ini berspasi; `glob` atas
+   direktori yang tidak ada tidak melempar, ia cuma diam. Penjaga aturan
+   struktur #1 melaporkan bersih tanpa pernah membaca satu baris. Diperbaiki,
+   **dan sekarang gagal keras bila nol berkas terpindai** — 11 pelanggaran nyata
+   langsung muncul.
+4. **Aplikasi bisa diam total tanpa satu pun pesan.** Ditemukan lewat WebKit (di
+   bawah). `main.tsx` kini punya `.catch()` **dan** batas 20 detik; keduanya
+   menggambar layar gagal berkode.
+
+### Tiga kotak yang tidak sepenuhnya tercapai
+
+**Lighthouse ≥90 di semua kategori — tidak.** Accessibility **100**, SEO **100**
+(setelah `public/robots.txt` dibuat; sebelumnya permintaan `/robots.txt` dijawab
+`index.html`), Performance **69–72**, Best Practices **79**. Best Practices
+turun karena **satu cookie pihak ketiga** dari CDN gambar contoh. Performance
+turun karena dua hal yang bukan UI: seed 25 koleksi yang selalu dibayar profil
+baru Lighthouse (FCP **1100 ms** muat pertama vs **460 ms** muat kedua, tanpa
+throttle), dan `vite preview` yang tidak mengirim header cache.
+
+**Bundel awal <200 KB gzip — tergantung apa yang dihitung.** Muat pertama `/`
+diukur di peramban **252,8 KB**, dan **78,6 KB**-nya server-mock (Dexie + seed)
+yang ada hanya karena belum ada backend. Aplikasinya sendiri **±174 KB**.
+Pembagian rutenya sehat: 84 potongan, pindah rute menarik 9–19 KB.
+
+**Uji lintas peramban — dua dari tiga mesin.** Chromium (Chrome/Edge) dan Gecko
+(Firefox) bersih di sepuluh rute beserta alur baca bab. **WebKit menggambar nol
+piksel di kesepuluhnya**, dengan nol error dan nol permintaan gagal. Ditelusuri
+sampai dasar: setiap tulis IndexedDB ke basis data kami menggantung, dan yang
+membedakannya dari Dexie kecil yang lulus adalah indeks **majemuk** dan
+**multiEntry** — keduanya diuji sendiri, keduanya menggantung. Safari 16+
+mendukung keduanya, jadi ini hampir pasti keterbatasan port WebKit Playwright di
+Windows; **hampir pasti bukan sudah diuji**, dan itu ditulis sebagai batasan
+terbuka (arch §17 no. 11), bukan sebagai centang.
+
+**Uji pembaca layar — pohonnya, bukan suaranya.** Sebelas halaman dari keempat
+alur ditelusuri kontrol demi kontrol (nama aksesibel, `alt`, jumlah `<h1>`,
+lompatan urutan judul, landmark) dan semuanya bersih setelah satu perbaikan.
+NVDA/VoiceOver/TalkBack **belum pernah dijalankan** — mesin ini tidak
+memilikinya (arch §17 no. 12).
+
+### Aksesibilitas: lima cacat, lalu 100 di sepuluh rute
+
+`<a>` sebagai anak langsung `<dl>` di strip metrik `/karya` · kontras 3,01:1
+pada `+n bonus` yang memakai emas **garis** untuk teks 12px · kontras 4,35:1
+pada baris notifikasi belum dibaca · urutan judul melompat h1→h3 di tiga halaman
+· nama tombol zoom sampul yang tidak memuat lencana yang terlihat di dalamnya.
+
+Dua hal yang axe **tidak** temukan dan hanya ketahuan dengan membaca DOM-nya:
+`ReaderLayout` dan `AuthLayout` tidak punya `<main>` sama sekali, dan **tidak ada
+satu pun skip-link** di seluruh aplikasi. Keduanya ditambahkan (arch §1.48).
+
+### Yang diuji
+
+- **Lebar bertambah dari lima jadi delapan.** 768 / 1024 / 1440 masuk ke sapuan
+  e2e yang sudah ada, bukan ke berkas baru — 1024 penting karena di sanalah
+  navigasi bawah berubah jadi sidebar. Nol luberan di 40 halaman × 8 lebar.
+- **E2E #4** `offline-baca-tersimpan.spec.ts`: syarat pemasangan (manifest +
+  kelima ikon benar-benar 200 + SW mengendalikan halaman) → tandai bab → putus
+  jaringan → babnya tetap terbaca → jaringan kembali, bilahnya hilang sendiri.
+- **Muat ulang saat offline diperiksa `npm run check:build`**, bukan di e2e:
+  `npm run dev` tidak punya precache Workbox, jadi memuat ulang di sana gagal
+  karena mode dev-nya, bukan karena produknya.
+- `npm run check` bersih · **662 test unit** · **115 e2e** · `check:build`
+  bersih. Satu flake terlihat sekali pada `isi-koin-lalu-buka-bab` dalam salah
+  satu dari tiga kali jalan penuh; lulus sendirian dan pada dua kali jalan penuh
+  lainnya.
+
+### Yang **tidak** dikerjakan
+
+- **Safari sungguhan tidak diuji** — tidak ada perangkat Apple di sini.
+- **Pembaca layar sungguhan tidak dijalankan.**
+- **Cookie pihak ketiga dari CDN gambar contoh tidak dihapus.** Menghapusnya
+  berarti mengganti seluruh sumber sampul contoh; itu perubahan data, bukan
+  perbaikan Fase 14.
+- **Ukuran server-mock tidak dikecilkan.** Ia memang tidak ikut ke produksi
+  ber-backend, dan mengecilkannya sekarang berarti mengurangi data contoh yang
+  justru dipakai untuk menguji halaman-halaman itu.
+
+---
+
+## 2026-09-06 · Langkah 78 — audit Fase 1–13, dan enam kotak yang terlewat
+
+> "dari phase 1 - 13 per saat ini apakah ada todo yang terlewat?"
+
+**Ada.** 18 kotak kosong, dan ketiganya beda jenis. Diverifikasi di kode, bukan
+dari catatan.
+
+### A · Sudah dikerjakan, kotaknya lupa dicentang — 11 kotak
+
+**Seluruh Fase 5b (10).** `todo.md` sendiri menulis *"R4 selesai — menutup Fase
+5b"*, tetapi kotaknya tidak pernah dicentang. Dibuktikan: `autoUnlockStoryIds`
+di kontrak, `defaults.ts`, dan handler · `InsufficientCoins.tsx` membawa tiga
+jalan keluar · sakelar global sudah tidak ada di panel pengaturan · **11 test
+`auto-unlock` lulus**.
+
+Ditambah **E2E #3** (Fase 8), yang catatannya menyebut "separuh" padahal
+`rantai-tinjauan.spec.ts` sudah menjalankan kelima langkahnya — tulis bab
+dwibahasa → atur akses → kirim terbit → tinjau → tayang — dan lulus di dua lebar.
+
+### B · Benar-benar terlewat — 5 kotak, semuanya ditutup di langkah ini
+
+Kelimanya dulu diblokir Fase 11/12/13. Fasenya selesai; tidak ada yang kembali
+menutup kotaknya.
+
+| Yang terlewat | Yang dikerjakan |
+|---|---|
+| **Saldo dompet tidak tampil di `/hadiah`** — titik ke-6 FR-WALLET-17 | Baris "Saldo koin" **terpisah dari strip**, bukan kolom keempat: angka pertama strip itu perolehan *bulan ini*, dan menaruh saldo sejajar justru membuat keduanya terbaca sebagai dua saldo |
+| **Keputusan tinjauan tidak memicu notifikasi** (FR-STUDIO-38) | `resolveReviewAsAdmin` memanggil `emitNotification`, dan **penolakan membawa alasannya** — notifikasi yang cuma berkata "ditolak" memaksa penulis membuka halaman lain untuk tahu apa yang harus diperbaiki |
+| **Status penulis tidak ada di `/profil`** | Baris di kelompok Akun: tingkat **dan** langkah yang belum selesai, diturunkan dari `authorProfiles` — langkah yang sudah selesai berhenti tampil sebagai tugas |
+| **Pintasan penghasilan tampil ke semua orang** | Dijaga `tier !== 'none'`. Halamannya dijaga `RequireAuthor`, jadi menawarkannya ke pembaca biasa berarti menggambar pintu yang menolaknya |
+| **Tautan Payout identity menggantung** | Menuju `/penulis/penarikan`; rekening tidak disalin ke sini, karena dua tempat yang menyimpan rekening yang sama akan berselisih |
+
+### Satu kesalahan saya sendiri
+
+Di Langkah 76 saya **mencentang** baris *"Saldo di sini adalah titik ke-6 dari
+enam yang dijanjikan FR-WALLET-17"* di `todo-redesign.md` — padahal `/hadiah`
+tidak pernah menampilkan saldo dompet. Saya mencentang sesuatu yang tidak saya
+buat. Sekarang kodenya ada, jadi centangnya benar; tetapi selama dua langkah
+catatan itu berbohong.
+
+### C · Masih diblokir — 1 kotak
+
+Penanda "tersedia offline" di `/pustaka` menunggu simpan-offline **Fase 14**.
+Belum ada data bab tersimpan untuk ditandai.
+
+### Hasilnya
+
+**Fase 1–13 kini tinggal satu kotak kosong**, dan kotak itu memang menunggu fase
+berikutnya. `npm run check` bersih · **657 test unit** (naik dari 655, dua test
+baru untuk pemicu notifikasi tinjauan) · **114 e2e**.
+
+Kelima perbaikan diperiksa di peramban berjalan, bukan hanya di test: saldo
+`20rb` muncul di `/hadiah`; `/profil` berbunyi "Terverifikasi · Semua langkah
+selesai" untuk akun contoh; dan setelah tingkatnya diturunkan ke `none` lewat
+IndexedDB, **pintasan penghasilan benar-benar hilang** (0 tautan) sementara
+statusnya berganti jadi "Belum terdaftar · 3 langkah belum selesai" dengan
+ketiganya disebut. Nol luberan di enam lebar, nol error konsol.
+
+---
+
+## 2026-09-06 · Langkah 77 — Fase 13 selesai: profil, pengaturan, bantuan, legal
+
+> "oke sekarang lanjutkan ke fase 13"
+
+**42 kotak Fase 13 tercentang, plus empat `[LUAR]`.** Fase terbesar sejauh ini:
+tujuh halaman baru, satu halaman ditulis ulang sebagian, dan sepuluh metode seam.
+
+`npm run check` bersih · **655 test unit** (naik dari 635) · **114 e2e** (naik
+dari 96) · `check:build` lolos.
+
+### Privasi ditegakkan dengan tidak mengirim
+
+FR-PROF-10 menuntut kategori yang dimatikan membuat **tabnya hilang**, bukan tab
+kosong — dan itu memaksa daftar tab dikirim server. Kalau layar yang menyaring,
+ia harus menerima isinya lebih dulu untuk tahu apakah kosong, dan pada saat itu
+data pribadinya sudah sampai ke klien.
+
+**Dompet dijepit dua kali**: server memaksa `wallet: false` sebelum menyimpan,
+dan `PublicProfileSchema` menuliskannya `z.literal(false)` sehingga tipenya
+sendiri menolak nilai lain. Sakelarnya tetap dirender, mati permanen — sakelar
+yang hilang membuat pengguna mencarinya di tempat yang tidak ada.
+`architecture.md` §1.41.
+
+### Skor keamanan dari faktor nyata
+
+Lima bobot (20·25·20·20·15) di `lib/security.ts`, dan `SECURITY_MAX`
+**dijumlahkan dari daftarnya** — bukan ditulis `100` sebagai konstanta kedua.
+Sarannya lahir dari keadaan yang sama, jadi tidak mungkin ada saran yang
+menyarankan sesuatu yang sudah menyala. §1.42.
+
+### Hapus riwayat ≠ kosongkan rak
+
+`clearReadingHistory` menghapus progres dan **tidak menyentuh perpustakaan**. Rak
+adalah pilihan pembaca; riwayat jejaknya. Pembaca yang kehilangan rak setelah
+menekan "hapus riwayat" tidak akan menekan tombol apa pun lagi di halaman itu.
+
+Penghapusan akun **ditahan dengan alasan yang dikirim** — bukan bendera.
+`architecture.md` §1.43.
+
+### Dua hal yang saya karang, lalu buat nyata
+
+- **`novelova:visit-count` tidak ada.** Ambang "muncul setelah ≥3 sesi" untuk
+  ajakan pasang aplikasi tidak punya sumber sama sekali; saya menuliskannya
+  seolah ada. Penghitungnya sekarang di `main.tsx` — bukan di React, karena
+  `StrictMode` merender dua kali dan penghitung di dalam efek akan naik dua per
+  kunjungan.
+- **Undangan referral memakai id `u2`–`u4`** yang tidak ada di data contoh;
+  pengguna lain ber-id `f1`–`f8`. Ketahuan dari e2e yang membuka
+  `/pengguna/u2` dan mendapat halaman kosong.
+
+### Diperiksa di peramban
+
+Sembilan halaman × enam lebar (320 · 360 · 390 · 412 · 430 · 1280): **nol
+luberan, nol error konsol**. Ditambah sapuan target ketuk di `/profil/ubah` dan
+`/pengaturan/keamanan` — dua halaman dengan kontrol terkecil sejauh ini.
+
+E2E `profil-dua-lebar.spec.ts`: empat alur di 412 dan 1280.
+
+### Tiga cacat di test saya sendiri, bukan di produk
+
+1. `getByText('Cetak cerita')` menabrak **jawaban FAQ** yang memuat kata yang
+   sama — strict mode violation yang terlihat seperti cacat produk.
+2. `/pengguna/u2` tidak ada.
+3. Test menuntut tombol "Hapus akun" bisa ditekan, padahal data contoh memang
+   punya pengajuan pencairan berstatus Ditinjau — jadi yang benar **tampil
+   alasan penahanannya**. Produknya benar; assertion saya yang salah, dan
+   sekarang justru itu yang diuji.
+
+### Yang tidak dikerjakan
+
+- **Ganti foto profil belum menyimpan berkas.** Kolom `avatarUrl` diteruskan apa
+  adanya; unggahan berkas menyentuh penyimpanan objek yang belum ada di seam
+  mana pun, dan menirunya dengan `blob:` lokal akan menghasilkan URL yang mati
+  begitu tab ditutup — lebih buruk daripada belum ada.
+- **Bahasa antarmuka belum benar-benar mengganti bahasa.** Pilihannya tersimpan
+  di server dan pratinjaunya berubah, tetapi `i18n/id.ts` satu-satunya kamus
+  yang ada; menambah kamus kedua adalah pekerjaan tersendiri yang tidak ada di
+  daftar Fase 13.
+- **Aturan lint "tidak ada teks tertanam di markup"** tidak dibuat. Biome tidak
+  punya aturan itu, dan menulis plugin custom untuk satu aturan lebih mahal
+  daripada nilainya sekarang — dicatat sebagai satu-satunya kotak Fase 13 yang
+  ditutup dengan penilaian, bukan dengan kode.
+
+---
+
+## 2026-09-06 · Langkah 76 — Fase 12 selesai: pusat hadiah & voucher terpadu
+
+> "oke sekarang lanjutkan ke fase 12"
+
+**19 kotak Fase 12 tercentang, plus empat `[LUAR]`.** `npm run check` bersih ·
+**635 test unit** (naik dari 613) · **96 e2e** (naik dari 90) · `check:build`
+lolos.
+
+### Yang bisa dihitung ulang berhenti disimpan
+
+`RewardState` (tersimpan) dipisah dari `Reward` (dibaca layar). Yang tersimpan
+tinggal streak terakhir, tanggal klaim terakhir, dan penanda klaim misi.
+
+Itu bukan kerapian — itu yang membuat aturan *"melewatkan satu hari kembali ke
+Hari 1"* benar **tanpa kerja terjadwal tengah malam**. Streak yang basi tidak
+perlu dibersihkan, ia cukup tidak dihitung saat dibaca berikutnya. Kalau
+turunannya ikut disimpan, ada dua kemungkinan dan keduanya buruk: kerja tengah
+malam yang bisa gagal diam-diam, atau streak basi yang berarti hadiah bisa
+diambil dua kali. `architecture.md` §1.38.
+
+### Kolom baru yang tanpanya satu misi mustahil dijawab
+
+`ReadingProgress.finishedAt` — tanggal lokal per bab. `finishedChapterIds` hanya
+tahu **apa** yang selesai, bukan **kapan**, jadi *"Baca 3 bab hari ini"* tidak
+bisa dijawab sama sekali. Ditambahkan seperti `scrollByChapter` di R7:
+berpendamping dan berdefault, bukan mengganti yang lama.
+
+Dan **tanggal pertama kali selesai** yang dicatat, bukan yang terakhir — kalau
+yang terakhir, satu bab yang sama bisa digulir ulang tiga kali untuk
+menuntaskan misinya.
+
+Tiga misi, tiga sumber nyata: bab selesai hari ini, ulasan terkirim hari ini,
+`adQuotas.used` hari ini. **Tidak satu pun disimpan di baris misinya** — misi
+yang menyimpan progresnya sendiri akan tetap 100% besok, dan itu persis cacat
+prototipe yang FR-RWD-07 tutup.
+
+### Satu pintu untuk setiap perolehan dan pemakaian
+
+Ditemukan dua kali dalam dua fase berturut-turut. Fase 11: rekonsiliasi top-up
+menulis notifikasi langsung ke tabel, jadi tidak bisa dimatikan pengguna. Fase
+12: `applyVoucher` **tidak menulis apa pun** ke buku besar — bab terbuka tanpa
+jejak, dan satu-satunya kesimpulan yang masuk akal bagi pembaca adalah koinnya
+terpotong diam-diam.
+
+Sekarang: hadiah koin lewat `kreditHadiah` (saldo + baris `kind: 'reward'` dalam
+satu transaksi Dexie), pemakaian voucher menulis baris **bernilai nol koin**
+ber-`method: 'voucher'`, dan riwayat klaim di `/hadiah` **diturunkan dari buku
+besar yang sama**. `architecture.md` §1.39.
+
+### Voucher berhenti jadi diskon yang buta
+
+Tombol "Gunakan" yang dulu `#` kini membuka **pemilih cerita** — hanya cerita
+tempat voucher itu benar-benar berlaku, masing-masing menyebut berapa bab yang
+akan terbuka. Voucher terkunci menampilkan syaratnya dan tidak punya tombol sama
+sekali, dan keadaan terkuncinya **dihitung server** (streak, bab selesai): layar
+yang menebak sendiri akan menghidupkan tombol yang servernya tolak.
+
+### Cacat yang typecheck tidak bisa lihat
+
+`ReferralInvite.userId` dipakai untuk **dua arti**: baris Dexie memakainya
+sebagai indeks pemilik, isinya seharusnya orang yang diundang. Keduanya
+`string`, jadi seluruh seed lolos `tsc` dengan ketiga undangan memakai id yang
+sama.
+
+Gejalanya baru muncul di peramban sebagai keluhan React soal **kunci ganda** —
+bukan di typecheck, bukan di satu pun dari 635 test. Kolomnya kini `inviteeId`.
+`architecture.md` §1.40.
+
+### Diperiksa di peramban, dan dua perbaikan datang dari sana
+
+Halamannya di **320, 360, 390, 412, 430, 1280** — nol luberan, nol error konsol.
+Dua yang hanya ketahuan dengan melihat:
+
+- **`0 dari 7` pecah tiga baris** di slot angka 320px, membuat strip tiga kolom
+  tidak sejajar. Jadi `0/7`; ketiga kolom kini sama tinggi (143px, diukur).
+- **Voucher terkunci berlencana "Gunakan"** — kata kerja untuk sesuatu yang
+  justru tidak bisa dilakukan. Jadi "Terkunci".
+
+E2E `hadiah-dua-lebar.spec.ts`: alur sama di 412 dan 1280, termasuk klaim yang
+**diulang setelah reload** — itu bedanya dari prototipe, yang cukup disegarkan
+untuk diklaim ulang.
+
+### Yang tidak dikerjakan
+
+- **Tautan masuk dari beranda** dipasang sebagai ikon di kepala, bukan tab bilah
+  bawah: bilah bawah sudah lima tab (FR-HOME-09), dan menambah yang keenam
+  adalah perubahan produk yang tidak diminta Fase 12.
+- **Check-in dan voucher kedaluwarsa belum memicu notifikasi.** Keduanya jenis
+  yang sudah ada di katalog Fase 11 (`checkin`, `voucher-kedaluwarsa`) dan
+  pemicunya tinggal dipasang — tetapi itu tidak ada di daftar Fase 12, dan
+  memasangnya tanpa diminta berarti mengirim notifikasi yang tidak ada yang
+  minta.
+
+---
+
+## 2026-09-06 · Langkah 75 — Fase 11 selesai: notifikasi
+
+> "kerjakan todo.md di phase 11. Semua todo di phase tersebut dikerjakan. Dan
+> pastikan saat test selalu lakukan test preview mobile di semua ukuran layar
+> (xl, l, m, s) untuk memcegah fitur/tampilan yang tidak sesuai dan kurang bagus.
+> Begitu juga saat test preview di dekstop"
+
+**22 kotak Fase 11 tercentang, plus tiga `[LUAR]`.** `npm run check` bersih ·
+**613 test unit** (naik dari 588) · **90 e2e** (naik dari 83) · `check:build`
+lolos.
+
+### Tabrakan PRD yang baru terlihat saat kedua layarnya ditulis
+
+`prd_11` menetapkan **lima saringan** (FR-NOTIF-01) dan **empat kelompok
+preferensi** (FR-NOTIF-04) — dan keduanya bukan daftar yang sama. Bukan salah
+satunya yang keliru: keduanya benar untuk pertanyaan yang berbeda. Saringan
+menjawab *"apa yang ingin saya lihat"*, kelompok preferensi menjawab *"apa yang
+boleh mengganggu saya"*.
+
+Yang membuktikan keduanya harus terpisah: **notifikasi penarikan disaring sebagai
+Dompet, tetapi dimatikan bersama Karya saya.** Satu daftar tidak bisa melakukan
+keduanya.
+
+Jadi kontraknya membawa **tiga** enum: `NotifKind` (sebelas jenis, tabel
+FR-NOTIF-02), `NotifType` (empat saringan), `NotifPrefGroup` (empat kelompok).
+Pemetaannya **satu tabel** di `src/lib/notif.ts`, dibaca layar dan server-mock —
+pola `lib/payout.ts`. `architecture.md` §1.36.
+
+**Kontrak lama salah dan diganti.** `NotificationPrefs` berkunci
+`cerita/dompet/hadiah/sistem` — keempat *saringan*. Itu tebakan Fase 2 yang
+ditulis sebelum halamannya ada.
+
+### Yang dibangun
+
+- **`/notifikasi`** — kepala hari (Hari ini · Kemarin · tanggal), lima saringan
+  yang **menyaring di server**, sebelas ikon per jenis, waktu relatif, "Tandai
+  semua terbaca", muat 20 per halaman, batas 90 hari, dua keadaan kosong yang
+  berbeda (belum ada apa pun vs tidak ada di saringan ini).
+- **`/notifikasi/pengaturan`** — **rute modal**: lembar di atas `/notifikasi`
+  yang punya URL sendiri, jadi tautan dari profil membuka lembar di atas halaman
+  sungguhan, bukan melayang di atas layar kosong.
+- **Lencana lonceng** — `9+` di atas sembilan, **tidak dirender sama sekali**
+  saat nol. Di `src/hooks/` bersama `useWallet`, karena `components/patterns/`
+  tidak boleh mengimpor dari `features/`.
+- **Menandai terbaca optimistis dua kunci sekaligus** — baris *dan* lencana.
+  `lib/useOptimistic` sengaja tidak dipakai: ia memotret satu kunci, dan satu
+  ketukan di sini mengubah dua tampilan. Disiplinnya sama, cakupannya beda.
+
+### Tiga pemicu yang sudah ada, akhirnya tersambung
+
+Penjadwal bab · penjadwal cerita · persetujuan biaya cetak. Dan satu yang
+**sudah melanggar aturannya sejak Fase 6**: rekonsiliasi top-up di `wallet.ts`
+menulis `db.notifications.put(...)` langsung, sehingga menghasilkan notifikasi
+yang **tidak bisa dimatikan pengguna**. Dipindahkan lewat `emitNotification`,
+tempat preferensi diperiksa.
+
+### Dua cacat yang ditemukan dengan menekan, bukan melihat
+
+1. **Perubahan Email di kelompok keamanan dibuang diam-diam.** Di `setChannel`,
+   kunci literal `sistem:` menimpa kunci terhitung `[group]:` saat keduanya
+   `sistem` — jadi sakelarnya bergerak di layar lalu kembali. **TypeScript
+   menerima kedua bentuknya**; yang menangkapnya e2e yang benar-benar menekan
+   sakelarnya dan membaca ulang setelah reload.
+2. **Label sakelar tercetak dua kali** — dua belas baris mubazir. Diperbaiki
+   dengan `<fieldset>` + `<legend>`: konteks kelompok diumumkan sekali, sakelar
+   cukup bernama "Push". `architecture.md` §1.37.
+
+### Diperiksa di peramban sungguhan, bukan hanya di test
+
+Kedua halaman di **320 · 360 · 390 · 412 · 430 · 1280** — nol luberan di
+keduanya, nol error konsol. Satu perbaikan datang justru dari mengukur, bukan
+dari melihat: di 320px tab berbagi baris dengan ikon pengaturan dan hanya dapat
+**200px dari 320**, sehingga cuma 2,5 dari lima tab terlihat. Aksinya diturunkan
+ke baris sendiri → **288px, empat tab terlihat penuh**.
+
+E2E `notifikasi-dua-lebar.spec.ts`: alur yang sama di 412 dan 1280, termasuk
+sakelar keamanan yang **ditekan sungguhan** — memeriksa `disabled` saja tidak
+membuktikan keadaannya bertahan.
+
+### Dua jebakan test yang menggigit saya sendiri
+
+- **`page.goto` sesudah menekan notifikasi membunuh mutasinya.** Muat-ulang keras
+  merobohkan konteks JS, dan tulisan IndexedDB yang belum rampung ikut hilang —
+  jadi polling pun tidak bisa memulihkannya. Gejalanya khas: lulus di 1280, gagal
+  di 412, tanpa beda selain kecepatan. Diganti `page.goBack()`, yang sekaligus
+  **membuktikan penandanya benar-benar tersimpan**.
+- **`textContent()` menunggu elemennya muncul**, jadi kasus "lencana memang tidak
+  ada" tidak akan pernah bisa diamati — ia menggantung sampai poll kehabisan
+  waktu. Padahal justru kasus **nol** yang paling penting di FR-NOTIF-03.
+  `count()` dulu, baru `textContent()`.
+
+### Yang tidak dikerjakan
+
+- **FR-NOTIF-05 (push) tidak disentuh** — ia `P2` dan **tidak ada di daftar Fase
+  11**; `todo.md` menaruhnya di Fase 14 bersama pengerasan PWA. Jam tenang sudah
+  tersimpan di preferensi dan ditampilkan, tetapi belum menahan apa pun.
+- **Check-in harian dan voucher kedaluwarsa belum punya pemicu hidup** — pusat
+  hadiah baru dibangun di Fase 12. Keduanya ada di data contoh, jadi barisnya
+  bisa dilihat dan ditekan.
+
+---
+
+## 2026-09-06 · Langkah 74 — design system putaran 8 sebagai dokumen
+
+> "mungkin anda bisa buat design system markdown untuk versi baru ini"
+
+Tujuh markdown di `putaran8/`, dibentuk mengikuti `design-system/` supaya
+keduanya bisa dibaca berdampingan. **Nol kode aplikasi disentuh.**
+
+### Bedanya dari `design-system/`: potret vs spesifikasi
+
+`design-system/` merekam apa yang **sudah ada**; `putaran8/` menetapkan apa yang
+**harus dibangun**. Karena itu tiap tabel menyebut asal angkanya — **diukur**
+(dibawa dari garis dasar putaran 7), **dihitung** (diverifikasi sebelum ditulis),
+atau **diputuskan** (pilihan yang bisa dibantah). Tanpa pembedaan itu, target
+`±30 % isi layar` akan terbaca sebagai fakta padahal ia sasaran.
+
+| Berkas | Isi |
+|---|---|
+| `00-ringkasan.md` | status, empat keputusan terkunci, indeks, tiga yang belum diputuskan |
+| `01-warna.md` | **sumber tunggal hex** — seluruh token, terang & malam, tiap rasio dihitung |
+| `02-tipografi.md` | dua muka, delapan ukuran, kepala section yang berganti bentuk |
+| `03-ruang-radius-elevasi.md` | **skala jarak bernama** — yang selama ini tidak ada — radius, elevasi, target kerapatan |
+| `04-komponen.md` | 4 berubah bentuk · 6 berubah warna · sisanya tidak disentuh |
+| `05-pola.md` | sembilan aturan, **tiga berubah** dan ditandai |
+| `06-migrasi.md` | enam langkah, verifikasi per langkah, yang jadi usang |
+
+### Satu jebakan dokumen yang langsung ditutup
+
+`usulan.md` semula memuat tabel hex lengkap, dan `01-warna.md` memuatnya lagi.
+Itu **persis** jebakan yang memakan `prd_03` dua langkah lalu: dua dokumen dengan
+angka yang sama, salah satunya akan usang diam-diam dan pembacanya tidak punya
+cara memilih mana yang benar. Tabelnya dicabut dari `usulan.md`, diganti penunjuk
+— `usulan.md` kini menjawab **kenapa**, berkas bernomor menjawab **apa persisnya**.
+
+### Yang ditemukan sambil menulis
+
+- **Meter kekuatan kata sandi: tiga dari lima di bawah 4,5:1, dan itu benar.**
+  Kelimanya dipakai sebagai `bg-nv-strength-*` — **isian batang**, bukan teks
+  (`PasswordMeter.tsx`), jadi yang berlaku WCAG 1.4.11 dengan ambang **3:1**.
+  Dicatat terang di `01` §9, karena angka 4,12 di sebelah kolom berisi 5-an
+  **terlihat seperti cacat**, dan sesi berikutnya akan "memperbaikinya" sampai
+  meternya berhenti membedakan lemah dari kuat.
+- **Teks tombol utama di tema gelap harus arang, bukan putih.** `#131519` di atas
+  rose malam = 7,93:1; putih cuma 2,0:1. Menyalin `text-white` dari tema terang
+  terasa wajar sampai tombol utamanya tidak terbaca.
+- **Dua klaim angka saya sendiri salah, dan dikoreksi.** "9 kepala section di
+  beranda" → sebenarnya **8**: tiga prioritas, empat ekor tersaring, dan Lanjut
+  Membaca; banner tidak punya kepala. Dihitung dari `handlers/sections.ts`, bukan
+  dari ingatan. `--nv-rose-line` juga ditulis 3,29:1 dan sebenarnya **3,27:1**.
+
+### Yang sengaja diwarisi utuh, bukan ditulis ulang
+
+Empat aturan putaran 7 dipertahankan apa adanya karena terbukti benar: aksen
+punya **dua nilai** (teks vs bukan-teks), aksi utama **bukan** warna aksen, tiga
+jaket sampul, dan empat keadaan wajib. Yang berganti cuma warnanya. Aturan yang
+sudah terbukti tidak diulang dari nol hanya karena paletnya baru.
+
+### Yang tidak dikerjakan
+
+- **`tokens.css` masih putaran 7 seluruhnya.** Belum satu baris pun masuk `src/`.
+- **`architecture.md` §1.36 belum ditulis** — ini spesifikasi, bukan keputusan
+  berlaku. §1.x dicatat kalau implementasinya dimulai.
+- **PRD belum disentuh.** `06-migrasi.md` §4 mendaftar berkas mana yang wajib
+  ikut, dan mencatat pelajaran Langkah 72: yang harus disapu **kata "emas"**,
+  bukan daftar §1.x — `prd_03` punya empat pijakan untuk satu aturan dan hanya
+  dua yang tersentuh.
+- **Tiga keputusan masih menggantung**: serif mana, sampul 104 atau 96px, dan
+  apakah metadata kembali ke kartu beranda. Yang terakhir **menimpa keputusan
+  produk 5 September**, jadi ia ditandai `⚠` di `04` dan tidak diambil diam-diam.
+
+---
+
+## 2026-09-06 · Langkah 73 — usulan putaran 8: rose gold + abu dingin
+
+> "menurut saya design saat ini terlalu lawas, kalau kamu memegang project ini
+> apa yang akan kamu lakukan untuk melakukan redesign aplikasi nya? Dari segi
+> tampilan bisa kamu ubah2 tetapi tidak lepas dari aturan PRD yang sudah dibuat.
+> … untuk color saya ingin kamu gunakan rose gold + grey."
+
+Empat keputusan dikonfirmasi lebih dulu: `prd_01` §0 **boleh** direvisi jadi
+putaran 8 · rose gold **aksen saja**, aksi utama tetap arang · serif **diganti
+mukanya, perannya tetap** · abu **dingin**.
+
+Hasilnya `putaran8/` — `usulan.md` + `pratinjau.html` + tiga tangkapan layar.
+**Nol kode aplikasi disentuh**; ini usulan, belum keputusan membangun.
+
+### Diagnosis: dua keluhan, dua penyakit berbeda
+
+"Lawas" datang dari **krem yang meniru kertas**, "emas" yang sebenarnya cokelat
+(`#7d5411`), serif yang dipakai di chrome aplikasi, dan kedataran total karena
+§0.6 melarang bayangan. "Putih dominan" datang dari isi yang cuma **18,3 %**
+layar. **Obatnya berbeda** — palet menyembuhkan yang pertama, kerapatan yang
+kedua. Mengganti warna saja tidak akan menjawab keluhan bos.
+
+### Dugaan saya sendiri yang salah, dan koreksinya
+
+Saya kira memperbesar beda kertas↔panel akan menolong. Diukur, ternyata **tuas
+itu lemah**: begitu abu halaman lewat `#eceef1`, teks redup jatuh di bawah AA
+(`#e7eaee` → 4,38:1). Jadi `#eceef1` bukan pilihan estetis, ia **lantai yang
+ditentukan kontras**. Yang benar-benar menggeser porsi layar adalah sampul dan
+tinggi baris.
+
+### Palet
+
+Rose punya **dua nilai** — aturan struktural yang diwarisi utuh dari putaran 7,
+bukan selera: `#a04a5a` untuk teks (4,99:1 di abu, 5,80:1 di panel), `#b76e79`
+untuk garis (3,80:1, gagal sebagai teks). Aksi utama tetap arang `#16181d`.
+Malam: `#131519` / `#1c1f25` / rose `#d99aa5` (7,93:1). Semua dihitung, bukan
+ditaksir.
+
+**Jaket sampul ikut pindah keluarga** (`#22252b` · `#3b2b33` · `#54353f`).
+Ketahuan saat melihat pratinjaunya sendiri: jaket cokelat di atas abu dingin
+terasa nyasar — dan sampul ~30 % layar setelah dibesarkan, jadi ia bukan detail.
+
+### Pratinjau
+
+`pratinjau.html` memakai palet yang diusulkan, jadi ia mendemonstrasikan dirinya
+sendiri. Perbandingan sebelum→sesudah memakai **markup yang sama persis** untuk
+kedua sisi — hanya dua set token yang berbeda (`.p7` / `.p8`). Itu sekaligus
+buktinya bahwa perubahannya token + kerapatan, **bukan penulisan ulang**.
+
+Diperiksa di peramban sungguhan: kelima font termuat, nol error konsol, dan
+angkanya cocok dengan yang diklaim (baris 177 vs 120px, sampul 80 vs 104px).
+Sapuan enam lebar (320·360·390·412·430·1280) **nol luberan** — setelah
+diperbaiki: `minmax(330px, 1fr)` meluber 129px di 320, jebakan `grid` tanpa
+lantai yang sama persis dengan yang sudah tercatat di CLAUDE.md §8.
+
+### Yang tidak dikerjakan
+
+- **Tidak ada token aplikasi yang disentuh.** `tokens.css` belum bergerak
+  satu baris pun; pengguna baru meminta rencana.
+- **Serif belum dipilih** — empat kandidat (Newsreader · Literata · Fraunces ·
+  Lora) disandingkan di pratinjau supaya dipilih dengan mata. Semuanya ada di
+  `@fontsource-variable`, jadi ini **menukar** paket, bukan menambah: runtime
+  tetap 12.
+- **`architecture.md` §1.36 belum ditulis.** Ini usulan; §1.x dicatat kalau
+  keputusannya berlaku.
+- **Ongkos dicatat, bukan disembunyikan:** sampul 80 → 104px menukar 3,7 → 3,1
+  sampul terlihat per baris. Kalau itu terlalu mahal, 96px kompromi yang wajar.
+
+---
+
+## 2026-09-06 · Langkah 72 — PRD beranda, yang ternyata belum selesai diselaraskan
+
+> "apakah prd untuk home content versi terbaru sudah diupdate di PRD Novelova di
+> project novelova-v2"
+
+Jawaban singkatnya: **sebagian**, dan pertanyaannya menemukan celah yang sapuan
+Langkah 71 lewatkan.
+
+`prd_03_home_discovery.md` sudah membawa dua catatan revisi 5 September dari
+Langkah 66 — susunan feed (§2.1) dan bentuk section (tabel FR-HOME-04). Keduanya
+benar. Tetapi §1.22 punya **empat** pijakan di berkas itu, bukan dua, dan dua
+sisanya tidak pernah ikut disunting:
+
+| Tempat | Yang masih tertulis | Yang berlaku di kode |
+|---|---|---|
+| Blok "Anatomi v2" (kepala berkas) | "urutannya **tidak berubah**" | tiga section prioritas naik ke atas, tab genre turun di bawah banner |
+| ” | kartu membawa `★ rating` + jumlah baca | `StoryCard` `variant="grid"` tinggal **sampul + judul** |
+| ” | Baru & Naik Cepat bergaris pertumbuhan emas | tidak ada `weeklyReads` di komponen beranda mana pun |
+| ” | Editor's Picks berkutipan serif | bentuk `rail-wide` 160px dihapus di §1.22 |
+| ” | section tematik daftar tegak bernomor | `shapeOf()` hanya mengenal `rail` dan `continue` |
+| FR-HOME-05 | iklan setelah Popular & setelah Editor's Picks | `HomePage.tsx` menaruhnya setelah ekor ke-1 dan ke-2, **di bawah tab genre** |
+
+Yang membuatnya lebih buruk daripada sekadar usang: keduanya **membantah catatan
+revisi di berkasnya sendiri**. Pembaca PRD yang membuka §2.1 dan blok pembuka
+mendapat dua jawaban berbeda untuk satu pertanyaan, dan tidak ada di berkas itu
+yang memberi tahu mana yang menang.
+
+Diperbaiki dengan dua catatan revisi bertanggal 6 September, keduanya menyebut
+versi lamanya. Blok "Anatomi v2" tidak dihapus — ia potret putaran 7 yang sah;
+yang ditambahkan tabel lima baris yang menyebut mana kalimatnya yang sudah
+dilewati R2b, dan mana yang **masih benar** (bentuk banner, tab teks, kepala
+section, Lanjut Membaca, pita iklan, FAB kiri bawah, sembilan baris lembar
+pengaturan).
+
+### Kenapa sapuan Langkah 71 melewatkannya
+
+Karena `prd_03` diperiksa terhadap **peta §1.x**, bukan terhadap kodenya: §1.22
+tercatat "sudah diterapkan di Langkah 66", jadi berkasnya tidak pernah dibuka.
+Peta itu menjawab pertanyaan yang salah — ia tahu sebuah aturan sudah diterapkan,
+ia tidak tahu berapa tempat di PRD yang menyebut aturan itu. Dicatat di
+`architecture.md` §1.34 sebagai koreksi, bukan dihapus.
+
+Tidak ada kode aplikasi yang disentuh.
+
+---
+
+## 2026-09-05 · Langkah 71 — folder design system, dan PRD diselaraskan penuh
+
+> "oke saya ingin kamu buat folder baru dan isikan design system dari project
+> novelova-v2 dari warna/font dan style yang dipakai. Tujuan nya saya ingin
+> lakukan redesign system lagi dikarenakan terdapat feedback dari bos: masih
+> terlalu renggang jadi putihnya dominan. Nah saya ingin itu desain seperti
+> aplikasi novel online yang moderen. Dan untuk PRD dalam project novelova-v2
+> pastikan semua prd nya sudah mengikuti update terakhir ini."
+
+Empat keputusan dikonfirmasi lebih dulu: folder berisi **potret sistem sekarang**
+(bukan usulan), bentuknya **dokumen + halaman contoh**, arah putaran 8 **terang
+tapi rapat**, dan PRD **diselaraskan ke kode**, bukan ke arah baru.
+
+Tidak ada kode aplikasi yang disentuh di langkah ini.
+
+### `design-system/` — 21 berkas
+
+Tujuh markdown, satu halaman contoh mandiri, dua berkas font, sembilan tangkapan
+layar. Tidak ada angka yang dikarang: semuanya dibaca dari `tokens.css`,
+`base.css`, dan 35 berkas komponen — atau **diukur dari aplikasi yang berjalan**.
+
+`pratinjau.html` berdiri sendiri dan memakai **font sungguhan** (woff2 disalin ke
+`design-system/fonts/`), bukan fallback sistem — kesan tipografinya harus jujur.
+Diperiksa di peramban: Lora dan Plus Jakarta Sans keduanya termuat, nol error,
+tidak meluber.
+
+### Diagnosis bos dikoreksi oleh pengukuran
+
+Enam layar, 390×844, dihitung per piksel:
+
+| | Porsi layar |
+|---|---|
+| Putih `#ffffff` | **20,0 %** |
+| Kertas `#f4f2ef` | **61,7 %** |
+| Isi | **18,3 %** |
+
+**Yang dominan bukan putih.** Yang memenuhi layar adalah kertas, dan keduanya
+bersama menutup 82 %. Kesimpulan bos tetap benar, sebabnya yang lain: kertas dan
+panel hanya terentang **5 poin kecerahan**, jadi mata membacanya sebagai satu
+bidang kosong besar.
+
+Dua layar ekstrem jadi patokan: **Profil 7,2 % isi** (paling kosong) dan
+**Beranda 44 %** (paling padat — karena sampul; gambar satu-satunya hal di sistem
+ini yang mengisi bidang).
+
+Angka paling telak: **baris pustaka 177px → 4,8 baris per layar.** Aplikasi novel
+modern umumnya 6–8.
+
+`06-kerapatan.md` menutup dengan **enam tuas** beserta ongkosnya, dan tiga hal
+yang **tidak** disarankan disentuh lebih dulu — mengembalikan bayangan, menambah
+warna aksen, dan menurunkan ukuran huruf dari 14px (yang terakhir melawan
+`prd_01` §4.4, yang justru menaikkan lantai teks karena prototipe memakai 9–11px
+sebanyak 298 kali).
+
+Halaman contohnya memuat **demonstrasi kerapatan** berdampingan — daftar yang
+sama, warna dan komponen identik, hanya jarak dan ukuran sampul yang berubah:
+4,8 baris menjadi 8. Ditandai terang sebagai demonstrasi tuas, **bukan usulan
+desain**.
+
+### PRD: 6 dari 13 → **13 dari 13**
+
+Rincian per berkas di `architecture.md` §1.34. Yang paling substansial:
+
+- **`prd_02`** — pengenalan tiga langkah **tidak pernah tampil ke akun baru mana
+  pun**; requirement-nya benar sejak awal, implementasinya yang salah, dan
+  perbaikannya di penjaga rute.
+- **`prd_08`** — persentase perubahan berhenti dipatok, jadi layar tidak bisa
+  lagi berbunyi "0% · naik 4%".
+- **`prd_07`** — sumber sentimen akhirnya disebut benar: **ulasan**, bukan
+  komentar.
+- **`prd_09`** — nominal buku besar jadi tinta; hijau/merah dicabut.
+- **`prd_11`** — **diperiksa dan ternyata tidak ada yang salah.** Yang ditambahkan
+  cuma dua perilaku yang sudah dibangun tetapi belum pernah tertulis. Dicatat
+  sebagai tambahan, bukan koreksi.
+
+### Yang tidak dikerjakan
+
+- **Usulan putaran 8 tidak dibuat.** Pengguna memilih folder berisi potret saja;
+  arah "terang tapi rapat" dicatat sebagai konteks, dan tidak ada satu pun token
+  baru yang ditulis.
+- **§1.32 dan §1.33 tetap tidak masuk PRD.** Keduanya aturan teknis (seam API
+  tanpa top-level `await`, halaman dev tidak ikut bundel), bukan requirement
+  produk — menaruhnya di PRD akan membuat PRD menjelaskan bundler.
+- **27 PNG `putaran7/` tidak disentuh.** Ia acuan putaran 7 dan tetap benar untuk
+  putaran 7; yang akan membuatnya usang adalah putaran 8, bukan folder ini.
+
+---
+
 ## 2026-09-05 · Langkah 70 — deploy Cloudflare Tunnel, dan build produksi yang ternyata mati
 
 > "project ini mau saya deploy di cloudflare tunnel. saya sudah siapkan port sama

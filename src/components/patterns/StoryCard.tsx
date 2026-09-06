@@ -35,6 +35,8 @@ export interface StoryCardProps {
    * satu ketukan yang jelas dengan dua target sempit.
    */
   onCoverClick?: ((story: Story, origin: HTMLElement) => void) | undefined
+  /** Diteruskan ke `Cover` — sampul yang sudah pasti terlihat saat halaman dibuka. */
+  priority?: boolean
   className?: string
 }
 
@@ -70,15 +72,21 @@ export function StoryCard({
   rank,
   trailing,
   onCoverClick,
+  priority = false,
   className,
 }: StoryCardProps) {
   const to = `/cerita/${story.id}`
+  // Lencana yang benar-benar tergambar, bila ia berupa teks. Dipakai untuk nama
+  // tombol zoom sampul di bawah.
+  const lencanaEfektif = badge === undefined ? story.badge : badge
+  const lencanaTeks = typeof lencanaEfektif === 'string' ? lencanaEfektif : ''
   // `badge === undefined` berarti "pakai bawaannya"; `null` berarti "jangan ada".
   const cover = (
     <Cover
       src={story.coverUrl}
       title={story.title}
       badge={badge === undefined ? story.badge : badge}
+      priority={priority}
     />
   )
 
@@ -167,10 +175,18 @@ export function StoryCard({
   if (onCoverClick) {
     return (
       <div className={cx('block', className)}>
+        {/*
+          Lencana peringkat (`#1`) tergambar **di dalam** tombolnya, jadi ia teks
+          yang terlihat — dan nama aksesibilitas yang tidak memuatnya membuat
+          perintah suara "klik #1" tidak menemukan apa pun (axe
+          `label-content-name-mismatch`). Ikut disebut, bukan disembunyikan:
+          peringkatnya memang informasi, dan tidak ada tempat lain yang
+          menyebutkannya.
+        */}
         <button
           type="button"
           onClick={(e) => onCoverClick(story, e.currentTarget)}
-          aria-label={`Perbesar sampul ${story.title}`}
+          aria-label={`Perbesar sampul ${story.title}${lencanaTeks ? ` ${lencanaTeks}` : ''}`}
           className="block w-full rounded-nv-cover"
         >
           {cover}

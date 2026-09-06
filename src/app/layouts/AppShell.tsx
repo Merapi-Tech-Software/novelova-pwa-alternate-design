@@ -15,7 +15,7 @@ export function AppShell() {
     <>
       <SideNav />
       <div className="min-h-dvh pb-[calc(var(--nv-bottom-nav)+4.75rem)] lg:pb-8 lg:pl-60">
-        <main className="mx-auto max-w-5xl px-4 py-5 lg:px-8">
+        <main id="konten" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-5 lg:px-8">
           <Outlet />
         </main>
       </div>

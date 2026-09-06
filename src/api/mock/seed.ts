@@ -1,5 +1,6 @@
 import { AD_QUOTA_MAX, PROMO } from '@/lib/coin'
 import { todayLocalISO } from '@/lib/date'
+import { typeOfKind } from '@/lib/notif'
 import type {
   AdQuota,
   AuthorProfile,
@@ -19,8 +20,9 @@ import type {
   Rating,
   ReaderPrefs,
   ReadingProgress,
+  ReferralInvite,
   Review,
-  Reward,
+  RewardState,
   ScheduleEntry,
   Story,
   Transaction,
@@ -814,6 +816,24 @@ const progress: Array<ReadingProgress & { id: string }> = LIB_SEED.map(([storyId
   scrollPct: at > 0 ? 0.42 : 0,
   finishedChapterIds:
     at > 0 ? Array.from({ length: Math.min(at, 8) }, (_, i) => `${storyId}-c${i + 1}`) : [],
+  /*
+   * **Dua bab selesai hari ini**, sisanya kemarin — supaya misi "Baca 3 bab hari
+   * ini" mulai di 2/3 seperti tabel FR-RWD-03, dan bisa dituntaskan dengan
+   * benar-benar membaca satu bab lagi, bukan dengan angka yang dipatok.
+   * Hanya cerita pertama yang menyumbang; kalau semuanya hari ini, misinya
+   * sudah selesai sebelum pembaca menyentuh apa pun.
+   */
+  finishedAt:
+    at > 0
+      ? Object.fromEntries(
+          Array.from({ length: Math.min(at, 8) }, (_, i) => [
+            `${storyId}-c${i + 1}`,
+            storyId === 's1' && i < 2
+              ? todayLocalISO()
+              : todayLocalISO(new Date(Date.now() - days(2))),
+          ]),
+        )
+      : {},
   updatedAt: iso(hours(12)),
 }))
 
@@ -1058,7 +1078,7 @@ const comments: Comment[] = [
 
 const NOTIF_SEED: Array<{
   id: string
-  type: Notification['type']
+  kind: Notification['kind']
   title: string
   body: string
   link: string
@@ -1068,7 +1088,7 @@ const NOTIF_SEED: Array<{
 }> = [
   {
     id: 'n1',
-    type: 'cerita',
+    kind: 'bab-baru',
     title: '3 bab baru di Cinta di Balik Kontrak',
     body: 'Digabung dari tiga rilis hari ini',
     link: '/cerita/s1/bab/s1-c8',
@@ -1078,7 +1098,7 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n2',
-    type: 'dompet',
+    kind: 'topup',
     title: 'Top-up 500 koin berhasil',
     body: 'Saldo bertambah 550 koin termasuk bonus',
     link: '/koin/transaksi/tx1',
@@ -1087,7 +1107,7 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n3',
-    type: 'hadiah',
+    kind: 'checkin',
     title: 'Check-in hari ke-5 tersedia',
     body: 'Klaim 30 koin sebelum tengah malam',
     link: '/hadiah',
@@ -1096,7 +1116,7 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n4',
-    type: 'cerita',
+    kind: 'ulasan-komentar',
     title: 'Ulasan baru di Velvet Alibi',
     body: 'Rina Ayu menulis ulasan 5 bintang',
     link: '/cerita/ms1/ulasan',
@@ -1105,7 +1125,7 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n5',
-    type: 'sistem',
+    kind: 'keamanan',
     title: 'Masuk dari perangkat baru',
     body: 'Chrome · Jakarta',
     link: '/pengaturan/keamanan',
@@ -1114,7 +1134,7 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n6',
-    type: 'dompet',
+    kind: 'penarikan',
     title: 'Penarikan Rp 6.500.000 selesai',
     body: 'Masuk ke BCA **** 4481',
     link: '/penulis/penarikan/riwayat',
@@ -1123,7 +1143,7 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n7',
-    type: 'hadiah',
+    kind: 'voucher-kedaluwarsa',
     title: '2 voucher hampir kedaluwarsa',
     body: 'Berakhir dalam 3 hari',
     link: '/hadiah',
@@ -1132,7 +1152,7 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n8',
-    type: 'cerita',
+    kind: 'bab-terjadwal',
     title: 'Bab 49 terjadwal terbit besok 19.00',
     body: 'Hujan di Parkiran Basement',
     link: '/karya/ms1/bab',
@@ -1141,19 +1161,41 @@ const NOTIF_SEED: Array<{
   },
   {
     id: 'n9',
-    type: 'sistem',
+    kind: 'cetak-status',
     title: 'Pesanan cetak Velvet Alibi dikirim',
     body: 'Resi JNE 004821194',
     link: '/karya/cetak',
     msAgo: days(4) + hours(3),
     unread: false,
   },
+  {
+    id: 'n10',
+    kind: 'pengikut-baru',
+    title: 'Rina Ayu mulai mengikutimu',
+    body: 'Pengikutmu jadi 1.284 orang',
+    link: '/pengguna/u2',
+    msAgo: days(6),
+    unread: false,
+  },
+  {
+    id: 'n11',
+    kind: 'cerita-terjadwal',
+    title: 'Hujan di Parkiran Basement terbit 12 Sep 09.00',
+    body: 'Cerita berpindah dari draf ke terjadwal',
+    link: '/karya',
+    msAgo: days(9),
+    unread: false,
+  },
 ]
 
-const notifications: Notification[] = NOTIF_SEED.map((n) => ({
+export const SEED_NOTIFICATIONS: Notification[] = NOTIF_SEED.map((n) => ({
   id: n.id,
   userId: ME,
-  type: n.type,
+  kind: n.kind,
+  // Diturunkan, bukan ditulis ulang: dua kolom yang harus sepakat dan diisi
+  // tangan akan menyimpang, dan gejalanya cuma satu baris yang hilang dari
+  // saringannya (`lib/notif.ts`).
+  type: typeOfKind(n.kind),
   title: n.title,
   body: n.body,
   deepLink: n.link,
@@ -1166,8 +1208,8 @@ const notifications: Notification[] = NOTIF_SEED.map((n) => ({
 const notificationPrefs: NotificationPrefs = {
   userId: ME,
   cerita: { inApp: true, push: true, email: false },
-  dompet: { inApp: true, push: true, email: true },
-  hadiah: { inApp: true, push: false, email: false },
+  dompetHadiah: { inApp: true, push: true, email: true },
+  karya: { inApp: true, push: true, email: false },
   // Kanal keamanan terkunci `true` — tidak boleh dimatikan (FR-NOTIF-04).
   sistem: { inApp: true, push: true, email: true },
   quietHours: { enabled: true, from: 22, to: 7 },
@@ -1468,41 +1510,94 @@ const withdrawals: Withdrawal[] = [
   },
 ]
 
-const rewards: Reward = {
+const rewards: RewardState = {
   userId: ME,
   checkInStreak: 4,
   lastCheckIn: null,
+  /*
+   * Tiga misi FR-RWD-03. `progress` di sini **hanya nilai awal database** —
+   * yang dibaca layar selalu dihitung ulang dari aktivitas nyata hari itu
+   * (`handlers/rewards.ts`), jadi angka apa pun di sini tidak bisa berbohong
+   * lebih dari satu pembacaan.
+   */
   missions: [
     {
       id: 'm1',
+      kind: 'read',
       title: 'Baca 3 bab hari ini',
       description: 'Bab apa pun, dari cerita mana pun',
-      progress: 2,
+      progress: 0,
       target: 3,
       rewardCoins: 15,
       claimedAt: null,
+      actionLink: '/pustaka',
+      actionLabel: 'Lanjut',
     },
     {
       id: 'm2',
+      kind: 'review',
       title: 'Tulis satu ulasan',
       description: 'Minimal 20 karakter',
-      progress: 1,
+      progress: 0,
       target: 1,
       rewardCoins: 25,
       claimedAt: iso(days(6)),
+      actionLink: '/cerita/s1/ulasan',
+      actionLabel: 'Ulas',
     },
     {
       id: 'm3',
-      title: 'Simpan 5 cerita',
-      description: 'Bangun perpustakaanmu',
-      progress: 6,
-      target: 5,
+      kind: 'ad',
+      title: 'Tonton satu iklan',
+      description: 'Buka bab terkunci lewat iklan',
+      progress: 0,
+      target: 1,
       rewardCoins: 20,
       claimedAt: null,
+      actionLink: '/cerita/s1/bab/s1-c8',
+      actionLabel: 'Tonton',
     },
   ],
   referralCode: 'ANNA2026',
 }
+
+/**
+ * Undangan referral · FR-RWD-04 · FR-RWD-07.
+ *
+ * Tiga keadaan yang berbeda **dengan sengaja**: satu yang sudah membaca bab
+ * pertamanya (hadiah cair), satu yang baru mendaftar (hadiah belum), dan satu
+ * lagi yang sudah membaca — supaya layarnya bisa menunjukkan bedanya, bukan
+ * hanya menyebutkan aturannya.
+ */
+const referralInvites: Array<ReferralInvite & { id: string; userId: string }> = [
+  {
+    id: 'ref1',
+    userId: ME,
+    inviteeId: 'f1',
+    name: 'Rina Ayu',
+    joinedAt: iso(days(18)),
+    readFirstChapter: true,
+    rewardedCoins: 200,
+  },
+  {
+    id: 'ref2',
+    userId: ME,
+    inviteeId: 'f2',
+    name: 'Bagas Pratama',
+    joinedAt: iso(days(9)),
+    readFirstChapter: true,
+    rewardedCoins: 200,
+  },
+  {
+    id: 'ref3',
+    userId: ME,
+    inviteeId: 'f3',
+    name: 'Dimas Anggara',
+    joinedAt: iso(days(2)),
+    readFirstChapter: false,
+    rewardedCoins: 0,
+  },
+]
 
 /** Empat cakupan voucher — tanpa cakupan, voucher hanya diskon yang buta. */
 const vouchers: Voucher[] = [
@@ -1520,6 +1615,7 @@ const vouchers: Voucher[] = [
     unlockCond: null,
     maxUses: 1,
     usedCount: 0,
+    locked: false,
     expiresAt: iso(-days(3)),
   },
   {
@@ -1536,6 +1632,7 @@ const vouchers: Voucher[] = [
     unlockCond: null,
     maxUses: 1,
     usedCount: 0,
+    locked: false,
     expiresAt: iso(-days(10)),
   },
   {
@@ -1552,6 +1649,7 @@ const vouchers: Voucher[] = [
     unlockCond: 'Selesaikan 10 bab cerita ini',
     maxUses: 1,
     usedCount: 0,
+    locked: false,
     expiresAt: iso(-days(21)),
   },
   {
@@ -1568,6 +1666,7 @@ const vouchers: Voucher[] = [
     unlockCond: null,
     maxUses: 3,
     usedCount: 1,
+    locked: false,
     expiresAt: iso(-days(14)),
   },
 ]
@@ -1629,7 +1728,7 @@ const readerPrefs: ReaderPrefs = {
 }
 
 /** Dinaikkan bila bentuk seed berubah, supaya database lama ditulis ulang. */
-const SEED_VERSION = 16
+const SEED_VERSION = 20
 
 /**
  * Mengisi database bila kosong atau versinya usang.
@@ -1664,7 +1763,7 @@ export async function seedIfNeeded(): Promise<void> {
     await db.reviews.bulkAdd(reviews)
     await db.comments.bulkAdd(comments)
 
-    await db.notifications.bulkAdd(notifications)
+    await db.notifications.bulkAdd(SEED_NOTIFICATIONS)
     await db.notificationPrefs.add(notificationPrefs)
 
     await db.authorProfiles.add(authorProfile)
@@ -1674,6 +1773,7 @@ export async function seedIfNeeded(): Promise<void> {
 
     await db.rewards.add(rewards)
     await db.vouchers.bulkAdd(vouchers)
+    await db.referralInvites.bulkAdd(referralInvites)
 
     await db.privacySettings.add(privacySettings)
     await db.readerPrefs.add(readerPrefs)

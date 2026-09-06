@@ -20,6 +20,7 @@ const STORY = 's1'
 async function markAsRead(storyId = STORY) {
   await db.progress.put({
     scrollByChapter: {},
+    finishedAt: {},
     id: `${CURRENT_USER_ID}-${storyId}`,
     userId: CURRENT_USER_ID,
     storyId,

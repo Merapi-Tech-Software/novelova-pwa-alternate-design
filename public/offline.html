@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f2ef" />
+    <title>Tidak ada koneksi · Novelova</title>
+    <!--
+      Berkas ini disajikan service worker saat **navigasi** gagal, jadi ia tidak
+      boleh bergantung pada apa pun yang butuh jaringan: tanpa JS aplikasi, tanpa
+      webfont, tanpa CSS terpisah. Yang tersisa harus tetap terbaca dan tetap
+      punya jalan keluar.
+
+      Warnanya disalin dari `tokens.css` putaran 7 dan **memang salinan** —
+      satu-satunya di seluruh proyek, karena berkas ini tidak pernah melewati
+      Tailwind maupun bundler.
+
+      Konsekuensinya perlu disebut terang: `check-tokens.mjs` hanya memindai
+      `src/**`, jadi salinan ini **tidak dijaga apa pun**. Kalau palet berubah
+      (putaran 8), berkas inilah yang paling mungkin tertinggal — dan ia baru
+      terlihat saat jaringan mati, yaitu saat paling sedikit orang melihatnya.
+    -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #f4f2ef;
+        color: #1c1a18;
+        font: 500 14px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 30rem;
+        text-align: center;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font: 600 26px/1.2 Georgia, "Times New Roman", serif;
+      }
+      p {
+        margin: 0 0 6px;
+        color: #4a443e;
+      }
+      .aman {
+        color: #7d5411;
+        font-weight: 600;
+      }
+      a {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        margin-top: 20px;
+        padding: 0 20px;
+        border-radius: 999px;
+        background: #1c1a18;
+        color: #ffffff;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .kode {
+        margin-top: 18px;
+        font-size: 12px;
+        color: #6f6862;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #171513;
+          color: #f0ece7;
+        }
+        p {
+          color: #c4beb7;
+        }
+        .aman {
+          color: #b68235;
+        }
+        a {
+          background: #b68235;
+          color: #171513;
+        }
+        .kode {
+          color: #8b857d;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!--
+        Tiga hal berurutan (architecture.md §1.4): apa yang terjadi → apakah
+        bacaanmu aman → satu tindakan. Tindakannya **daftar bab tersimpan**,
+        bukan "muat ulang": menyuruh memuat ulang saat tidak ada jaringan adalah
+        menyuruh mencoba hal yang baru saja gagal.
+      -->
+      <h1>Tidak ada koneksi</h1>
+      <p>Perangkat ini sedang tidak terhubung ke internet.</p>
+      <p class="aman">Bab yang sudah kamu simpan tetap bisa dibaca.</p>
+      <a href="/pustaka">Buka bab tersimpan</a>
+      <p class="kode">NET-OFFLINE</p>
+    </main>
+  </body>
+</html>

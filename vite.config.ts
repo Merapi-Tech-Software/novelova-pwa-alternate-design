@@ -31,8 +31,20 @@ export default defineConfig({
         lang: 'id',
         display: 'standalone',
         orientation: 'any',
-        theme_color: '#d09a93',
-        background_color: '#f4efea',
+        /*
+         * **Palet putaran 7**, bukan rose-gold v1 (`architecture.md` §1.20).
+         * `theme_color` mewarnai bilah sistem saat aplikasi berdiri sendiri dan
+         * `background_color` mewarnai layar sebelum React menggambar apa pun —
+         * dua tempat pengguna melihat aplikasi sebelum satu piksel token dimuat.
+         * Nilainya sama dengan `--nv-bg` dan `<meta name="theme-color">`.
+         *
+         * Dua-duanya salinan hex, dan itu terpaksa: `check-tokens.mjs` cuma
+         * memindai `src/**`, jadi berkas ini **tidak dijaga apa pun** — sama
+         * seperti `public/offline.html`. Kalau paletnya berganti (putaran 8),
+         * ketiganya harus ikut, dan tidak ada yang akan mengingatkan.
+         */
+        theme_color: '#f4f2ef',
+        background_color: '#f4f2ef',
         start_url: '/',
         scope: '/',
         icons: [

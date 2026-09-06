@@ -40,6 +40,22 @@ Halaman ini adalah satu-satunya halaman detail cerita yang aktif — **seluruh**
 6. **Percabangan:**
    - **Bab gratis** → langsung ke reader.
    - **Bab terkunci** → ke reader dengan gerbang unlock (lihat [`prd_05_reader.md`](prd_05_reader.md)).
+
+> **Revisi 5 September 2026 · yang menunggu di ujung tautan itu sudah berubah.**
+> Halaman ini tidak berubah, tetapi ruang baca yang ditujunya berubah mendasar,
+> dan pembaca PRD yang mengikuti tautan di atas akan menemukan sesuatu yang lain
+> dari yang dibayangkannya:
+>
+> - Bab **tidak lagi berhalaman**. Ia mengalir dalam satu gulir, dipisah garis
+>   rambut polos, tanpa satu pun tombol pindah bab (`prd_05` FR-READ-15,
+>   dicabut dan diganti).
+> - Gerbang bab terkunci **hanya tampil sekali per cerita**. Sesudah izinnya
+>   diberikan, bab berikutnya dibeli diam-diam dan langsung menyambung — tanpa
+>   toast, tanpa lencana, tanpa yang menghalangi (`prd_05` FR-READ-09).
+>
+> Akibatnya untuk halaman ini: **daftar bab di sini tetap jadi satu-satunya
+> tempat pembaca melihat harga tiap bab sebelum memutuskan.** Di ruang baca,
+> harga hanya muncul sekali. `architecture.md` §1.21, §1.25.
    - **Punya voucher** → buka modal voucher → masukkan kode:
      - Kode salah → input bergetar + pesan kesalahan, modal tetap terbuka.
      - Kode benar → seluruh bab terkunci dibuka → modal sukses + confetti → "Lanjut Membaca" → reader.

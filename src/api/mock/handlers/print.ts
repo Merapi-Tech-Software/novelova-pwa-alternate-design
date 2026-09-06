@@ -3,6 +3,7 @@ import type { NovelovaApi } from '../../client'
 import type { Paged, PrintOrder, PrintOrderParams } from '../../contracts'
 import { ApiError, INTERNAL_CODES, VISIBLE_CODES } from '../../errors'
 import { db } from '../db'
+import { emitNotification } from './notifications'
 import { currentUserId } from './session'
 
 /**
@@ -107,6 +108,18 @@ export const printHandlers: Pick<
       note: 'Biaya baru disetujui. Pesanan diteruskan ke produksi.',
     }
     await db.printOrders.put(next)
+
+    // Pemicu FR-NOTIF-02: status pesanan cetak berubah. `groupKey` per pesanan,
+    // supaya rangkaian perubahan status satu pesanan dalam sehari jadi satu
+    // baris — dan barisnya menunjuk status terakhir, bukan yang pertama.
+    await emitNotification(currentUserId(), {
+      kind: 'cetak-status',
+      title: `Pesanan cetak ${order.storyTitle} dikonfirmasi`,
+      body: 'Biaya disetujui dan pesanan diteruskan ke produksi.',
+      deepLink: '/karya/cetak',
+      groupKey: `print-${order.id}`,
+    })
+
     return next
   },
 

@@ -64,8 +64,8 @@ identik sudah ada di §9.2 rekomendasi #8, yang menaikkan muted rose-gold dari
 | Token | Nilai | Dipakai untuk |
 |---|---|---|
 | Aksi | `#1c1a18` | Tombol utama, tab aktif, garis bawah tab. **Bukan emas** |
-| Emas teks | `#7d5411` | Saldo koin, rating, harga bab terkunci, `See all`, `+23 bonus` — **5,98:1** |
-| Emas garis | `#b68235` | Garis judul bab, batang progres, titik tab aktif, seluruh aksen malam |
+| Emas teks | `#7d5411` | Saldo koin, rating, harga bab terkunci, **tahap aktif pelacak**, `See all`, `+23 bonus` — **5,98:1** |
+| Emas garis | `#b68235` | Garis judul bab, batang progres, titik tab aktif, **tahap kini pelacak**, garis grafik, seluruh aksen malam |
 
 **Emas tidak pernah jadi isi besar.** Dan menukar kedua emas itu membuat setiap
 angka koin, rating, dan harga di aplikasi gagal AA sekaligus — `#b68235` hanya
@@ -73,6 +73,19 @@ angka koin, rating, dan harga di aplikasi gagal AA sekaligus — `#b68235` hanya
 
 Brief putaran 7 sendiri **tidak pernah menyebut hex emasnya**; kedua nilai di
 atas diambil dari piksel mockup.
+
+> **Revisi 5 September 2026 · peran keenam emas.** Versi lama tidak menyebut
+> **pelacak tahap** dalam daftar peran emas, sehingga `StageTrack` menandai tahap
+> kini dengan tinta juga — dan satu-satunya beda dari tahap yang sudah selesai
+> tinggal centangnya. Mockup `7o`–`7r` menggambarnya emas sejak awal. Diperbaiki
+> sekali di primitifnya di R8, sehingga riwayat cetak, riwayat pencairan,
+> pengajuan pencairan, dan detail transaksi ikut benar bersamaan.
+> `architecture.md` §1.28.
+>
+> Pada giliran yang sama, **garis grafik** masuk ke peran emas garis: kurva
+> pendapatan, batang corong, batang sumber, dan sel terpanas heatmap semuanya
+> memakai `#b68235` sejak R9a. Tinta di sana membuat grafiknya terbaca sebagai
+> deretan tombol.
 
 ### 0.4 Tipografi — dua muka, satu tugas masing-masing
 
