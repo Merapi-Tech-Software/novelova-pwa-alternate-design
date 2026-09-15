@@ -107,7 +107,13 @@ for (const path of [
   // dan blok skor keamanan yang membawa batang, lima faktor, dan daftar sesi.
   '/profil/ubah',
   '/profil/koneksi',
-  '/pengguna/u2',
+  // `f1`, bukan `u2`. **`u2` tidak pernah ada** — id seed cuma `u1`, `f1`–`f8`,
+  // dan `a1`+ — jadi sapuan ini mengukur layar "Pengguna ini tidak ada" selama
+  // dua fase, bukan profil publiknya. Layar gagal memang tidak pernah meluber,
+  // jadi ia lulus terus dan halaman sungguhannya tidak pernah tersapu sama
+  // sekali. Varian dari jebakan "probe yang tidak mengukur apa pun melaporkan
+  // bersih" (CLAUDE.md §8).
+  '/pengguna/f1',
   '/pengaturan/bahasa',
   '/pengaturan/keamanan',
   '/bantuan',

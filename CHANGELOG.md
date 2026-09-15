@@ -5,6 +5,154 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-06 · Langkah 81 — profil publik: ada, tetapi dua hal di sekitarnya salah
+
+> "oke untuk cek profile public user apakah sudah ada?"
+
+**Sudah ada, dan berjalan.** `/pengguna/:userId` (`PublicProfilePage.tsx`, 211
+baris, FR-PROF-08 · FR-PROF-10): kartu identitas, tombol Ikuti, strip tiga
+statistik, tiga tab yang **hilang** — bukan kosong — bila pemiliknya mematikan
+kategorinya, plus tab Visibilitas yang menjelaskan kenapa. Privasinya ditegakkan
+server dengan **tidak mengirim** isinya (§1.41).
+
+Diukur di peramban pada `/pengguna/f1`: bersih di **320 · 360 · 390 · 412 · 430
+· 1280**, nol luberan.
+
+### Dua cacat yang ketahuan saat memeriksanya
+
+**1. Sapuan lebar e2e mengukur layar gagal, bukan halamannya.** Daftar
+`isi-koin-di-hp.spec.ts` memuat `/pengguna/u2` — dan **`u2` tidak pernah ada**.
+Id pengguna di seed cuma `u1` (akun contoh), `f1`–`f8`, dan `a1`+. Yang tersapu
+selama dua fase adalah layar *"Pengguna ini tidak ada"*, dan layar gagal memang
+tidak pernah meluber, jadi ia lulus terus sementara halaman sungguhannya tidak
+pernah diukur sama sekali. Varian dari jebakan yang sudah dicatat: **probe yang
+tidak mengukur apa pun melaporkan bersih.** Diganti `/pengguna/f1`.
+
+**2. Data contoh punya jalan buntu ke dirinya sendiri.** Notifikasi seed `n10`
+*"Rina Ayu mulai mengikutimu"* menaut ke `/pengguna/u2`. Rina Ayu adalah `f1`.
+Menekan notifikasi itu mendarat di layar "Pengguna ini tidak ada" — di dalam data
+contoh sendiri, pada satu-satunya jenis notifikasi yang tujuannya memang profil
+publik.
+
+### Dua celah yang dicatat, bukan dikerjakan
+
+Ditambahkan ke `todo-incoming-features.md` sebagai **A7** dan **A8**, jadi
+bagian A kini delapan temuan.
+
+**A7 · Halamannya nyaris tidak bisa dicapai.** Hanya dua tempat menautinya:
+`UserRow` (di `/profil/koneksi`) dan hasil pencarian bagian Penulis. **Detail
+cerita tidak termasuk** — `StoryHero` merender `{story.penName}` sebagai `<p>`
+polos meski `Story.authorId` sudah ada di kontraknya. Jalan paling wajar menuju
+profil penulis justru yang tidak ada. Perbaikannya kecil, tetapi ia mengubah
+tampilan halaman yang paling sering dibuka, jadi **menunggu persetujuan**.
+
+**A8 · Kolom seed yang tidak pernah dibaca.** `FOLLOWER_ROWS` mendeklarasikan
+kolom keempat `act` dan mengisinya dengan sepuluh kalimat berbeda ("412 bab tahun
+ini", "6 karya terbit"…), lalu kedua pemakaiannya mendestrukturisasi
+`[name, handle, role]` saja. Akibatnya `activityLineOf` menurunkannya dari tabel
+`progress` yang untuk delapan orang itu kosong, dan `/profil/koneksi` beserta
+tiap profil publik sama-sama berbunyi **"Belum ada bab selesai" untuk semua
+orang**. Menurunkannya dari data nyata benar (§1.38); yang salah cuma data
+nyatanya tidak ada. Dua jalan keluarnya saling meniadakan, jadi **butuh
+keputusan**.
+
+### Yang **tidak** dikerjakan
+
+- **A7 dan A8 tidak dikerjakan** — keduanya keputusan, bukan cacat: satu mengubah
+  desain halaman terpanas, satu lagi menyangkut menambah data contoh, dan
+  menambah data contoh sudah dua kali melahirkan cacat di proyek ini.
+- Nama penulis di `StoryCard` sengaja **tidak** diusulkan jadi tautan: kartunya
+  sudah satu tautan utuh, dan tautan di dalam tautan bukan HTML yang sah.
+
+`npm run check` bersih · **662 test unit** · sapuan `/pengguna/f1` lulus di
+delapan lebar.
+
+---
+
+## 2026-09-06 · Langkah 80 — audit fitur, dan satu rumah untuk yang belum lengkap
+
+> "oke ini kan sudah mau selesai. Kira-kira menurutmu apakah masih ada fitur
+> yang kurang dari project novelova-v2 ini?"
+>
+> "oke dibuat todo, cuman beda file, buat nama baru todo-incoming-features.md
+> nah disini disimpan semua fitur yang masih belum lengkap dari aplikasi ini.
+> Untuk architecture dan file yang berhubungan kalau ada diupdate juga"
+
+### Auditnya
+
+Tiga sapuan, diukur — bukan diingat:
+
+| Yang disapu | Hasil |
+|---|---|
+| Metode seam vs handler | **127 dari 127 terisi**, nol `NOT_IMPLEMENTED` |
+| 191 kode FR di PRD vs seluruh kode & dokumen | 10 tidak pernah dikutip |
+| Kesepuluhnya dibuka satu per satu | **8 sebenarnya sudah jalan**, 1 usang, **1 dilewati tanpa catatan** |
+
+Delapan yang "hilang" ternyata sudah berjalan dan cuma tidak dikutip nomornya —
+tampilkan/sembunyikan sandi, "Ingat saya", navigasi antar halaman auth, navigasi
+bawah lima tab, urutkan rak, buka bab dari daftar. FR-LIB-10 **usang**: isinya
+masih bicara `home_tabs.html` dan folder prototipe. Yang benar-benar dilewati
+tanpa catatan cuma FR-WALLET-13.
+
+**Tiga celah terbesar justru tidak punya kode FR sama sekali**, jadi tidak satu
+pun sapuan berbasis PRD bisa menemukannya. Ketiganya lahir dari satu pertanyaan
+yang diajukan ke kode: *apa yang membaca nilai ini?*
+
+1. **`Story.audience` ditulis, tidak pernah dibaca.** Penulis memilih
+   `'Dewasa 18+'`, nilainya tersimpan — dan tidak ada satu pun tempat yang
+   menyaring, memperingatkan, atau menggerbanginya. Pengguna juga tidak punya
+   tanggal lahir. Ini satu-satunya temuan yang risikonya di luar teknis.
+2. **`follows` hanya dipakai untuk menghitung.** Jumlah pengikut, keadaan tombol,
+   daftar koneksi — habis. Tidak ada jenis notifikasi "cerita baru dari penulis
+   yang kamu ikuti" di katalog sebelas jenis. Pembaca menekan Ikuti, angkanya
+   naik, lalu tidak terjadi apa-apa selamanya.
+3. **Tautan yang dibagikan tidak punya `og:*`.** Aksi "Bagikan" sudah ada; yang
+   hilang di ujung yang menerima. Tidak bisa ditambal dari klien — perayap tidak
+   menjalankan JS — jadi ia **keputusan arsitektur**, bukan tugas.
+
+Ditambah dua lagi: **belum ada persetujuan analitik** (Fase 15 merencanakan
+Sentry + analytics tanpa satu pun langkah persetujuan), dan **laporan tidak bisa
+menyasar bab** — pembaca yang menemukan pelanggaran di isi bab terpaksa
+melaporkan seluruh ceritanya.
+
+### Yang berubah
+
+- **`todo-incoming-features.md` — berkas baru.** Tiga bagian: **A** enam celah di
+  atas · **B** sembilan butir yang menunggu backend · **C** enam kandidat yang
+  belum pernah diputuskan, ditandai **jangan dikerjakan tanpa ditanyakan**.
+- **Bagian *"Backlog — Setelah v1"* di `todo.md` dipindahkan seluruhnya ke sana.**
+  Alasannya sama dengan alasan PRD tidak boleh punya dua versi: dua daftar "yang
+  belum selesai" akan menyimpang, dan yang menyimpang diam-diam paling mahal.
+  `todo.md` kembali murni jadi rencana per fase.
+- `architecture.md` **§1.50** — auditnya, pola yang ditemukannya (**kolom yang
+  ditulis tetapi tidak pernah dibaca adalah fitur yang tidak ada**, dan typecheck
+  maupun test tidak bisa melihatnya), dan peran berkas barunya.
+- `CLAUDE.md` — berkas baru masuk tabel §1; hitungan seam dikoreksi; paragraf
+  "9 kotak `PENAMPUNG`" yang usang sejak Fase 13 diperbaiki.
+- `todo.md` Fase 15 — "arch §17, **10 butir**" jadi **12 butir** (dua batasan
+  lahir di Langkah 79), dan serah terimanya kini menyebut bagian A berkas baru.
+
+### Satu perbaikan kode
+
+`public/robots.txt` yang saya tulis di Langkah 79 menunjuk ke
+`sitemap.xml` yang **tidak ada**. Barisnya dihapus beserta alasannya: menunjuk
+sitemap yang menjawab 404 terbaca perayap sebagai konfigurasi rusak, dan itu
+lebih buruk daripada tidak menunjuk sama sekali. Sitemap sungguhan lahir bersama
+deploy Fase 15, saat domain finalnya sudah pasti.
+
+### Yang **tidak** dikerjakan
+
+- **Tidak satu pun butir di berkas baru dikerjakan.** Permintaannya membuat
+  daftarnya, bukan mengerjakannya — dan bagian C secara eksplisit menunggu
+  keputusan pengguna.
+- **FR-WALLET-13 belum diputuskan** dibuang atau dibangun, jadi belum ada §1.x
+  yang mencatat pembuangannya dan PRD-nya tidak disunting.
+- Angka "121 dari 123" di `CLAUDE.md` dikoreksi jadi 127 dari 127. Itu kesalahan
+  hitung **keempat** pada metode seam (56 → 70 → 80 → 121); pelajarannya tetap
+  sama, hitung ulang dari berkasnya.
+
+---
+
 ## 2026-09-06 · Langkah 79 — Fase 14 selesai: pengerasan PWA, push, dan tiga audit
 
 > "oke sekarang yang perlu anda lakukan adalah kerjakan todo.md di phase 14.

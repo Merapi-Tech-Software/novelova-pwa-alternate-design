@@ -21,4 +21,7 @@ Disallow: /profil/ubah
 Disallow: /hadiah
 Disallow: /dev/
 
-Sitemap: https://novelova.merapiapp.my.id/sitemap.xml
+# Tidak ada baris `Sitemap:` di sini, dan itu disengaja: berkasnya belum ada,
+# dan menunjuk ke sitemap yang menjawab 404 lebih buruk daripada tidak menunjuk
+# sama sekali — perayap membacanya sebagai konfigurasi rusak. Sitemap sungguhan
+# lahir bersama deploy di Fase 15, saat domain finalnya sudah pasti.

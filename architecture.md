@@ -1776,6 +1776,52 @@ pasti terlihat. `Cover` kini punya `priority`, dipakai **hemat**: tiga sampul
 pertama section teratas saja.
 
 
+### 1.50 Fitur yang belum lengkap punya satu rumah, dan audit yang menemukannya
+
+Sesudah Fase 14, pertanyaan *"masih ada fitur yang kurang?"* dijawab dengan
+mengukur, bukan mengingat. Tiga sapuan:
+
+| Yang disapu | Hasil |
+|---|---|
+| Metode seam vs handler | **127 dari 127 terisi**, nol `NOT_IMPLEMENTED` |
+| 191 kode FR di PRD vs seluruh kode & dokumen | 10 tidak pernah dikutip |
+| Kesepuluhnya dibuka satu per satu | **8 sebenarnya sudah jalan** (sandi tampil/sembunyi, "Ingat saya", navigasi auth, nav bawah, urutkan rak, buka bab), 1 usang (FR-LIB-10 masih bicara `home_tabs.html`), **1 benar-benar dilewati tanpa catatan** (FR-WALLET-13) |
+
+Angka "121 dari 123" yang beredar di `CLAUDE.md` sejak Fase 13 salah; ia
+dikoreksi jadi 127 dari 127 pada sapuan ini. Itu kesalahan hitung keempat pada
+metode seam (56 → 70 → 80 → 121), dan pelajarannya tetap sama: **hitung ulang
+dari berkasnya, jangan dari dokumen sebelumnya.**
+
+Yang lebih penting: **tiga celah terbesar tidak punya kode FR sama sekali**, jadi
+tidak satu pun sapuan berbasis PRD bisa menemukannya. Ketiganya lahir dari
+membaca kode dengan pertanyaan "apa yang membaca nilai ini?":
+
+1. **`Story.audience` ditulis, tidak pernah dibaca.** Penulis memilih
+   `'Dewasa 18+'`, nilainya tersimpan, dan tidak ada satu pun tempat yang
+   menyaring, memperingatkan, atau menggerbanginya. Pengguna juga tidak punya
+   tanggal lahir. Label yang tidak melakukan apa pun adalah janji yang tidak
+   ditepati kepada penulis **dan** pembaca.
+2. **`follows` hanya dipakai untuk menghitung.** Jumlah pengikut, keadaan tombol,
+   daftar koneksi — habis. Tidak ada notifikasi "cerita baru dari penulis yang
+   kamu ikuti", dan katalog sebelas jenis notifikasi memang tidak punya jenisnya.
+   Pembaca menekan Ikuti dan sesudah itu tidak terjadi apa-apa selamanya.
+3. **Tautan yang dibagikan tidak punya `og:*`.** Aksi "Bagikan" sudah ada di
+   kartu jelajah; yang hilang justru di ujung yang menerima. Dan ini **tidak bisa
+   ditambal dari klien** — perayap tidak menjalankan JS, jadi judul yang diubah
+   React tidak pernah terbaca. Perbaikannya menambah infrastruktur (prerender,
+   SSR, atau fungsi edge), jadi ia **keputusan**, bukan tugas.
+
+Pola yang berlaku di luar ketiganya: **kolom yang ditulis tetapi tidak pernah
+dibaca adalah fitur yang tidak ada**, dan typecheck maupun test tidak bisa
+melihatnya — keduanya benar sendiri-sendiri. Yang menemukannya cuma menelusuri
+pemakaian tiap kolom yang dijanjikan ke pengguna.
+
+Rumahnya sejak Langkah 80: **`todo-incoming-features.md`**. Bagian *"Backlog —
+Setelah v1"* di `todo.md` dipindahkan ke sana seluruhnya, dengan alasan yang sama
+dengan alasan PRD tidak boleh punya dua versi — dua daftar "yang belum selesai"
+akan menyimpang, dan yang menyimpang diam-diam adalah yang paling mahal.
+
+
 ## 2. Stack
 
 | Kebutuhan | Pilihan | Alasan | Yang ditolak & kenapa |

@@ -1768,7 +1768,8 @@ Bangun `SettingRow` dan `UserRow` (Fase 1) lebih dulu — keduanya memikul hampi
 - [ ] Deploy ke static host (Vercel / Netlify / Cloudflare Pages) + header keamanan (CSP, HSTS)
 - [ ] Error tracking (Sentry) + analytics dasar
 - [ ] Uji instalasi PWA nyata di Android & iOS
-- [ ] **Serah terima:** daftar batasan yang diketahui (arch §17, **10 butir**) disampaikan eksplisit ke pemangku kepentingan
+- [ ] **Serah terima:** daftar batasan yang diketahui (arch §17, **12 butir**) disampaikan eksplisit ke pemangku kepentingan
+  ↳ Ditambah `todo-incoming-features.md` bagian A — enam celah yang **bukan** simulasi, melainkan fitur yang memang belum lengkap. Yang paling perlu disebut: rating usia yang tersimpan tetapi tidak pernah ditegakkan.
 
 > **M5 tercapai:** PWA siap dipakai pengguna nyata — dengan catatan bahwa autentikasi, pembayaran, tinjauan admin, dan push masih simulasi (arch §17).
 
@@ -1776,18 +1777,16 @@ Bangun `SettingRow` dan `UserRow` (Fase 1) lebih dulu — keduanya memikul hampi
 
 ## Backlog — Setelah v1
 
-Revisi PRD memindahkan enam butir backlog lama ke dalam fase. Yang tersisa:
+**Pindah ke `todo-incoming-features.md`** (Langkah 80).
 
-- [ ] **Backend nyata** — tulis `api/http/`, ubah satu env. Prasyarat untuk semua yang di bawah, dan **satu-satunya** yang menutup batasan "data hanya per perangkat" tanpa mengubah kode aplikasi.
-- [ ] Autentikasi & otorisasi nyata (arch §17 batasan 1) — bentuk sesinya sudah benar, yang kurang server yang memverifikasi
-- [ ] Payment gateway nyata (Midtrans/Xendit) + webhook (batasan 2)
-- [ ] SDK iklan berhadiah nyata (batasan 4)
-- [ ] Web Push nyata dengan VAPID (batasan 8) — izin, jam tenang, dan deep link sudah berjalan
-- [ ] Panel admin untuk antrean tinjauan (batasan 7) — sisi penulis sudah lengkap
-- [ ] Pengelolaan banyak rekening bank — PRD 08 §7 #6
-- [ ] Peringkat relevansi pencarian yang sebenarnya (batasan 9)
-- [ ] Render PDF & cetak di server — batasan 6
-- [ ] Bahasa English penuh (`i18n/en.ts` + provider) — jalurnya sudah terpasang sejak FR-CORE-04
+Berkas ini adalah **rencana per fase**; yang tersisa di sini cuma Fase 15
+(persiapan rilis). Segala sesuatu yang belum lengkap sebagai **fitur** — celah
+yang ditemukan audit Langkah 80, sembilan butir yang menunggu backend, dan
+kandidat yang belum pernah diputuskan — hidup di satu berkas tersendiri.
+
+Alasannya sama dengan alasan PRD tidak boleh punya dua versi: dua daftar "yang
+belum selesai" akan menyimpang, dan yang menyimpang diam-diam adalah yang paling
+mahal. Jangan menambahkan butir backlog baru ke sini.
 
 ---
 

@@ -1173,7 +1173,11 @@ const NOTIF_SEED: Array<{
     kind: 'pengikut-baru',
     title: 'Rina Ayu mulai mengikutimu',
     body: 'Pengikutmu jadi 1.284 orang',
-    link: '/pengguna/u2',
+    // `f1` — Rina Ayu adalah baris pertama `FOLLOWER_ROWS`. Sebelumnya `u2`,
+    // dan **tidak ada pengguna beridentitas itu**: id yang dipakai seed cuma
+    // `u1` (akun contoh), `f1`–`f8`, dan `a1`+. Menekan notifikasi ini mendarat
+    // di "Pengguna ini tidak ada" — jalan buntu di data contoh sendiri.
+    link: '/pengguna/f1',
     msAgo: days(6),
     unread: false,
   },
