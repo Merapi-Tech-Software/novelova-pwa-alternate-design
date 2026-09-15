@@ -17,6 +17,7 @@ import { ApiError, INTERNAL_CODES } from '../../errors'
 import { SERVER_CONFIG } from '../config'
 import { db } from '../db'
 import { readerPrefsOf } from '../defaults'
+import { chapterAgeRestricted } from './age'
 import { currentUserId } from './session'
 
 /**
@@ -269,6 +270,16 @@ export const unlockHandlers: Pick<
 
     const chapter = await db.chapters.get(input.chapterId)
     if (!chapter) throw new ApiError(INTERNAL_CODES.NOT_FOUND, 'Bab ini tidak ada.')
+
+    // Bab 18+ tidak bisa dibeli oleh akun yang tidak boleh membacanya (A1) —
+    // koin yang terpotong untuk bab yang tetap tertutup adalah uang yang hilang.
+    const induk = await db.stories.get(chapter.storyId)
+    if (induk && (await chapterAgeRestricted(userId, induk))) {
+      throw new ApiError(
+        INTERNAL_CODES.FORBIDDEN,
+        'Bab ini untuk 18+. Verifikasi usiamu dulu; koinmu tidak terpotong.',
+      )
+    }
 
     const wallet = await db.wallets.get(userId)
     const balance = wallet?.balance ?? 0

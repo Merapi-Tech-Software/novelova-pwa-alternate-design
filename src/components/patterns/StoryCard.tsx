@@ -2,6 +2,8 @@ import { Play, Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import type { Story } from '@/api/contracts'
+import { t } from '@/i18n/t'
+import { isAdultStory } from '@/lib/age'
 import { formatCompactCoin } from '@/lib/coin'
 import { cx } from '@/lib/cx'
 import { Cover } from './Cover'
@@ -60,6 +62,12 @@ function Meta({ story }: { story: Story }) {
       <span className="text-nv-muted tabular-nums">
         {formatCompactCoin(story.stats.reads)} baca
       </span>
+      {/* 18+ di baris metrik (A1) — sampul sudah punya lencana HOT/BARU. */}
+      {isAdultStory(story) && (
+        <span className="rounded-nv-sm border border-nv-line px-1 font-bold text-[10px] text-nv-text leading-4">
+          {t('story.adultBadge')}
+        </span>
+      )}
     </span>
   )
 }

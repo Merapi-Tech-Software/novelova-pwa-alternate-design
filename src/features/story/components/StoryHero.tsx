@@ -1,6 +1,8 @@
+import { Link } from 'react-router'
 import type { StoryDetail } from '@/api/contracts'
 import { Cover } from '@/components/patterns/Cover'
 import { t } from '@/i18n/t'
+import { isAdultStory } from '@/lib/age'
 import { formatCompactCoin } from '@/lib/coin'
 
 const STATUS_LABEL: Record<StoryDetail['status'], string> = {
@@ -42,8 +44,30 @@ export function StoryHero({ story }: { story: StoryDetail }) {
         <Cover src={story.coverUrl} title={story.title} badge={story.badge} className="w-[94px]" />
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-page leading-tight font-semibold">{story.title}</h1>
-          <p className="pt-1 text-body text-nv-muted">{story.penName}</p>
+          {/*
+            Nama pena **tautan ke profil penulis** · A7. Sebelumnya `<p>` polos:
+            jalan paling wajar menuju profil penulis — dari cerita yang sedang
+            disukai — justru yang tidak ada, dan profil publik cuma bisa dicapai
+            dari halaman koneksi dan hasil pencarian. Garis bawah putus-putus
+            supaya ia terbaca sebagai tautan tanpa jadi tombol.
+          */}
+          <p className="pt-1 text-body text-nv-muted">
+            <Link
+              to={`/pengguna/${story.authorId}`}
+              className="nv-tap underline decoration-nv-line decoration-dotted underline-offset-4 hover:text-nv-text"
+            >
+              {story.penName}
+            </Link>
+          </p>
           <ul className="flex flex-wrap gap-2 pt-3">
+            {/* Lencana 18+ **di deret genre**, bukan di sampul: sampul sudah
+                memakai lencana HOT/BARU, dan dua lencana di satu sampul saling
+                menutupi di 94px. */}
+            {isAdultStory(story) && (
+              <li className="rounded-nv-pill bg-nv-accent px-3 py-1 text-caption font-bold text-nv-card">
+                {t('story.adultBadge')}
+              </li>
+            )}
             {story.genres.map((genre) => (
               <li
                 key={genre}

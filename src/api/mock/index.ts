@@ -1,5 +1,6 @@
 import type { NovelovaApi } from '../client'
 import { withNotImplemented } from '../errors'
+import { ageHandlers } from './handlers/age'
 import { analyticsHandlers } from './handlers/analytics'
 import {
   chapterAccessHandlers,
@@ -74,6 +75,8 @@ const handlers: Partial<NovelovaApi> = {
   ...profileHandlers,
   // Fase 14 → baca offline.
   ...offlineHandlers,
+  // Langkah 83 → verifikasi usia & konten dewasa (A1).
+  ...ageHandlers,
 }
 
 export const api = withNotImplemented<NovelovaApi>(handlers, 'mock')

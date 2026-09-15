@@ -12,6 +12,7 @@ import type {
 } from '../../contracts'
 import { ApiError, INTERNAL_CODES, VISIBLE_CODES } from '../../errors'
 import { db } from '../db'
+import { assertStoryViewable, chapterAgeRestricted } from './age'
 import { currentUserId } from './session'
 
 /**
@@ -120,6 +121,23 @@ export const storyHandlers: Pick<
     }
 
     const owned = (await ownedChapterIds(userId)).has(chapterId) || chapter.access === 'free'
+
+    /*
+     * **Gerbang usia sebelum gerbang koin** · A1.
+     *
+     * Cerita 18+ yang tidak boleh dibaca akun ini dikirim **tanpa isi dan tanpa
+     * pratinjau** — berbeda dari gerbang koin, yang sengaja memperlihatkan awal
+     * bab. `owned` tetap jujur, dan progres **tidak dicatat**: bab yang tidak
+     * pernah terlihat isinya bukan bab yang "sudah dibuka".
+     */
+    const induk = await db.stories.get(chapter.storyId)
+    if (!induk) throw new ApiError(INTERNAL_CODES.NOT_FOUND, 'Cerita ini tidak ada.')
+    await assertStoryViewable(userId, induk)
+    const ageRestricted = await chapterAgeRestricted(userId, induk)
+    // Bab terbit yang ditarik ke tinjauan oleh laporan (A5): ada, tetapi tidak
+    // dikirim isinya sampai diputuskan. Bab draf/terjadwal bukan urusan ini.
+    const underReview = chapter.state === 'published' && chapter.review === 'in_review'
+
     let progress = await db.progress.where('[userId+storyId]').equals([userId, storyId]).first()
 
     /**
@@ -131,7 +149,7 @@ export const storyHandlers: Pick<
      * Baris yang sudah ada **tidak disentuh**: menimpanya dengan nol akan
      * membuang posisi baca yang sebenarnya.
      */
-    if (owned && !progress) {
+    if (owned && !ageRestricted && !underReview && !progress) {
       const opened = {
         id: `${userId}-${storyId}`,
         userId,
@@ -174,9 +192,11 @@ export const storyHandlers: Pick<
       ...chapter,
       owned,
       finished: progress?.finishedChapterIds.includes(chapterId) ?? false,
-      content: owned ? content : [],
-      preview: body.slice(0, 2),
-      storyTitle: (await db.stories.get(chapter.storyId))?.title ?? '',
+      content: owned && !ageRestricted && !underReview ? content : [],
+      preview: ageRestricted || underReview ? [] : body.slice(0, 2),
+      storyTitle: induk.title,
+      ageRestricted,
+      underReview,
       prevChapterId: siblings[at - 1]?.id ?? null,
       nextChapterId: siblings[at + 1]?.id ?? null,
       nextTitle: siblings[at + 1]?.title ?? null,
@@ -190,6 +210,9 @@ export const storyHandlers: Pick<
     if (!story) {
       throw new ApiError(INTERNAL_CODES.NOT_FOUND, 'Cerita ini tidak ada atau sudah dihapus.')
     }
+    // Mode `hidden` (A1): cerita 18+ memang "tidak ada" bagi akun yang tidak
+    // berhak — termasuk lewat tautan langsung. Mode `gated` meloloskannya.
+    await assertStoryViewable(userId, story)
 
     const entry = await entryOf(userId, storyId)
     const progress = await db.progress.where('[userId+storyId]').equals([userId, storyId]).first()

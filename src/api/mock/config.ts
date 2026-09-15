@@ -28,4 +28,17 @@ export const SERVER_CONFIG = {
    * sudah menetapkan angka kebijakan harus bisa berubah tanpa rilis baru.
    */
   bundleOfferAfter: 10,
+  /**
+   * Cara cerita 18+ diperlakukan bagi akun yang **belum** terverifikasi dewasa
+   * · A1. Keputusan pengguna: **keduanya dibangun, backend yang memilih.**
+   *
+   * - `gated`  — kartu & halaman detail tetap tampil berlencana 18+; yang
+   *   ditahan **isi bab**-nya. Pembaca tahu ceritanya ada dan kenapa terkunci.
+   * - `hidden` — tidak dikirim sama sekali: tidak di beranda, pencarian, maupun
+   *   tautan langsung (`NOT_FOUND`). Paling ketat; tautan dari teman jadi buntu.
+   *
+   * Nilai bawaan `gated`. Di server tiruan bisa ditukar dari `/dev/kitchen-sink`
+   * (`kv` `policy:adultMode`) supaya keduanya bisa dilihat tanpa rilis.
+   */
+  adultContentMode: 'gated' as 'gated' | 'hidden',
 } as const

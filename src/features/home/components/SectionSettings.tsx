@@ -28,6 +28,7 @@ const ROWS: Array<[key: SectionKey, label: string, hint: string]> = [
   ['sec-toprom', 'Section tematik', 'Kurasi mengikuti tab genre'],
   ['sec-ad1', 'Iklan banner', 'Slot setelah section tematik pertama'],
   ['sec-ad2', 'Iklan native', 'Slot setelah section tematik kedua'],
+  ['sec-following', 'Penulis diikuti', 'Cerita dari penulis yang kamu ikuti'],
   ['sec-continue', 'Lanjut Membaca', 'Progres bacaan kamu'],
 ]
 

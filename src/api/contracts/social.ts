@@ -179,7 +179,8 @@ export type ReportReason = z.infer<typeof ReportReasonSchema>
 
 export const ReportInputSchema = z
   .object({
-    targetType: z.enum(['story', 'review', 'comment', 'user']),
+    /** `chapter` sejak A5: pelanggaran di **isi bab** dilaporkan per bab, bukan seluruh ceritanya. */
+    targetType: z.enum(['story', 'review', 'comment', 'user', 'chapter']),
     targetId: IdSchema,
     reason: ReportReasonSchema,
     note: z.string().default(''),

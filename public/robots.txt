@@ -21,7 +21,7 @@ Disallow: /profil/ubah
 Disallow: /hadiah
 Disallow: /dev/
 
-# Tidak ada baris `Sitemap:` di sini, dan itu disengaja: berkasnya belum ada,
-# dan menunjuk ke sitemap yang menjawab 404 lebih buruk daripada tidak menunjuk
-# sama sekali — perayap membacanya sebagai konfigurasi rusak. Sitemap sungguhan
-# lahir bersama deploy di Fase 15, saat domain finalnya sudah pasti.
+# `sitemap.xml` ditulis `scripts/prerender.mjs` saat `npm run build` — bersama
+# satu halaman pratinjau per cerita dan per penulis (A3). Ia hanya ada di
+# `dist/`, tidak di `public/`, jadi baris ini benar hanya untuk hasil build.
+Sitemap: https://novelova.merapiapp.my.id/sitemap.xml

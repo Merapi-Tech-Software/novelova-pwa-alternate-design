@@ -116,6 +116,35 @@ try {
   if (errors.length > 0) gagal.push(`error saat memuat: ${errors.join(' | ')}`)
 
   /*
+   * **Pratinjau tautan (A3).** `dist/cerita/s1/index.html` harus tersaji untuk
+   * `/cerita/s1` — bukan jatuh ke `index.html` umum — dan membawa `og:title`
+   * ceritanya. Diperiksa lewat HTTP mentah, persis seperti perayap: perayap
+   * tidak menjalankan JavaScript, jadi memeriksanya lewat Playwright akan
+   * membuktikan hal yang salah.
+   */
+  try {
+    const html = await (await fetch(`${BASE}/cerita/s1`)).text()
+    if (!/<meta property="og:title" content="Cinta di Balik Kontrak"/.test(html)) {
+      gagal.push('/cerita/s1 tidak membawa og:title ceritanya — prerender tidak tersaji')
+    }
+    if (!/<meta property="og:image" content="http/.test(html)) {
+      gagal.push('/cerita/s1 tidak membawa og:image')
+    }
+    const peta = await fetch(`${BASE}/sitemap.xml`)
+    if (!peta.ok) gagal.push('sitemap.xml tidak tersaji')
+
+    // Kerangka yang di-prerender tetap harus menyalakan aplikasinya.
+    await page.goto(`${BASE}/cerita/s1`, { waitUntil: 'networkidle', timeout: 60_000 })
+    await page
+      .waitForFunction(() => document.body.innerText.includes('Cinta di Balik Kontrak'), {
+        timeout: 30_000,
+      })
+      .catch(() => gagal.push('aplikasi tidak menyala di atas halaman prerender /cerita/s1'))
+  } catch (error) {
+    gagal.push(`prerender: ${error instanceof Error ? error.message : error}`)
+  }
+
+  /*
    * **Baca offline pada bundel sungguhan** · Fase 14 · FR-CORE-03 · §10.3.
    *
    * Ini bagian alur kritis #4 yang tidak bisa diuji di `npm run dev`: di sana
@@ -181,7 +210,7 @@ if (gagal.length > 0) {
   kode = 1
 } else {
   console.log(
-    '✓ build: aplikasi terpasang dari dist/, halaman dev tidak ikut terkirim, bab tersimpan terbaca offline',
+    '✓ build: aplikasi terpasang dari dist/, halaman dev tidak ikut terkirim, pratinjau tautan tersaji, bab tersimpan terbaca offline',
   )
 }
 

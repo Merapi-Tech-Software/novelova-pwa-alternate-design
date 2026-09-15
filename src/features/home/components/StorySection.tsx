@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import type { HomeSection, Story } from '@/api/contracts'
 import { StoryCard } from '@/components/patterns/StoryCard'
 import { Skeleton } from '@/components/ui/Card'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { SectionHeader, SeeAllAction } from '@/components/ui/SectionHeader'
 import { t } from '@/i18n/t'
 
@@ -112,7 +113,30 @@ export function StorySection({
         </ul>
       )}
 
-      {shape === 'rail' && (
+      {/*
+        Satu-satunya section yang boleh kosong: "Dari Penulis yang Kamu Ikuti"
+        (A2). Server sengaja mengirimnya kosong, dan yang digambar di sini
+        **ajakan**, bukan ruang kosong — pembaca baru pasti mengenainya
+        (FR-CORE-03: kosong ≠ gagal, dan kosong harus punya jalan keluar).
+      */}
+      {shape === 'rail' && section.stories.length === 0 && (
+        <EmptyState
+          variant="first-run"
+          title={t('home.followingEmptyTitle')}
+          description={t('home.followingEmptyBody')}
+          secondary={
+            <Link
+              to="/cari"
+              className="inline-flex h-11 items-center rounded-nv-pill border border-nv-line-soft px-5 text-body font-semibold"
+            >
+              {t('home.followingEmptyAction')}
+            </Link>
+          }
+          className="py-6"
+        />
+      )}
+
+      {shape === 'rail' && section.stories.length > 0 && (
         <div className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {section.stories.map((story, i) => (
             <StoryCard

@@ -1,11 +1,13 @@
 import type { NovelovaApi } from '../../client'
 import type { HomeFeed, HomeSection, Paged, SectionParams, Story } from '../../contracts'
 import { db } from '../db'
+import { feedFilterFor } from './age'
 import { readingCounts } from './library'
 import {
   BANNER,
   CONTINUE,
   FIXED,
+  FOLLOWING,
   filteredSectionsFor,
   findSection,
   type SectionDef,
@@ -53,7 +55,14 @@ function favoritesFirst(stories: Story[], favorites: string[]): Story[] {
   return [...stories].sort((a, b) => liked(a) - liked(b))
 }
 
-/** Section tanpa isi dibuang di sini, sekali, bukan di tiap pemakai. */
+/**
+ * Section tanpa isi dibuang di sini, sekali, bukan di tiap pemakai.
+ *
+ * Satu pengecualian: `keepEmpty` (section "Dari Penulis yang Kamu Ikuti", A2)
+ * **dikirim walau kosong**, karena keadaan kosongnya adalah ajakan mengikuti
+ * penulis — bukan ruang kosong. Pembaca baru pasti mengenainya, dan section
+ * yang menghilang tidak mengajak siapa pun.
+ */
 function build(
   def: SectionDef,
   stories: Story[],
@@ -61,7 +70,7 @@ function build(
   progress: Record<string, number> | null = null,
 ): HomeSection | null {
   const picked = stories.filter((s) => def.match?.(s) ?? true).sort(def.order)
-  if (picked.length === 0) return null
+  if (picked.length === 0 && !def.keepEmpty) return null
 
   return {
     id: def.id,
@@ -77,9 +86,20 @@ export const homeHandlers: Pick<NovelovaApi, 'getHomeFeed' | 'getSection'> = {
   async getHomeFeed(tab?: string): Promise<HomeFeed> {
     const userId = currentUserId()
     const hidden = new Set((await db.readerPrefs.get(userId))?.hiddenStoryIds ?? [])
-    // Yang sudah ditolak pembaca tidak muncul lagi di mana pun (FR-HOME-14).
-    const all = published(await db.stories.toArray()).filter((s) => !hidden.has(s.id))
+    // Yang sudah ditolak pembaca tidak muncul lagi di mana pun (FR-HOME-14),
+    // dan cerita 18+ hanya ikut bila akunnya berhak **dan** mau (A1).
+    const bolehDewasa = await feedFilterFor(userId)
+    const all = published(await db.stories.toArray())
+      .filter((s) => !hidden.has(s.id))
+      .filter(bolehDewasa)
     const inTab = all.filter(tabFilter(tab))
+
+    // Penulis yang diikuti pembaca ini · A2. Dari tabel `follows`, bukan dari
+    // rak: mengikuti penulis dan menyimpan ceritanya adalah dua hal berbeda.
+    const diikuti = new Set(
+      (await db.follows.where('followerId').equals(userId).toArray()).map((f) => f.followeeId),
+    )
+    const dariPenulis = all.filter((s) => diikuti.has(s.authorId))
 
     // Saat tab "Semua" aktif, favorit onboarding yang menentukan apa yang
     // terlihat lebih dulu. Saat sebuah tab dipilih, tab itu yang menang.
@@ -112,6 +132,7 @@ export const homeHandlers: Pick<NovelovaApi, 'getHomeFeed' | 'getSection'> = {
       ...FIXED.map((def) => build(def, all, favorites)),
       build(BANNER, all, []),
       ...filteredSectionsFor(tab).map((def) => build(def, inTab, favorites)),
+      build(FOLLOWING, dariPenulis, []),
       build(CONTINUE, reading, [], readingPct),
     ]
 
@@ -132,7 +153,10 @@ export const homeHandlers: Pick<NovelovaApi, 'getHomeFeed' | 'getSection'> = {
 
     const userId = currentUserId()
     const hidden = new Set((await db.readerPrefs.get(userId))?.hiddenStoryIds ?? [])
-    const all = published(await db.stories.toArray()).filter((s) => !hidden.has(s.id))
+    const bolehDewasa = await feedFilterFor(userId)
+    const all = published(await db.stories.toArray())
+      .filter((s) => !hidden.has(s.id))
+      .filter(bolehDewasa)
 
     const scoped = def?.unfiltered ? all : all.filter(tabFilter(params.tab))
     const filtered = scoped.filter(

@@ -1,5 +1,6 @@
 import {
   BookOpenText,
+  BookPlus,
   CalendarClock,
   Coins,
   Gift,
@@ -37,6 +38,7 @@ const ICON: Record<NotifKind, ReactNode> = {
   'pengikut-baru': <UserPlus size={16} aria-hidden />,
   penarikan: <Wallet size={16} aria-hidden />,
   keamanan: <ShieldAlert size={16} aria-hidden />,
+  'cerita-baru': <BookPlus size={16} aria-hidden />,
 }
 
 /**

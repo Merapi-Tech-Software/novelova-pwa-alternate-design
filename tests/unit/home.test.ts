@@ -17,7 +17,7 @@ describe('beranda · FR-HOME-13', () => {
     const feed = await api.getHomeFeed('Mystery')
     // Sejak §1.22 yang tersaring hanyalah ekor: dua section generik dan dua
     // kurasi khas tabnya. Tiga teratas jadi peringkat global.
-    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'lanjut-baca']
+    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'mengikuti', 'lanjut-baca']
     const tersaring = feed.sections.filter((s) => !global.includes(s.id))
 
     expect(tersaring.length).toBeGreaterThan(0)
@@ -103,7 +103,7 @@ describe('beranda · FR-HOME-13', () => {
     const feed = await api.getHomeFeed('My Kisah')
     // Tiga section teratas kini global, jadi mereka **memang** berisi fiksi
     // biasa walau tabnya My Kisah — yang menyaring `kind` hanyalah ekornya.
-    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'lanjut-baca']
+    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'mengikuti', 'lanjut-baca']
     const stories = feed.sections.filter((s) => !global.includes(s.id)).flatMap((s) => s.stories)
 
     expect(stories.length).toBeGreaterThan(0)
@@ -172,7 +172,7 @@ describe('favorit onboarding memengaruhi beranda · FR-AUTH-11', () => {
     const feed = await api.getHomeFeed('Drama')
     // Diperiksa di section yang **memang tersaring tab**. "Populer" tidak lagi
     // bisa membuktikan apa pun soal ini sejak §1.22 menjadikannya global.
-    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'lanjut-baca']
+    const global = ['populer', 'terbaru', 'terbuka', 'banner', 'mengikuti', 'lanjut-baca']
     const tersaring = feed.sections.filter((s) => !global.includes(s.id))
 
     expect(tersaring.length).toBeGreaterThan(0)
@@ -235,6 +235,7 @@ describe('section kurasi per tab · Fase 3b', () => {
         'terbuka',
         'tamat',
         'gratis',
+        'mengikuti',
         'lanjut-baca',
       ])
       return feed.sections.filter((s) => !fixed.has(s.id))
@@ -257,7 +258,10 @@ describe('section kurasi per tab · Fase 3b', () => {
     const feed = await api.getHomeFeed('Mystery')
 
     for (const section of feed.sections) {
-      const hasPage = section.id !== 'banner' && section.id !== 'lanjut-baca'
+      // `mengikuti` (A2) juga tanpa halaman: isinya bergantung siapa yang
+      // membaca, dan registry section tidak mengenal pembacanya.
+      const hasPage =
+        section.id !== 'banner' && section.id !== 'lanjut-baca' && section.id !== 'mengikuti'
       expect(section.seeAll).toBe(hasPage ? section.id : null)
     }
   })

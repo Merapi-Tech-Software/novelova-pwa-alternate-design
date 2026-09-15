@@ -1,8 +1,12 @@
+import { Link } from 'react-router'
 import type { LocaleSettings } from '@/api/contracts'
 import { AsyncState } from '@/components/ui/AsyncState'
 import { Select } from '@/components/ui/Field'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { Switch } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
+import { useAgeVerification, useSetShowAdultContent } from '@/hooks/useAgeVerification'
+import { useReaderPrefs } from '@/hooks/useReaderPrefs'
 import { LANGUAGE_OPTIONS } from '@/i18n/content'
 import { t } from '@/i18n/t'
 import { formatDateTime } from '@/lib/format'
@@ -23,6 +27,10 @@ export default function LocalePage() {
   const locale = useLocale()
   const save = useSaveLocale()
   const toast = useToast()
+  const prefs = useReaderPrefs()
+  const verification = useAgeVerification()
+  const setShowAdult = useSetShowAdultContent()
+  const bolehDewasa = verification.data?.isAdult === true
 
   function ubah(patch: Partial<LocaleSettings>) {
     if (!locale.data) return
@@ -90,6 +98,38 @@ export default function LocalePage() {
               apa lagi yang ikut bergeser.
             */}
             <p className="text-caption text-nv-muted">{t('settings.timezoneNote')}</p>
+
+            {/*
+              Konten dewasa · A1. Sakelarnya **bukan izin** — izinnya verifikasi
+              usia di server. Untuk akun yang belum terverifikasi sakelarnya
+              dimatikan **beserta jalan keluarnya**, bukan disembunyikan: sakelar
+              yang hilang tidak menjelaskan apa yang harus dilakukan.
+            */}
+            <section className="nv-card p-4">
+              <SectionHeader label={t('settings.contentTitle')} className="mb-3" />
+              <Switch
+                checked={bolehDewasa && (prefs.data?.showAdultContent ?? false)}
+                disabled={!bolehDewasa || setShowAdult.isPending}
+                label={t('settings.showAdult')}
+                description={t('settings.showAdultDesc')}
+                onChange={(next) =>
+                  setShowAdult.mutate(next, {
+                    onSuccess: () => toast.show(t('settings.showAdultSaved'), { tone: 'success' }),
+                  })
+                }
+              />
+              {!bolehDewasa && (
+                <p className="pt-3 text-caption text-nv-muted">
+                  {t('settings.showAdultLocked')}{' '}
+                  <Link
+                    to="/pengaturan/verifikasi-usia"
+                    className="font-semibold text-nv-accent underline underline-offset-4"
+                  >
+                    {t('settings.ageTitle')}
+                  </Link>
+                </p>
+              )}
+            </section>
 
             <section className="nv-card p-4">
               <SectionHeader label={t('settings.previewTitle')} className="mb-3" />

@@ -24,6 +24,7 @@ export function emptyReaderPrefs(userId: string): ReaderPrefs {
     autoUnlockCounts: {},
     bundleOfferSeenStoryIds: [],
     onboardedAt: null,
+    showAdultContent: false,
   }
 }
 

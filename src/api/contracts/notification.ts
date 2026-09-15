@@ -34,6 +34,8 @@ export const NotifKindSchema = z.enum([
   'pengikut-baru',
   'penarikan',
   'keamanan',
+  /** Penulis yang diikuti merilis cerita baru · A2. Jenis kedua belas. */
+  'cerita-baru',
 ])
 export type NotifKind = z.infer<typeof NotifKindSchema>
 

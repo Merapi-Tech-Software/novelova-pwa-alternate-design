@@ -1,13 +1,16 @@
 import { Play } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { isApiError } from '@/api/errors'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
 import { ModerationActions } from '@/components/patterns/ModerationActions'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Card'
 import { Badge, Chip } from '@/components/ui/Chip'
+import { useAgeVerification } from '@/hooks/useAgeVerification'
 import { useChapters, useStory, useToggleFollow, useToggleSave } from '@/hooks/useStory'
 import { t } from '@/i18n/t'
+import { isAdultStory } from '@/lib/age'
 import { ChapterList } from '../components/ChapterList'
 import { MonetizationCard } from '../components/MonetizationCard'
 import { RateSheet } from '../components/RateSheet'
@@ -51,6 +54,7 @@ export default function StoryDetailPage() {
   })
   const toggleSave = useToggleSave(storyId)
   const toggleFollow = useToggleFollow(storyId)
+  const verification = useAgeVerification()
 
   if (story.isPending) {
     return (
@@ -58,6 +62,32 @@ export default function StoryDetailPage() {
         <Skeleton className="h-56" />
         <Skeleton lines={4} />
       </div>
+    )
+  }
+
+  /*
+   * **Tidak ada ≠ tidak sampai.** `NOT_FOUND` — tautan salah, cerita dihapus, atau
+   * cerita 18+ dalam mode `hidden` (A1) — dulu memakai pesan generik
+   * "permintaannya tidak sampai ke server" beserta tombol Coba lagi. Keduanya
+   * bohong: servernya menjawab, dan mencoba lagi menghasilkan jawaban yang sama.
+   */
+  if (isApiError(story.error) && story.error.code === 'NOT_FOUND') {
+    return (
+      <FailureNotice
+        level="inset"
+        title={t('story.notFoundTitle')}
+        body={t('story.notFoundBody')}
+        safety={t('failure.genericSafe')}
+        actions={
+          <Link
+            to="/"
+            className="inline-flex h-11 items-center rounded-nv-pill bg-nv-accent px-5 text-body font-bold text-nv-card"
+          >
+            {t('story.notFoundAction')}
+          </Link>
+        }
+        code="NOT_FOUND"
+      />
     )
   }
 
@@ -92,6 +122,26 @@ export default function StoryDetailPage() {
     // dan FAB, tetapi bilah lengket di halaman ini menumpuk di atas keduanya.
     <div className="pb-20">
       <StoryHero story={detail} />
+
+      {/*
+        Cerita 18+ yang belum boleh dibaca akun ini · A1. Pemberitahuannya di
+        sini, di atas aksi, supaya pembaca tahu **sebelum** menekan "Baca" bahwa
+        yang menahannya bukan koin — dan tahu ke mana harus pergi.
+      */}
+      {isAdultStory(detail) && verification.data && !verification.data.isAdult && (
+        <section className="mb-5 rounded-nv-lg border border-nv-line bg-nv-card p-4">
+          <p className="font-display text-card font-semibold">{t('story.adultNoticeTitle')}</p>
+          <p className="pt-1 text-body text-nv-text-2">{t('story.adultNoticeBody')}</p>
+          {(verification.data.status === 'none' || verification.data.status === 'rejected') && (
+            <Link
+              to="/pengaturan/verifikasi-usia"
+              className="mt-3 inline-flex h-11 items-center rounded-nv-pill bg-nv-accent px-5 text-body font-bold text-nv-card"
+            >
+              {t('story.adultVerify')}
+            </Link>
+          )}
+        </section>
+      )}
 
       <StoryActions
         story={detail}

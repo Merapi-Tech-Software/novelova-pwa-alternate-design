@@ -69,7 +69,7 @@ describe('pengaturan section · FR-HOME-06 · FR-HOME-16', () => {
     expect(screen.getByRole('switch', { name: 'Populer' })).toBeInTheDocument()
   })
 
-  it('kesembilan sakelar selalu ada, termasuk blok yang sedang kosong', async () => {
+  it('kesepuluh sakelar selalu ada, termasuk blok yang sedang kosong', async () => {
     // Bukan `localStorage.clear()`: cookie refresh server tiruan juga tinggal di
     // sana, dan menghapusnya membuat seluruh permintaan menjawab AUTH-401.
     localStorage.removeItem('home_section_visibility_v1')
@@ -78,7 +78,7 @@ describe('pengaturan section · FR-HOME-06 · FR-HOME-16', () => {
     await screen.findByRole('heading', { name: 'Populer' })
 
     await userEvent.click(screen.getByRole('button', { name: 'Pengaturan section' }))
-    expect(screen.getAllByRole('switch')).toHaveLength(9)
+    expect(screen.getAllByRole('switch')).toHaveLength(10)
   })
 })
 

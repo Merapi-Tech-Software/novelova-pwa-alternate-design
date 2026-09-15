@@ -13,6 +13,7 @@ import type {
 } from '../../contracts'
 import { db } from '../db'
 import { readerPrefsOf } from '../defaults'
+import { feedFilterFor } from './age'
 import { currentUserId } from './session'
 
 /**
@@ -207,9 +208,13 @@ export const onboardingHandlers: Pick<
   async getStarterPicks(genres: string[]): Promise<Story[]> {
     const stories = await db.stories.where('review').equals('published').toArray()
     const wanted = new Set(genres)
+    // Akun yang baru mendaftar belum terverifikasi apa pun; cerita 18+ tidak
+    // pernah jadi bacaan pembuka (A1).
+    const bolehDewasa = await feedFilterFor(currentUserId())
 
     return stories
       .filter((s) => s.visibility === 'public')
+      .filter(bolehDewasa)
       .sort((a, b) => {
         const byGenre =
           Number(b.genres.some((g) => wanted.has(g))) - Number(a.genres.some((g) => wanted.has(g)))

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { ONBOARDING_GENRES_MAX, PASSWORD_MIN } from '@/lib/limits'
-import { IdSchema, IsoDateTimeSchema } from './common'
+import { IdSchema, IsoDateTimeSchema, LocalDateSchema } from './common'
 
 /** prd_10 · prd_02 · FR-STUDIO-33 */
 
@@ -106,8 +106,59 @@ export const ReaderPrefsSchema = z.object({
   bundleOfferSeenStoryIds: z.array(IdSchema).default([]),
   /** `null` = belum pernah. Melewati onboarding juga mengisinya. */
   onboardedAt: IsoDateTimeSchema.nullable(),
+  /**
+   * Tampilkan cerita 18+ di beranda, pencarian, dan jelajah · A1.
+   *
+   * **Bawaannya mati**, dan hanya berarti bagi akun yang sudah terverifikasi
+   * dewasa — menyalakannya tanpa verifikasi tidak menampilkan apa pun, karena
+   * yang memutuskan boleh-tidaknya adalah server (`AgeVerification`), bukan
+   * sakelar ini. Sakelar ini cuma menjawab *"mau lihat atau tidak"*.
+   */
+  showAdultContent: z.boolean().default(false),
 })
 export type ReaderPrefs = z.infer<typeof ReaderPrefsSchema>
+
+// ── Verifikasi usia · todo-incoming-features.md A1 ──────────────────────────
+
+/**
+ * `none` belum pernah mengajukan · `pending` dokumen menunggu tinjauan ·
+ * `verified` lolos · `rejected` ditolak, dan **alasannya wajib ikut**.
+ */
+export const AgeVerificationStatusSchema = z.enum(['none', 'pending', 'verified', 'rejected'])
+export type AgeVerificationStatus = z.infer<typeof AgeVerificationStatusSchema>
+
+/**
+ * Keadaan verifikasi usia satu akun.
+ *
+ * Pengguna memilih **verifikasi dokumen (KTP)**, bukan swa-deklarasi. Yang
+ * disimpan hanya nama & ukuran berkasnya — v1 belum punya penyimpanan berkas,
+ * jadi unggahannya **disimulasikan** dan tinjauannya diputuskan lewat
+ * `/dev/kitchen-sink`, persis seperti keputusan admin atas antrean tinjauan.
+ *
+ * `isAdult` **diturunkan server** dari `status === 'verified'` dan usia dari
+ * `birthDate` hari ini — bukan disimpan. Yang disimpan bisa basi: akun yang
+ * diverifikasi pada usia 17 tahun 11 bulan menjadi dewasa sebulan kemudian tanpa
+ * ada yang menulis apa pun.
+ */
+export const AgeVerificationSchema = z.object({
+  userId: IdSchema,
+  status: AgeVerificationStatusSchema,
+  birthDate: LocalDateSchema.nullable(),
+  documentName: z.string().nullable(),
+  documentSize: z.number().int().nonnegative().nullable(),
+  submittedAt: IsoDateTimeSchema.nullable(),
+  decidedAt: IsoDateTimeSchema.nullable(),
+  rejectReason: z.string().nullable(),
+  isAdult: z.boolean(),
+})
+export type AgeVerification = z.infer<typeof AgeVerificationSchema>
+
+export const AgeVerificationInputSchema = z.object({
+  birthDate: LocalDateSchema,
+  documentName: z.string().min(1, 'Pilih berkas KTP.'),
+  documentSize: z.number().int().positive(),
+})
+export type AgeVerificationInput = z.infer<typeof AgeVerificationInputSchema>
 
 /** Jawaban permintaan reset · FR-AUTH-08. */
 export const ResetRequestSchema = z.object({

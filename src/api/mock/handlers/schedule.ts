@@ -241,18 +241,31 @@ export const reviewHandlers: Pick<
       if (report.status !== 'open') continue
       const mine =
         (report.targetType === 'story' && mineIds.has(report.targetId)) ||
-        (report.targetType === 'comment' && myCommentIds.has(report.targetId))
+        (report.targetType === 'comment' && myCommentIds.has(report.targetId)) ||
+        (report.targetType === 'chapter' && myChapterIds.has(report.targetId))
       if (!mine) continue
+
+      // Laporan bab (A5) menyebut **nomor dan judul babnya** — moderator tidak
+      // boleh menebak bab mana — dan tautannya menuju editor bab itu.
+      const bab = report.targetType === 'chapter' ? await db.chapters.get(report.targetId) : null
+      const konteks = [
+        bab ? `Bab ${bab.number} · ${bab.title}` : null,
+        report.note === '' ? null : report.note,
+      ]
+        .filter(Boolean)
+        .join(' — ')
 
       items.push({
         id: `report-${report.id}`,
         kind: 'report',
         refId: report.targetId,
         label: `Laporan: ${report.reason}`,
-        context: report.note === '' ? null : report.note,
+        context: konteks === '' ? null : konteks,
         status: 'in_review',
         reason: null,
-        link: reviewLink('report', report.targetId, report.targetId),
+        link: bab
+          ? reviewLink('chapter', bab.storyId, bab.id)
+          : reviewLink('report', report.targetId, report.targetId),
         submittedAt: report.createdAt,
         decidedAt: null,
       })
@@ -342,6 +355,7 @@ export async function resolveReviewAsAdmin(
       rejectReason: decision === 'approve' ? null : reason,
     })
     await beritahuPenulis(story.id, decision, story.title, decision === 'approve' ? null : reason)
+    if (decision === 'approve') await beritahuPengikut(story)
     return
   }
 
@@ -389,6 +403,30 @@ async function beritahuPenulis(
     deepLink: `/karya/${storyId}/bab`,
     groupKey: `review-${storyId}`,
   })
+}
+
+/**
+ * Memberi tahu **pengikut penulisnya** bahwa cerita baru tayang · A2.
+ *
+ * Dipicu di satu-satunya tempat cerita berubah jadi `published` — keputusan
+ * tinjauan — bukan di `createStory`: cerita yang baru dibuat masih draf, dan
+ * mengabarkan draf adalah mengabarkan sesuatu yang tidak bisa dibuka.
+ *
+ * Lewat `emitNotification`, jadi preferensi kelompok "Cerita" dan jam tenang
+ * tetap berlaku (§1.39). `groupKey` per penulis: tiga cerita dari penulis yang
+ * sama dalam sehari jadi satu baris berhitung, bukan tiga.
+ */
+async function beritahuPengikut(story: Story): Promise<void> {
+  const pengikut = await db.follows.where('followeeId').equals(story.authorId).toArray()
+  for (const f of pengikut) {
+    await emitNotification(f.followerId, {
+      kind: 'cerita-baru',
+      title: `${story.penName} merilis cerita baru`,
+      body: story.title,
+      deepLink: `/cerita/${story.id}`,
+      groupKey: `cerita-baru-${story.authorId}`,
+    })
+  }
 }
 
 /** Menyetujui seluruh antrean sekaligus — pintasan `/dev/kitchen-sink`. */

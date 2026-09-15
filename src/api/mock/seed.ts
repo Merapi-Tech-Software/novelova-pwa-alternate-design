@@ -70,34 +70,40 @@ const days = (n: number) => n * 86_400_000
 
 // ── pengguna ────────────────────────────────────────────────────────────────
 
-/** `FOLLOWERS` kanvas: 24 pengguna, empat di antaranya menyembunyikan aktivitas. */
-const FOLLOWER_ROWS: Array<
-  [name: string, handle: string, role: 'reader' | 'author', act: string | null]
-> = [
-  ['Rina Ayu', 'rinaayu', 'reader', '412 bab tahun ini'],
-  ['Dwi Prakoso', 'dwipra', 'author', '6 karya terbit'],
-  ['Bagas Nugroho', 'bagasn', 'reader', null],
-  ['Sekar Wulan', 'sekarwulan', 'reader', '88 ulasan ditulis'],
-  ['Fajar Alim', 'fajaralim', 'author', '2 karya terbit'],
-  ['Nadia Puspa', 'nadiapuspa', 'reader', '31 cerita tersimpan'],
-  ['Yoga Saputra', 'yogas', 'reader', null],
-  ['Intan Permata', 'intanp', 'author', '14 karya terbit'],
-  ['Rizky Amelia', 'rizkyamelia', 'reader', '204 bab tahun ini'],
-  ['Hendra Wijaya', 'hendraw', 'reader', '12 ulasan ditulis'],
-  ['Tari Lestari', 'tarilestari', 'reader', '77 cerita tersimpan'],
-  ['Adi Kurniawan', 'adikurnia', 'author', '3 karya terbit'],
-  ['Maya Anggraini', 'mayaa', 'reader', '156 bab tahun ini'],
-  ['Bimo Santoso', 'bimos', 'reader', null],
-  ['Citra Dewanti', 'citrad', 'author', '9 karya terbit'],
-  ['Galih Pratama', 'galihp', 'reader', '44 ulasan ditulis'],
-  ['Wulan Sari', 'wulansari', 'reader', '19 cerita tersimpan'],
-  ['Eko Prasetyo', 'ekop', 'reader', '301 bab tahun ini'],
-  ['Lina Handayani', 'linah', 'author', '5 karya terbit'],
-  ['Putra Ramadhan', 'putrar', 'reader', '62 bab tahun ini'],
-  ['Sari Utami', 'sariutami', 'reader', '27 ulasan ditulis'],
-  ['Dimas Aryo', 'dimasaryo', 'author', '11 karya terbit'],
-  ['Ratna Kusuma', 'ratnak', 'reader', '98 cerita tersimpan'],
-  ['Arif Setiawan', 'arifs', 'reader', null],
+/**
+ * `FOLLOWERS` kanvas: 24 pengguna.
+ *
+ * Dulu tiap baris membawa kolom keempat `act` ("412 bab tahun ini") yang
+ * **tidak pernah dibaca siapa pun** — baris aktivitas diturunkan dari tabel
+ * `progress` (§1.38), dan untuk kedelapan pengguna pertama tabel itu kosong,
+ * jadi semuanya berbunyi "Belum ada bab selesai". Kolomnya dihapus; progresnya
+ * disemai sungguhan di `FOLLOWER_PROGRESS` (A8).
+ */
+const FOLLOWER_ROWS: Array<[name: string, handle: string, role: 'reader' | 'author']> = [
+  ['Rina Ayu', 'rinaayu', 'reader'],
+  ['Dwi Prakoso', 'dwipra', 'author'],
+  ['Bagas Nugroho', 'bagasn', 'reader'],
+  ['Sekar Wulan', 'sekarwulan', 'reader'],
+  ['Fajar Alim', 'fajaralim', 'author'],
+  ['Nadia Puspa', 'nadiapuspa', 'reader'],
+  ['Yoga Saputra', 'yogas', 'reader'],
+  ['Intan Permata', 'intanp', 'author'],
+  ['Rizky Amelia', 'rizkyamelia', 'reader'],
+  ['Hendra Wijaya', 'hendraw', 'reader'],
+  ['Tari Lestari', 'tarilestari', 'reader'],
+  ['Adi Kurniawan', 'adikurnia', 'author'],
+  ['Maya Anggraini', 'mayaa', 'reader'],
+  ['Bimo Santoso', 'bimos', 'reader'],
+  ['Citra Dewanti', 'citrad', 'author'],
+  ['Galih Pratama', 'galihp', 'reader'],
+  ['Wulan Sari', 'wulansari', 'reader'],
+  ['Eko Prasetyo', 'ekop', 'reader'],
+  ['Lina Handayani', 'linah', 'author'],
+  ['Putra Ramadhan', 'putrar', 'reader'],
+  ['Sari Utami', 'sariutami', 'reader'],
+  ['Dimas Aryo', 'dimasaryo', 'author'],
+  ['Ratna Kusuma', 'ratnak', 'reader'],
+  ['Arif Setiawan', 'arifs', 'reader'],
 ]
 
 /** Indeks pengikut yang **juga** diikuti balik oleh pengguna ini. */
@@ -151,6 +157,11 @@ const follows: Array<Follow & { id: string }> = [
     followeeId: `f${idx + 1}`,
     createdAt: iso(days(20 - (idx % 20))),
   })),
+  // Dua penulis katalog yang diikuti · A2 — supaya section "Dari Penulis yang
+  // Kamu Ikuti" punya isi sejak awal. `a1` sengaja bukan: nama penanya sama
+  // dengan akun contoh, dan mengikuti diri sendiri bukan keadaan yang sah.
+  { id: 'fw-out-a2', followerId: ME, followeeId: 'a2', createdAt: iso(days(12)) },
+  { id: 'fw-out-a3', followerId: ME, followeeId: 'a3', createdAt: iso(days(9)) },
 ]
 
 // ── katalog ─────────────────────────────────────────────────────────────────
@@ -194,6 +205,7 @@ const CATALOG_FILLER: StorySeed[] = FILLER.map((seed, i) => {
     status: seed.status,
     free: seed.free === true,
     kisah: seed.kisah === true,
+    dewasa: seed.dewasa === true,
     tags: seed.tags,
     synopsis: seed.synopsis,
     badge: FILLER_BADGES[i % FILLER_BADGES.length] ?? 'BARU',
@@ -235,7 +247,9 @@ const catalogStories: Story[] = [...CATALOG, ...CATALOG_FILLER].map((s, i) => ({
   // dan yang mana, ditulis di seed-nya, bukan dihitung dari posisinya.
   kind: s.kisah === true ? 'kisah' : 'fiksi',
   tags: s.tags ?? CANVAS_TAGS[i] ?? [],
-  audience: 'Remaja',
+  // Tiga pengisi berlabel 18+ (A1) — supaya gerbang usianya bisa dilihat tanpa
+  // menyiapkan apa pun. Yang mana, ditulis di `catalog.ts`, bukan di sini.
+  audience: s.dewasa === true ? 'Dewasa 18+' : 'Remaja',
   language: i % 9 === 4 ? 'English' : 'Indonesia',
   status: s.status,
   review: 'published',
@@ -837,6 +851,51 @@ const progress: Array<ReadingProgress & { id: string }> = LIB_SEED.map(([storyId
   updatedAt: iso(hours(12)),
 }))
 
+/**
+ * Progres baca delapan pengguna contoh · A8.
+ *
+ * Yang disemai **fakta**-nya (bab mana yang selesai), bukan kalimatnya — baris
+ * aktivitas di `/profil/koneksi` dan profil publik tetap diturunkan
+ * `activityLineOf` dari sini, jadi angkanya tidak bisa berselisih dengan
+ * datanya. Delapan cerita kanvas (`s1`–`s8`) punya ≥ 8 bab, jadi indeks bab di
+ * bawah selalu ada. Dua pengguna sengaja tanpa progres: koneksi yang belum
+ * membaca apa pun adalah keadaan yang sah dan harus tetap terlihat.
+ */
+const FOLLOWER_PROGRESS: Array<[userId: string, storyId: string, finished: number]> = [
+  ['f1', 's2', 8],
+  ['f1', 's3', 8],
+  ['f1', 's5', 5],
+  ['f2', 's1', 2],
+  ['f4', 's4', 8],
+  ['f4', 's6', 3],
+  ['f5', 's7', 1],
+  ['f6', 's2', 4],
+  ['f6', 's8', 4],
+  ['f6', 's1', 3],
+  ['f8', 's3', 6],
+]
+
+progress.push(
+  ...FOLLOWER_PROGRESS.map(([userId, storyId, finished], i) => ({
+    id: `${userId}-${storyId}`,
+    userId,
+    storyId,
+    lastChapterId: `${storyId}-c${finished}`,
+    scrollByChapter: {},
+    scrollPct: 0.6,
+    finishedChapterIds: Array.from({ length: finished }, (_, n) => `${storyId}-c${n + 1}`),
+    // Kemarin dan sebelumnya — bukan hari ini: misi harian milik akun contoh
+    // dihitung dari tanggal, dan bab orang lain tidak boleh ikut ke sana.
+    finishedAt: Object.fromEntries(
+      Array.from({ length: finished }, (_, n) => [
+        `${storyId}-c${n + 1}`,
+        todayLocalISO(new Date(Date.now() - days(3 + ((i + n) % 20)))),
+      ]),
+    ),
+    updatedAt: iso(days(1 + (i % 9))),
+  })),
+)
+
 const ownerships: Array<Ownership & { id: string }> = [
   { id: 'own1', userId: ME, chapterId: 's1-c4', source: 'coin', acquiredAt: iso(days(3)) },
   { id: 'own2', userId: ME, chapterId: 's1-c5', source: 'coin', acquiredAt: iso(days(3)) },
@@ -1188,6 +1247,19 @@ const NOTIF_SEED: Array<{
     body: 'Cerita berpindah dari draf ke terjadwal',
     link: '/karya',
     msAgo: days(9),
+    unread: false,
+  },
+  {
+    // Jenis kedua belas (A2): penulis yang diikuti merilis cerita. `a2` = Rani
+    // Kusuma, yang memang diikuti akun contoh; `s2` karyanya.
+    id: 'n12',
+    kind: 'cerita-baru',
+    title: 'Rani Kusuma merilis cerita baru',
+    body: 'Surat dari Bandung',
+    link: '/cerita/s2',
+    msAgo: days(2) + hours(5),
+    // Sudah dibaca: lencana lonceng contoh (4) dipakai e2e notifikasi, dan
+    // menambah yang belum dibaca menggeser angkanya di tiga tempat.
     unread: false,
   },
 ]

@@ -316,3 +316,68 @@ describe('sentimen dari data nyata · FR-SOCIAL-08', () => {
     expect(report.sentiment.negative).toBe(0)
   })
 })
+
+/**
+ * Laporan bab · A5 · todo-incoming-features.md.
+ *
+ * Ambangnya berlaku **per bab**: tiga laporan menaruh bab terbit ke tinjauan
+ * dan mengeluarkannya dari daftar pembaca, sementara ceritanya — dan bab lain
+ * di dalamnya — tidak disentuh. Pelapor kedua dan ketiga disimulasikan lewat
+ * baris `reports` langsung: satu akun hanya boleh melapor sekali.
+ */
+describe('laporkan bab · A5', () => {
+  const BAB = 's1-c3'
+
+  it('bab bisa dilaporkan sendiri, dan laporannya muncul di antrean penulis dengan nomor babnya', async () => {
+    await api.report({ targetType: 'chapter', targetId: 'ms1-c47', reason: 'spoiler', note: '' })
+    const { reviewHandlers } = await import('@/api/mock/handlers/schedule')
+    const antrean = await reviewHandlers.listReviewQueue()
+    const baris = antrean.find((i) => i.kind === 'report' && i.refId === 'ms1-c47')
+    expect(baris).toBeDefined()
+    expect(baris?.context).toMatch(/^Bab 47 · /)
+    expect(baris?.link).toBe('/karya/ms1/bab/ms1-c47/ubah')
+  })
+
+  it('bab dalam tinjauan dikirim tanpa isi dan keluar dari daftar; bab lain di cerita yang sama tetap ada', async () => {
+    await api.report({ targetType: 'chapter', targetId: BAB, reason: 'kasar', note: '' })
+    // Satu laporan belum apa-apa: konten tetap tampil sampai melewati ambang.
+    expect((await api.getChapter('s1', BAB)).underReview).toBe(false)
+
+    const chapter = await db.chapters.get(BAB)
+    if (!chapter) throw new Error('seed s1-c3 hilang')
+    await db.chapters.put({ ...chapter, review: 'in_review' })
+
+    const tertahan = await api.getChapter('s1', BAB)
+    expect(tertahan.underReview).toBe(true)
+    expect(tertahan.content).toEqual([])
+    expect(tertahan.preview).toEqual([])
+
+    const daftar = await api.getChapters('s1', { page: 1, pageSize: 50 })
+    expect(daftar.items.map((c) => c.id)).not.toContain(BAB)
+    expect(daftar.items.map((c) => c.id)).toContain('s1-c2')
+
+    await db.chapters.put({ ...chapter, review: 'published' })
+  })
+
+  it('ambang tiga laporan benar-benar memindahkan bab ke tinjauan lewat handler', async () => {
+    for (const who of ['f1', 'f2']) {
+      await db.reports.put({
+        id: `rp-ambang-${who}`,
+        reporterId: who,
+        targetType: 'chapter',
+        targetId: 's1-c4',
+        reason: 'plagiat',
+        note: '',
+        status: 'open',
+        createdAt: new Date().toISOString(),
+      })
+    }
+    await api.report({ targetType: 'chapter', targetId: 's1-c4', reason: 'plagiat', note: '' })
+    const chapter = await db.chapters.get('s1-c4')
+    expect(chapter?.review).toBe('in_review')
+    expect(chapter?.state).toBe('published')
+    // Ceritanya tidak disentuh (§1.18: melapor bukan membungkam).
+    expect((await db.stories.get('s1'))?.review).toBe('published')
+    if (chapter) await db.chapters.put({ ...chapter, review: 'published' })
+  })
+})

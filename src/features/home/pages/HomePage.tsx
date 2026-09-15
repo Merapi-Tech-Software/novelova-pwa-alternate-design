@@ -35,6 +35,7 @@ const SWITCH_OF: Record<string, SectionKey> = {
   populer: 'sec-popular',
   terbaru: 'sec-trending',
   terbuka: 'sec-editor',
+  mengikuti: 'sec-following',
   'lanjut-baca': 'sec-continue',
 }
 
@@ -95,10 +96,15 @@ export default function HomePage() {
   const banner = sections.find((s) => s.id === 'banner')
   const prioritas = sections.filter((s) => PRIORITAS.includes(s.id))
   const lanjut = sections.find((s) => s.id === 'lanjut-baca')
+  const mengikuti = sections.find((s) => s.id === 'mengikuti')
   // Ekor yang **benar-benar tersaring tab** — satu-satunya kelompok yang isinya
   // berubah saat pembaca menekan tab genre.
   const ekor = sections.filter(
-    (s) => !PRIORITAS.includes(s.id) && s.id !== 'banner' && s.id !== 'lanjut-baca',
+    (s) =>
+      !PRIORITAS.includes(s.id) &&
+      s.id !== 'banner' &&
+      s.id !== 'lanjut-baca' &&
+      s.id !== 'mengikuti',
   )
   /*
    * Keadaan kosong dinilai dari **ekor saja**, dan sejak §1.22 itu bukan lagi
@@ -243,6 +249,9 @@ export default function HomePage() {
         </div>
       ))}
 
+      {/* Dari penulis yang diikuti (A2) — bacaan pribadi, di samping Lanjut
+          Membaca dan sama-sama tidak ikut tersaring tab. */}
+      {mengikuti && <StorySection section={mengikuti} tab={tab} onCoverClick={buka} />}
       {lanjut && <StorySection section={lanjut} tab={tab} />}
 
       {zoom && <CoverZoom target={zoom} onClose={() => setZoom(null)} />}

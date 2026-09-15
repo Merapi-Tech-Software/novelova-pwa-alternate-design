@@ -6,12 +6,17 @@ import { useChapter } from '@/hooks/useChapter'
 import { t } from '@/i18n/t'
 import { onVisible } from '@/lib/a11y'
 import { cx } from '@/lib/cx'
+import { AgeGate } from './AgeGate'
 
 export interface ChapterMeta {
   id: string
   number: number
   title: string
   owned: boolean
+  /** Ditahan gerbang usia (A1) — rantai berhenti di sini, dan buka-otomatis tidak dicoba. */
+  ageRestricted: boolean
+  /** Disembunyikan sambil menunggu tinjauan (A5) — dinding juga. */
+  underReview: boolean
   priceCoins: number
   commentCount: number
   nextChapterId: string | null
@@ -69,6 +74,8 @@ export function ChapterBlock({
       number: data.number,
       title: data.title,
       owned: data.owned,
+      ageRestricted: data.ageRestricted,
+      underReview: data.underReview,
       priceCoins: data.priceCoins,
       commentCount: data.commentCount,
       nextChapterId: data.nextChapterId,
@@ -146,8 +153,32 @@ export function ChapterBlock({
         </div>
       )}
 
+      {/*
+        Gerbang usia **mendahului** gerbang koin (A1): bab yang tidak boleh dibaca
+        tidak memperlihatkan pratinjau dan tidak menawarkan pembelian. `owned`
+        boleh benar di sini — bab gratis pun tertahan — jadi yang diperiksa
+        adalah `ageRestricted`, bukan kepemilikan.
+      */}
+      {data.ageRestricted && <AgeGate storyId={storyId} />}
+
+      {/*
+        Bab yang laporannya melewati ambang · A5 · §1.18. Pembaca lain melihat
+        **ada sesuatu di sini dan sedang diproses** — bukan bab yang lenyap
+        diam-diam dari tengah cerita. Tanpa tombol apa pun: tidak ada yang bisa
+        ia lakukan selain menunggu.
+      */}
+      {data.underReview && !data.ageRestricted && (
+        <section
+          role="status"
+          className="mt-6 rounded-nv-lg border border-nv-line bg-nv-paper-2 p-5 text-center"
+        >
+          <p className="font-display text-section font-semibold">{t('reader.underReviewTitle')}</p>
+          <p className="pt-2 text-body text-nv-text-2">{t('reader.underReviewBody')}</p>
+        </section>
+      )}
+
       {/* Bagian gratisnya dibaca normal, lalu berhenti di gerbang (`7x`). */}
-      {!data.owned && data.preview.length > 0 && (
+      {!data.ageRestricted && !data.underReview && !data.owned && data.preview.length > 0 && (
         <div
           className="space-y-4 font-read text-nv-text"
           style={{ fontSize: 'var(--reader-font-size)', lineHeight: 1.8 }}
@@ -156,7 +187,7 @@ export function ChapterBlock({
         </div>
       )}
 
-      {!data.owned && gate(data)}
+      {!data.ageRestricted && !data.underReview && !data.owned && gate(data)}
     </div>
   )
 }

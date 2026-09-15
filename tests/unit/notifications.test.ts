@@ -303,8 +303,8 @@ describe('daftar notifikasi', () => {
 // ── FR-NOTIF-02 · katalog sebelas jenis ─────────────────────────────────────
 
 describe('katalog jenis', () => {
-  it('punya sebelas jenis, sesuai tabel FR-NOTIF-02', () => {
-    expect(NOTIF_KIND_LIST).toHaveLength(11)
+  it('punya dua belas jenis — sebelas dari tabel FR-NOTIF-02, satu dari A2', () => {
+    expect(NOTIF_KIND_LIST).toHaveLength(12)
   })
 
   it('setiap jenis memetakan ke satu saringan dan satu kelompok preferensi', () => {
@@ -323,7 +323,7 @@ describe('katalog jenis', () => {
     }
   })
 
-  it('kesebelas jenis benar-benar ada di data contoh, masing-masing dengan tujuan buka', () => {
+  it('kedua belas jenis benar-benar ada di data contoh, masing-masing dengan tujuan buka', () => {
     // Dibaca dari seed, bukan dari tabel: `beforeEach` mengosongkan tabelnya,
     // dan yang diperiksa di sini memang isi contohnya — bukan sisa test lain.
     const kinds = new Set(SEED_NOTIFICATIONS.map((n) => n.kind))

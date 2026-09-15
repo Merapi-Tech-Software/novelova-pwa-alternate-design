@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
   AdQuota,
+  AgeVerification,
   AuthorProfile,
   Block,
   ChapterContent,
@@ -101,7 +102,7 @@ export class NovelovaDb extends Dexie {
     {
       id: string
       reporterId: string
-      targetType: 'story' | 'review' | 'comment' | 'user'
+      targetType: 'story' | 'review' | 'comment' | 'user' | 'chapter'
       targetId: string
       reason: string
       note: string
@@ -127,6 +128,8 @@ export class NovelovaDb extends Dexie {
   rewards!: EntityTable<RewardState, 'userId'>
   referralInvites!: EntityTable<ReferralInvite & { id: string; userId: string }, 'id'>
   offlineChapters!: EntityTable<OfflineChapter & { id: string }, 'id'>
+  /** Verifikasi usia · A1. `isAdult` diturunkan saat dibaca, tidak disimpan. */
+  ageVerifications!: EntityTable<Omit<AgeVerification, 'isAdult'>, 'userId'>
   vouchers!: EntityTable<Voucher, 'id'>
 
   // profil & pengaturan
@@ -204,6 +207,9 @@ export class NovelovaDb extends Dexie {
     this.version(4).stores({
       offlineChapters: 'id, userId, storyId, [userId+chapterId], lastOpenedAt',
     })
+
+    // Verifikasi usia datang di Langkah 83 (A1).
+    this.version(5).stores({ ageVerifications: 'userId, status' })
   }
 }
 

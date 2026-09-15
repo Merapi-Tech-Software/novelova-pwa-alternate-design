@@ -42,11 +42,23 @@ export function UserRow({ user, onToggleFollow, pending = false, className }: Us
       </Link>
 
       <div className="min-w-0 flex-1">
-        <Link to={`/pengguna/${user.id}`} className="flex items-center gap-2">
-          <span className="truncate text-body font-semibold">{user.displayName}</span>
-          {user.role === 'author' && <Badge tone="accent">Penulis</Badge>}
+        {/*
+          Nama mendapat **satu baris penuh**; lencana Penulis turun ke baris
+          keterangan. Saat keduanya berbagi baris, di 320px nama tinggal ~75px
+          dan "Adi Kurniawan" jadi "Ad…" — terukur setelah A8 mengisi baris
+          aktivitasnya. Keterangannya boleh membungkus **tiga** baris: di 320px
+          lencana Penulis memakan satu baris sendiri, dan dua baris menyisakan
+          "@adikurnia · …" — aktivitasnya hilang di belakang elipsis.
+        */}
+        <Link to={`/pengguna/${user.id}`} className="block truncate text-body font-semibold">
+          {user.displayName}
         </Link>
-        <p className="truncate text-caption text-nv-muted">
+        <p className="line-clamp-3 text-caption text-nv-muted">
+          {user.role === 'author' && (
+            <Badge tone="accent" className="mr-1.5 align-middle">
+              Penulis
+            </Badge>
+          )}
           @{user.username}
           {' · '}
           {user.activity ?? 'Aktivitas disembunyikan'}

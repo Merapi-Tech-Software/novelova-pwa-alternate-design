@@ -6,6 +6,7 @@ import type { ChapterSummary, Story, UserRowData } from '@/api/contracts'
 import { PRINT_STAGES } from '@/api/contracts'
 import { ApiError, VISIBLE_CODES } from '@/api/errors'
 import { jumpAutoUnlockCountAsDev } from '@/api/mock/defaults'
+import { decideAgeVerificationAsDev, setAdultModeAsDev } from '@/api/mock/handlers/age'
 import { setMockDraftSaveFails } from '@/api/mock/handlers/chapters'
 import { approveAllPendingAsAdmin } from '@/api/mock/handlers/schedule'
 import { CURRENT_USER_ID } from '@/api/mock/seed'
@@ -491,6 +492,67 @@ export default function KitchenSink() {
             onClick={() => void approveAllPendingAsAdmin().then(() => window.location.reload())}
           >
             Setujui seluruh antrean
+          </Button>
+        </div>
+
+        {/*
+          Verifikasi usia · A1. Pengguna tidak boleh memverifikasi dirinya
+          sendiri, jadi keputusannya — seperti keputusan admin di atas — hanya
+          ada di sini. Mode tampilan 18+ ikut di sini karena ia kebijakan
+          platform yang di produksi diatur backend, bukan pengguna.
+        */}
+        <p className="pt-3 text-body text-nv-muted">
+          Keputusan peninjau atas verifikasi usia (KTP), dan mode cerita 18+ bagi akun yang belum
+          terverifikasi: <code>gated</code> tampil berlencana dengan bab tertahan,{' '}
+          <code>hidden</code> tidak dikirim sama sekali.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              void decideAgeVerificationAsDev(CURRENT_USER_ID, 'approve').then(() =>
+                window.location.reload(),
+              )
+            }
+          >
+            Setujui verifikasi usia
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              void decideAgeVerificationAsDev(CURRENT_USER_ID, 'reject').then(() =>
+                window.location.reload(),
+              )
+            }
+          >
+            Tolak verifikasi usia
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              void decideAgeVerificationAsDev(CURRENT_USER_ID, 'reset').then(() =>
+                window.location.reload(),
+              )
+            }
+          >
+            Reset verifikasi
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void setAdultModeAsDev('gated').then(() => window.location.reload())}
+          >
+            Mode 18+: gated
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void setAdultModeAsDev('hidden').then(() => window.location.reload())}
+          >
+            Mode 18+: hidden
           </Button>
         </div>
 

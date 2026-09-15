@@ -6,6 +6,7 @@ import { isApiError, VISIBLE_CODES } from '@/api/errors'
 import { AdSlot } from '@/components/patterns/AdSlot'
 import { ChapterComments } from '@/components/patterns/ChapterComments'
 import { FailureNotice } from '@/components/patterns/FailureNotice'
+import { ModerationActions } from '@/components/patterns/ModerationActions'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Card'
 import { Sheet } from '@/components/ui/Modal'
@@ -319,7 +320,8 @@ export default function ReaderPage() {
        * seharusnya diajukan sekali jadi diajukan enam kali. Terukur sebelum
        * pengaman ini: enam gerbang bertumpuk dalam satu halaman.
        */
-      if (terakhir?.owned === false) return sekarang
+      if (terakhir?.owned === false || terakhir?.ageRestricted || terakhir?.underReview)
+        return sekarang
 
       const next = terakhir?.nextChapterId ?? null
       if (!next || sekarang.includes(next)) return sekarang
@@ -353,6 +355,13 @@ export default function ReaderPage() {
   const catatMeta = useCallback(
     (m: ChapterMeta) => {
       meta.current[m.id] = m
+      if (m.ageRestricted || m.underReview) {
+        // Dinding usia (A1) atau tinjauan (A5): bukan bab terkunci, jadi tidak
+        // ada buka-otomatis dan tidak ada gerbang koin. Rantai berhenti lewat
+        // `sambung` di bawah.
+        cobaSambung()
+        return
+      }
       if (m.owned === false) {
         setTerkunciId(m.id)
         bukaDiam(m.id)
@@ -633,7 +642,11 @@ export default function ReaderPage() {
           </p>
         )}
 
-        {data.owned && (
+        {/* Iklan native dan baris reaksi hanya untuk bab yang **isinya benar-benar
+            tampil**: menawarkan iklan dan tombol Suka/Laporkan di bawah bab yang
+            ditahan gerbang usia (A1) atau tinjauan (A5) adalah dua kontrol untuk
+            sesuatu yang tidak ada di layar. */}
+        {data.owned && !data.ageRestricted && !data.underReview && (
           <>
             {/*
               Baris status izin · `7y`. **Izin yang memotong koin tanpa tombol
@@ -674,6 +687,22 @@ export default function ReaderPage() {
               >
                 {liked ? t('reader.liked') : t('reader.like')}
               </Button>
+              {/*
+                Laporkan **bab ini** (A5). Sebelumnya pelanggaran di isi bab
+                hanya bisa dilaporkan sebagai seluruh ceritanya — memaksa
+                moderator menebak bab mana, dan pelapor menuduh lebih luas dari
+                yang ia maksud. `ownerId` null: memblokir penulis dari ujung
+                bab bukan tindakan yang masuk akal di sini.
+              */}
+              <ModerationActions
+                targetType="chapter"
+                targetId={data.id}
+                // `data.number`, bukan `babTerlihat`: di ujung bab pengamat sudah
+                // menunjuk bab berikutnya, dan lembar "Laporkan Bab 6" di baris
+                // reaksi bab 5 melaporkan bab yang salah.
+                targetLabel={t('moderation.targetChapter')(data.number)}
+                ownerId={null}
+              />
               {/*
                 **Tidak ada tombol komentar di sini.** Brief §7 melarangnya: satu-
                 satunya tempatnya baris kedua bilah bawah (`7v`). Komentar yang

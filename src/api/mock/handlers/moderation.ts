@@ -71,6 +71,20 @@ export const moderationHandlers: Pick<
       const comment = await db.comments.get(input.targetId)
       if (comment) await db.comments.put({ ...comment, underReview: true })
     }
+    /*
+     * Bab (A5): ambangnya berlaku **per bab**, bukan menjatuhkan ceritanya.
+     * `review: 'in_review'` mengeluarkannya dari daftar bab pembaca dan
+     * memasukkannya ke antrean tinjauan penulis — jalur yang sama dengan bab
+     * yang dikirim penulis sendiri, jadi keputusan admin memulihkannya lewat
+     * pintu yang sudah ada. `state` tidak disentuh: begitu disetujui, ia
+     * kembali `published` tanpa perlu dijadwalkan ulang.
+     */
+    if (total >= REPORT_THRESHOLD && input.targetType === 'chapter') {
+      const chapter = await db.chapters.get(input.targetId)
+      if (chapter && chapter.review === 'published') {
+        await db.chapters.put({ ...chapter, review: 'in_review' })
+      }
+    }
   },
 
   /**

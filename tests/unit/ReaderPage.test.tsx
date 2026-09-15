@@ -307,7 +307,9 @@ describe('saldo kurang · mockup `7z` · R4e', () => {
     await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
 
     renderReader('s1-c8')
-    await userEvent.click(await screen.findByRole('button', { name: /Chapter ini/ }))
+    await userEvent.click(
+      await screen.findByRole('button', { name: /Chapter ini/ }, { timeout: 10_000 }),
+    )
 
     /*
      * Permintaan produk 4 September menyebut dua jalan; voucher tetap ada karena
@@ -316,7 +318,12 @@ describe('saldo kurang · mockup `7z` · R4e', () => {
      */
     // Dicari **di dalam lembarnya**: gerbang di belakangnya juga punya tombol
     // "Tonton iklan", dan mencarinya di seluruh dokumen mengenai keduanya.
-    const lembar = await screen.findByRole('dialog')
+    //
+    // Batas 10 detik, bukan 1 detik bawaan: lembarnya baru muncul **setelah
+    // server-mock menolak** (satu putaran IndexedDB), dan di bawah beban suite
+    // paralel penantian 1 detik itu kalah sesekali — lulus sendirian, gagal di
+    // dua dari lima kali jalan penuh (CLAUDE.md §8, ambang lima detik).
+    const lembar = await screen.findByRole('dialog', {}, { timeout: 10_000 })
     expect(within(lembar).getByRole('link', { name: /Isi koin/ })).toBeInTheDocument()
     expect(within(lembar).getByRole('button', { name: /Pakai voucher/ })).toBeInTheDocument()
     expect(within(lembar).getByRole('button', { name: /Tonton iklan/ })).toBeInTheDocument()

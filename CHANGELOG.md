@@ -5,6 +5,277 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-15 · Langkah 85 — A7 tautan penulis di detail cerita, A8 progres koneksi
+
+> "oke saya ingin kamu lanjutkan saja dulu untuk todo todo-incoming-features.md
+> untuk step A7 dan A8. Selalu test result nya disemua tampilan (webiste ataupun
+> layar handphone) untuk mencegah fitur tidak bekerja dan tampilan posisi rapih.
+> Jika ada yang bingung, maka tanyakan"
+
+**A8 ditanyakan dulu** — pengguna memilih menyemai progres nyata untuk `f1`–`f8`
+(bukan sekadar menghapus kolom mati, bukan memakai kalimat tersimpan).
+
+### A7 · Nama pena jadi tautan
+
+`StoryHero` menautkan nama pena ke `/pengguna/<authorId>` — jalan paling wajar
+menuju profil penulis, yang sebelumnya tidak ada. Garis bawah putus-putus,
+bukan tombol. Nama di `StoryCard` sengaja tidak: tautan di dalam tautan.
+
+### A8 · Baris koneksi bervariasi
+
+Kolom `act` yang tidak pernah dibaca dihapus; `FOLLOWER_PROGRESS` (11 baris)
+menyemai bab selesai untuk enam pengguna contoh, dua sengaja kosong.
+Angkanya tetap **diturunkan** dari `progress` (§1.38). Tanggalnya kemarin ke
+belakang supaya misi harian akun contoh tidak terpengaruh, dan sudah diperiksa
+tidak ada handler yang mengagregasi `progress` lintas pengguna.
+
+**Cacat lama yang baru terlihat**: di 320px `UserRow` memotong nama penulis
+jadi "Ad…" karena nama, lencana *Penulis*, dan tombol Mengikuti berebut satu
+baris. Lencana turun ke baris keterangan, keterangan boleh tiga baris
+(`architecture.md` §1.54).
+
+### Yang diuji
+
+- Potret hero `/cerita/s2`, `/profil/koneksi`, `/pengguna/f1` di **320 · 360 ·
+  390 · 412 · 430 · 1280** — nol luberan, nol error; koneksi diperiksa ulang di
+  320 setelah perbaikan `UserRow`.
+- e2e `usia-dan-ikuti` ditambah: dari `/cerita/s2` ketuk nama pena →
+  `/pengguna/a2`; `/profil/koneksi` memuat "21 bab selesai" **dan** "Belum ada
+  bab selesai".
+- `npm run check` bersih · **678 unit** · **124 e2e** · `check:build` bersih.
+
+### Yang **tidak** dikerjakan
+
+- Nama penulis di kartu cerita (`StoryCard`) tidak dijadikan tautan — tautan di
+  dalam tautan bukan HTML yang sah.
+- Halaman lihat-semua untuk koneksi/penulis tidak disentuh.
+
+---
+
+## 2026-09-15 · Langkah 84 — A5 laporan bab; A4 ditunda, A6 tidak dikerjakan
+
+> "oke saya ingin kamu lanjutkan saja dulu untuk todo todo-incoming-features.md
+> untuk step A4 - A6. Selalu test result nya disemua tampilan (webiste ataupun
+> layar handphone) untuk mencegah fitur tidak bekerja dan tampilan posisi rapih.
+> Jika ada yang bingung, maka tanyakan"
+
+### Dua keputusan pengguna sebelum kode
+
+| | Jawaban |
+|---|---|
+| A6 · FR-WALLET-13 | **"jangan dikerjakan A6"** — tidak dibuang, tidak dibangun, PRD tidak disentuh |
+| A4 · persetujuan analitik | **Tunda sampai Fase 15** — lahir bersama Sentry yang ia gerbangi |
+
+Jadi yang dikerjakan **A5 saja**.
+
+### A5 · Laporan bisa menyasar bab
+
+`targetType` mendapat `chapter` (kontrak, Dexie, `backend-contract.md`).
+Tombol **Laporkan** di baris reaksi ujung bab lewat `ModerationActions` +
+`ReportSheet` yang sudah ada. **Ambang tiga laporan berlaku per bab**: bab itu
+saja masuk `review: 'in_review'` — keluar dari daftar pembaca, `getChapter`
+mengirimnya tanpa isi dengan `underReview`, ruang baca menggambar
+pemberitahuan "Bab ini sedang ditinjau" tanpa tombol, rantai baca berhenti.
+Antrean penulis menyebut `Bab N · judul` dan menaut ke editor babnya.
+Ceritanya tidak disentuh (§1.18). Rinciannya `architecture.md` §1.53.
+
+Dua hal yang hanya ketahuan dengan menekan tombolnya: lembar berjudul
+"Laporkan Bab **6**" di bab 5 (label dari bab yang terlihat, bukan pemilik
+baris), dan iklan + baris Suka/Laporkan yang masih digambar di bawah bab yang
+ditahan gerbang usia maupun tinjauan. Keduanya diperbaiki.
+
+### Yang diuji
+
+- Potret di **320 · 360 · 390 · 412 · 430 · 1280**: baris Laporkan, lembar
+  laporan, bab dalam tinjauan, daftar bab tanpa bab yang ditahan. Nol luberan,
+  nol error.
+- Spec baru `laporkan-bab.spec.ts` di 390 & 1280: laporkan dari ujung bab →
+  toast diterima → laporan kedua ditolak **server** setelah dimuat ulang.
+- 3 test unit baru di `moderation.test.ts` (antrean menyebut bab; bab dalam
+  tinjauan tanpa isi & keluar daftar; ambang memindahkan bab, bukan cerita).
+- `npm run check` bersih · **678 unit** · **124 e2e** · `check:build` bersih.
+- Flake `ReaderPage` "TIGA jalan keluar" (gagal di dua dari lima jalan penuh,
+  lulus sendirian) **ditutup**: `findByRole('dialog')` memakai batas 1 detik
+  bawaan padahal lembarnya baru muncul setelah server-mock menolak — kini 10
+  detik, seperti penantian lain di berkas yang sama.
+
+### Yang **tidak** dikerjakan
+
+- **A4** — ditunda ke Fase 15 atas keputusan pengguna; kotaknya tetap terbuka.
+- **A6** — tidak dikerjakan atas keputusan pengguna; tidak dicatat sebagai
+  penimpaan PRD.
+- **Laporan tidak punya jalur penyelesaian** (baris `reports` tetap `open`
+  setelah keputusan admin) — sudah begitu sejak Fase 10, dan bagian dari panel
+  admin yang belum ada (§17 no. 7).
+
+---
+
+## 2026-09-15 · Langkah 83 — A1–A3: rating usia, pengikut penulis, pratinjau tautan
+
+> "oke saya ingin kamu lanjutkan saja dulu untuk todo todo-incoming-features.md
+> untuk step A1 - A3. Selalu test result nya disemua tampilan (webiste ataupun
+> layar handphone) untuk mencegah fitur tidak bekerja dan tampilan posisi rapih.
+> Jika ada yang bingung, maka tanyakan"
+
+### Tiga hal ditanyakan dulu
+
+| | Jawaban pengguna |
+|---|---|
+| Verifikasi usia | **Dokumen (KTP)** — bukan swa-deklarasi |
+| Tampilan cerita 18+ | **Keduanya**: `gated` dan `hidden`, **backend yang memilih**; data terkait ikut ke `backend-contract.md` |
+| Pratinjau tautan | **Prerender saat build** dari katalog |
+
+### A1 · Rating usia
+
+Kontrak `AgeVerification` (none → pending → verified/rejected) + tiga metode
+seam (**130**), tabel Dexie v5, `lib/age.ts` (usia dari kalender, `isAdult`
+**diturunkan hari ini**), penyaring tunggal `feedFilterFor` di beranda,
+section, pencarian, pilihan awal; `getChapter` mengirim bab 18+ **tanpa isi
+dan tanpa pratinjau**; `unlockChapter` menolak sebelum koin terpotong; mode
+`hidden` menjawab `NOT_FOUND`. UI: gerbang usia di ruang baca, halaman
+`/pengaturan/verifikasi-usia` (rute ke-43) dengan pemilih KTP, sakelar di
+`/pengaturan/bahasa`, lencana & pemberitahuan di detail, penanda di kartu,
+baris di `/profil`, lima tombol dev di kitchen-sink. Dua cerita contoh 18+.
+
+**Unggahan disimulasikan** — belum ada penyimpanan berkas — dan layarnya
+mengatakannya. **Tanpa panel admin, di produksi tidak ada yang bisa menyetujui
+KTP**; itu ditulis sebagai batas, bukan disembunyikan.
+
+### A2 · Mengikuti penulis
+
+Jenis notifikasi kedua belas `cerita-baru`, dipicu saat cerita penulis yang
+diikuti disetujui, lewat `emitNotification`. Section beranda "Dari Penulis yang
+Kamu Ikuti" (sakelar kesepuluh), **dikirim walau kosong** supaya keadaan
+kosongnya bisa mengajak. Seed: akun contoh mengikuti `a2` dan `a3`.
+
+**Dua cacat lama ketahuan** begitu tombol Ikuti diberi akibat yang terlihat:
+tombol Ikuti di profil publik **tidak pernah bekerja** (`previous.items.map`
+melempar di `onMutate`), dan berhenti mengikuti baris seed tidak pernah
+menghapus apa pun (`delete` memakai id tebakan). Keduanya diperbaiki
+(`architecture.md` §1.52).
+
+### A3 · Pratinjau tautan
+
+`scripts/prerender.mjs` (dijalankan `npm run build`) menulis **78 halaman**
+ber-`og:*` + `sitemap.xml`, nol dependensi baru. `vite preview` ternyata tidak
+menyajikan `index.html` folder untuk path tanpa garis miring — `check:build`
+gagal jujur, middleware `prerenderIndex` menyamakannya dengan nginx, dan
+`check:build` kini memeriksa `og:title` lewat HTTP mentah seperti perayap.
+
+### Yang diuji
+
+- **Delapan lebar** untuk dua halaman baru di sapuan e2e; sapuan target ketuk
+  untuk halaman verifikasi; spec baru `usia-dan-ikuti.spec.ts` di 390 & 1280
+  (gerbang tanpa satu paragraf pun → ajukan → tinjau → terbuka → sakelar →
+  beranda; section & notifikasi pengikut).
+- **Potret layar** semua keadaan — gerbang (none/pending), verifikasi
+  (none/pending/rejected/verified), sakelar (terkunci/nyala), detail (gated &
+  hidden), kartu 18+, section mengikuti (terisi & kosong) — di 320 · 360 · 390 ·
+  412 · 430 · 1280. Nol luberan, nol error halaman.
+- 13 test unit baru (`age.test.ts`) · `npm run check` bersih · **675 unit** ·
+  **120 e2e** · `check:build` bersih (kini termasuk prerender). Satu flake
+  `ReaderPage` "TIGA jalan keluar" muncul di dua dari empat kali jalan penuh,
+  lulus sendirian dan pada dua kali jalan lainnya — jebakan ambang 5 detik.
+
+### Yang **tidak** dikerjakan
+
+- **Berkas KTP tidak diunggah ke mana pun.** Butuh penyimpanan berkas.
+- **Tidak ada panel admin** untuk menyetujui/menolak — kitchen-sink saja.
+- **Prerender tidak dinamis** — datanya data contoh; batasnya ditulis di
+  `backend-contract.md` §11.
+- **Section "mengikuti" tanpa halaman lihat-semua** (`ponytail:` di
+  `sections.ts`).
+
+---
+
+## 2026-09-15 · Langkah 82 — kontrak backend: 36 tabel, 127 endpoint
+
+> "oke pada project novelova-v2 datanya sekarang berdasarkan mock. Nah saya
+> ingin buat data nya sekarang asli, sekarang saya ingin kamu buat markdown
+> isinya api contract dan field-field didatabase beserta type data nya. Jika
+> bingung, maka tanyakan"
+
+### Tiga hal ditanyakan lebih dulu
+
+Ketiganya mengubah isi dokumen secara mendasar, jadi ditanyakan sebelum satu
+baris ditulis. Jawaban pengguna:
+
+| | Pilihan |
+|---|---|
+| Bentuk DB | **Relasional — PostgreSQL** |
+| Gaya API | **RPC 1:1 dengan seam** |
+| Cakupan | **Tabel + endpoint + bentuk turunan** |
+
+RPC dipilih karena seam-nya memang sudah RPC, dan janji arsitekturnya berbunyi
+*"ganti backend = tukar satu folder"*. Dengan REST, 127 metode harus dipetakan
+ulang ke resource + verb — dan sebagian memang bukan CRUD.
+
+### `backend-contract.md` — berkas baru
+
+1.705 baris. Sebelas bagian: keputusan · konvensi lintas-tabel · amplop RPC ·
+**skema 36 tabel** · ringkasan · **yang tidak punya tabel** · **127 endpoint** ·
+kode error · konstanta kebijakan · **20 aturan wajib server** · urutan migrasi
+sembilan tahap · dan apa yang dokumen ini sengaja tidak jawab.
+
+**Diverifikasi, bukan diklaim:** skrip pembanding memastikan 127 metode di
+dokumen = 127 metode di `client.ts`, **nol yang hilang dan nol yang dikarang**.
+Enam judul subbagian sempat salah hitung dan diperbaiki dari hasil hitungan itu,
+bukan dari ingatan.
+
+### Empat lubang yang baru terlihat saat diterjemahkan
+
+Menerjemahkan kontrak jadi **penyimpanan** memperlihatkan apa yang tidak pernah
+muncul saat membacanya sebagai antarmuka (arch §1.51):
+
+1. **Tiga kontrak tidak punya tabel sama sekali** — `PushSubscriptionSchema`,
+   `DataExportSchema`, `CoinPackageSchema`. Akibat nyatanya: push v1 tidak pernah
+   bisa mengirim ke perangkat mana pun, `requestDataExport` menjawab tanpa
+   menyimpan apa pun, dan **harga paket koin tidak bisa diubah tanpa rilis** —
+   padahal §1.13 menuntut sebaliknya.
+2. **Tidak ada kata sandi di mana pun.** Server-mock menerima apa pun yang cocok
+   dengan seed. `credentials.password_hash` adalah hal pertama yang harus ada di
+   backend, dan ia tidak punya padanan untuk disalin.
+3. **`reviewQueue` tabel mati** — ada di `db.ts`, **nol** rujukan di seluruh
+   handler. Peninggalan sebelum §1.11. Jangan ikut dibuat.
+4. **Tujuh `Record`/array sebenarnya dua tabel.** Empat kolom `ReaderPrefs`
+   berkunci (pembaca, cerita) → satu `reader_story_state`; tiga kolom
+   `ReadingProgress` berkunci (pembaca, bab) → satu `reading_progress_chapters`.
+
+### Keputusan skema yang perlu disebut
+
+- **`chapter_contents.body` tetap `text[]`**, menyimpang dari "array dipecah jadi
+  tabel". Paragraf naskah selalu dibaca utuh, tidak pernah dicari per paragraf.
+  Tabel `chapter_paragraphs` menambah join + `ORDER BY` di **jalur terpanas
+  aplikasi** tanpa menjawab satu pun pertanyaan baru.
+- **`ownerships` ber-PK `(user_id, chapter_id)`** — itulah yang membuat potongan
+  ganda mustahil, bukan idempotency saja.
+- **`transactions.balance_before/after` disimpan**, tidak diturunkan: menghitung
+  ulang dari jumlah kumulatif berarti satu baris salah menggeser seluruh riwayat
+  sesudahnya.
+- **`withdrawals` menyalin biaya & kurs ke barisnya.** Kebijakan boleh berubah;
+  riwayat pencairan tidak boleh ikut berubah surut.
+- **`privacy_settings.wallet` diberi `CHECK (wallet = false)`** — aturan platform
+  yang selama ini cuma dipaksa handler, kini selamat dari handler yang lupa.
+- **`LocalDate` → `date`, dan bukan turunan dari timestamp.** Ia tanggal menurut
+  zona pengguna; menurunkannya dari UTC menolak klaim check-in yang sah setiap
+  pagi di WIB.
+
+### Yang **tidak** dikerjakan
+
+- **Tidak ada kode backend yang ditulis.** Permintaannya dokumen.
+- **Tidak ada berkas migrasi SQL.** Cuplikan `CREATE TYPE`/`CHECK` di dokumen
+  adalah contoh bentuk, bukan migrasi siap jalan — nama constraint, indeks
+  tambahan, dan strategi rollback milik backend dev.
+- **Penyimpanan berkas, peringkat pencarian, dan webhook pembayaran sengaja
+  dibiarkan terbuka** dan ditulis begitu di bagian 11. Ketiganya keputusan
+  infrastruktur, bukan hal yang bisa diturunkan dari seam.
+- **`notif_kind` untuk "cerita baru dari penulis yang diikuti" belum ditambahkan**
+  — ia butuh keputusan (A2). Dokumen menyarankan menambahkannya **sekarang** bila
+  backend dibangun, karena menambah nilai enum setelah tabel besar terisi jauh
+  lebih mahal.
+
+---
+
 ## 2026-09-06 · Langkah 81 — profil publik: ada, tetapi dua hal di sekitarnya salah
 
 > "oke untuk cek profile public user apakah sudah ada?"

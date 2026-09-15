@@ -95,6 +95,20 @@ export const ChapterSchema = ChapterSummarySchema.extend({
   nextTitle: z.string().nullable(),
   /** Jumlah komentar bab ini (FR-READ-13). */
   commentCount: z.number().int().nonnegative(),
+  /**
+   * Bab milik cerita 18+ yang **tidak boleh dibaca akun ini** · A1.
+   *
+   * Saat benar, `content` **dan** `preview` kosong — bukan hanya isinya: gerbang
+   * usia tidak memperlihatkan apa pun, berbeda dari gerbang koin yang sengaja
+   * memperlihatkan awal bab. `owned` tetap jujur; yang menahannya bukan uang.
+   */
+  ageRestricted: z.boolean(),
+  /**
+   * Bab yang **disembunyikan sambil menunggu tinjauan** setelah laporan melewati
+   * ambang · A5 · §1.18. Isi dan pratinjau kosong; pembaca diberi tahu ada yang
+   * sedang diproses, bukan menemukan bab yang hilang diam-diam.
+   */
+  underReview: z.boolean(),
 })
 export type Chapter = z.infer<typeof ChapterSchema>
 

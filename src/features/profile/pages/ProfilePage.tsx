@@ -8,6 +8,7 @@ import {
   PenLine,
   Receipt,
   Settings2,
+  ShieldCheck,
   Ticket,
   Wallet,
 } from 'lucide-react'
@@ -18,9 +19,11 @@ import { CoinChip } from '@/components/patterns/CoinChip'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
+import { useAgeVerification } from '@/hooks/useAgeVerification'
 import { useVouchers } from '@/hooks/useVouchers'
 import { useWallet } from '@/hooks/useWallet'
 import { t } from '@/i18n/t'
+import { AGE_STATUS_LABEL } from '@/lib/age'
 import { formatCompactCoin } from '@/lib/coin'
 import { usePwa } from '@/stores/pwa'
 import { useSession } from '@/stores/session'
@@ -93,6 +96,7 @@ export default function ProfilePage() {
   const profile = useSession((s) => s.profile)
   const clearSession = useSession((s) => s.clearSession)
   const wallet = useWallet()
+  const verification = useAgeVerification()
   const voucher = useVouchers()
   const stats = useReaderStats()
   const recap = useWeeklyRecap()
@@ -349,6 +353,12 @@ export default function ProfilePage() {
           icon={<Bell size={17} aria-hidden />}
           label={t('profile.notifications')}
           to="/notifikasi/pengaturan"
+        />
+        <Baris
+          icon={<ShieldCheck size={17} aria-hidden />}
+          label={t('profile.ageVerification')}
+          {...(verification.data ? { value: AGE_STATUS_LABEL[verification.data.status] } : {})}
+          to="/pengaturan/verifikasi-usia"
         />
         <Baris icon={<PenLine size={17} aria-hidden />} label={t('profile.myWorks')} to="/karya" />
         <Baris

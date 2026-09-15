@@ -3,6 +3,8 @@ import { suggest } from '@/lib/similar'
 import type { NovelovaApi } from '../../client'
 import type { SearchParams, SearchResult, Story, Suggestion, User } from '../../contracts'
 import { db } from '../db'
+import { feedFilterFor } from './age'
+import { currentUserId } from './session'
 
 /**
  * Pencarian katalog · prd_11 · FR-SRCH-02.
@@ -70,7 +72,12 @@ function suggestionOf(kind: Suggestion['kind'], id: string, label: string, q: st
 
 async function catalog(): Promise<Story[]> {
   const stories = await db.stories.toArray()
-  return stories.filter((s) => s.review === 'published' && s.visibility === 'public')
+  // Cerita 18+ ikut hanya bila akunnya berhak dan mau (A1) — satu penyaring
+  // yang sama dengan beranda, supaya pencarian tidak jadi pintu belakang.
+  const bolehDewasa = await feedFilterFor(currentUserId())
+  return stories
+    .filter((s) => s.review === 'published' && s.visibility === 'public')
+    .filter(bolehDewasa)
 }
 
 export const searchHandlers: Pick<NovelovaApi, 'search' | 'getSuggestions' | 'getTrendingQueries'> =

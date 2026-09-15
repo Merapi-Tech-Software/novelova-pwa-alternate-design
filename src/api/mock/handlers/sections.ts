@@ -23,6 +23,8 @@ export interface SectionDef {
   unfiltered?: boolean
   /** `false` untuk blok yang tidak punya halaman daftar sendiri. */
   browsable?: boolean
+  /** Dikirim walau kosong — keadaan kosongnya punya arti (lihat `home.ts`). */
+  keepEmpty?: boolean
 }
 
 const byReads = (a: Story, b: Story) => b.stats.reads - a.stats.reads
@@ -121,6 +123,27 @@ export const BANNER: SectionDef = {
   order: byReads,
   unfiltered: true,
   browsable: false,
+}
+
+/**
+ * Cerita dari penulis yang diikuti pembaca · A2.
+ *
+ * Isinya bergantung **siapa yang membaca**, jadi ia tidak punya `match` —
+ * `home.ts` yang menyaringnya dari tabel `follows` sebelum memanggil `build`.
+ * Karena itu pula ia tidak punya halaman lihat-semua: `getSection` tidak
+ * mengenal pembacanya lewat registry ini.
+ *
+ * ponytail: rel 20 cerita tanpa "lihat semua". Cukup sampai seorang pembaca
+ * mengikuti lebih dari selusin penulis produktif; saat itu tambahkan cabang
+ * ber-`userId` di `getSection`.
+ */
+export const FOLLOWING: SectionDef = {
+  id: 'mengikuti',
+  title: 'Dari Penulis yang Kamu Ikuti',
+  order: byUpdated,
+  unfiltered: true,
+  browsable: false,
+  keepEmpty: true,
 }
 
 export const CONTINUE: SectionDef = {

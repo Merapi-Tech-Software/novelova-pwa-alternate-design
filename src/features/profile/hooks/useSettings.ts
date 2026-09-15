@@ -41,22 +41,38 @@ export function useConnections(kind: 'followers' | 'following', params: ListPara
  * daftar yang sedang tampil, jadi barisnya berubah seketika dan kembali
  * **beserta pesan** bila server menolak.
  */
+type FollowSnapshot =
+  | { items: Array<{ id: string; isFollowing: boolean }> }
+  | { user: { isFollowing: boolean } }
+
 export function useToggleFollow(queryKey: readonly unknown[]) {
-  return useOptimistic<
-    string,
-    { following: boolean },
-    { items: Array<{ id: string; isFollowing: boolean }> }
-  >({
+  return useOptimistic<string, { following: boolean }, FollowSnapshot>({
     queryKey,
     mutationFn: (userId) => api.toggleFollowUser(userId),
-    optimisticUpdate: (previous, userId) =>
-      previous && {
-        ...previous,
-        items: previous.items.map((row) =>
-          row.id === userId ? { ...row, isFollowing: !row.isFollowing } : row,
-        ),
-      },
+    /*
+     * Dua bentuk snapshot, satu hook: daftar koneksi menyimpan `items`, profil
+     * publik menyimpan `user`. Sebelum ini hanya bentuk pertama yang ditangani,
+     * jadi di profil publik `previous.items.map` melempar di dalam `onMutate` —
+     * dan **tombol Ikuti di profil publik tidak pernah bekerja**: mutasinya
+     * dibatalkan sebelum sampai ke server, dengan toast "Gagal menyimpan".
+     * Ketahuan saat A2 memberi tombol itu akibat yang terlihat di beranda.
+     */
+    optimisticUpdate: (previous, userId) => {
+      if (!previous) return previous
+      if ('items' in previous) {
+        return {
+          ...previous,
+          items: previous.items.map((row) =>
+            row.id === userId ? { ...row, isFollowing: !row.isFollowing } : row,
+          ),
+        }
+      }
+      return { ...previous, user: { ...previous.user, isFollowing: !previous.user.isFollowing } }
+    },
     rollbackMessage: 'Gagal menyimpan. Status mengikuti dikembalikan.',
+    // Section "Dari Penulis yang Kamu Ikuti" (A2) dibangun dari tabel follows,
+    // jadi beranda ikut basi begitu tombol ini ditekan.
+    alsoInvalidate: [['home']],
   })
 }
 

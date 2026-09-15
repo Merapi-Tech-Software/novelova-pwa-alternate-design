@@ -36,23 +36,39 @@ juga tidak punya tanggal lahir sama sekali.
 Akibatnya label "Dewasa 18+" tidak melakukan apa pun. Ia terbaca sebagai janji
 kepada penulis dan kepada pembaca, dan janji itu tidak ditepati di mana pun.
 
-- [ ] Tanggal lahir pada profil pengguna — **opsional saat daftar, wajib sebelum
-      membuka cerita dewasa pertama**. Menuntutnya di layar pendaftaran menaikkan
-      gesekan untuk semua orang demi aturan yang berlaku bagi sebagian.
-- [ ] `audience` ikut **menyaring di server**, bukan disembunyikan di klien —
-      cerita dewasa tidak dikirim ke akun yang tidak berhak, sejalan dengan
-      §1.41 ("privasi ditegakkan dengan tidak mengirim")
-- [ ] Layar peringatan sekali per cerita sebelum bab dewasa pertama, dengan
-      pilihan mundur yang jelas
-- [ ] Sakelar "tampilkan konten dewasa" di `/pengaturan/bahasa` atau pengaturan
-      baru — bawaannya **mati**
-- [ ] Lencana `18+` di kartu cerita dan di hero detail
-- [ ] Keputusan produk yang perlu dijawab lebih dulu: **apakah verifikasi
-      usianya cukup swa-deklarasi**, atau harus dokumen? Swa-deklarasi lazim di
-      Indonesia dan jauh lebih murah, tetapi itu keputusan pemilik produk
+**Diputuskan pengguna (Langkah 83):** verifikasi **dokumen KTP** — bukan
+swa-deklarasi — dan mode tampilannya **diatur server** (`gated` / `hidden`),
+keduanya dibangun. Rinciannya `architecture.md` §1.52.
 
-> ⚠️ Ini satu-satunya butir di berkas ini yang risikonya **di luar teknis**.
-> Kalau ada satu hal yang dikerjakan sebelum rilis, ini.
+- [x] Tanggal lahir + foto KTP diajukan di `/pengaturan/verifikasi-usia`
+      (`AgeVerification`: none → pending → verified/rejected, penolakan wajib
+      beralasan, pengajuan ulang setelah ditolak)
+  ↳ Unggahan **disimulasikan** — v1 tidak punya penyimpanan berkas; hanya nama &
+    ukuran yang tercatat, dan layarnya mengatakannya terang. Keputusan peninjau
+    ada di `/dev/kitchen-sink`, seperti keputusan admin atas antrean tinjauan.
+- [x] `audience` **menyaring di server** — satu penyaring (`feedFilterFor`) untuk
+      beranda, section, pencarian, dan pilihan awal; `getChapter` mengirim bab
+      18+ **tanpa isi dan tanpa pratinjau**; `unlockChapter` menolak sebelum koin
+      terpotong. `isAdult` diturunkan dari tanggal lahir **hari ini**, tidak
+      disimpan (`lib/age.ts`)
+- [x] Gerbang usia di ruang baca — bukan gerbang koin dengan kata lain: tidak
+      memperlihatkan apa pun, tidak menjual apa pun, satu jalan (verifikasi) dan
+      satu jaminan (koin tidak terpotong). Rantai baca menerus berhenti di sana
+- [x] Sakelar "Tampilkan cerita 18+" di `/pengaturan/bahasa` (bagian Konten),
+      bawaan mati, terkunci beserta tautan verifikasi bila belum berhak.
+      **Sakelar ≠ izin**: ia hanya menjawab "mau lihat di deretan atau tidak"
+- [x] Lencana `18+` di deret genre hero detail dan di baris metrik kartu, plus
+      pemberitahuan di detail dengan tautan verifikasi; baris "Verifikasi usia"
+      di `/profil`
+- [x] Mode `hidden` — cerita 18+ menjawab `NOT_FOUND` di detail & bab bagi akun
+      yang tidak berhak, dan **halaman detail kini punya pesan NOT_FOUND sendiri**
+      ("Cerita ini tidak ditemukan" + Ke beranda) alih-alih pesan jaringan
+      generik ber-"Coba lagi" · `[LUAR]`
+- [x] Dua cerita contoh berlabel 18+ (`s16`, `s31`) ditulis di `catalog.ts`
+
+> ⚠️ Yang tetap terbuka: **tidak ada panel admin**, jadi di produksi tidak ada
+> yang bisa menyetujui KTP — dan cerita 18+ tidak terbaca siapa pun sampai panel
+> itu ada (bagian B). Prioritasnya naik karenanya.
 
 ### A2 · Mengikuti penulis tidak menghasilkan apa pun · `P1`
 
@@ -68,14 +84,23 @@ Jadi pembaca menekan Ikuti, angkanya naik, dan sesudah itu tidak terjadi apa-apa
 selamanya. Tombol yang tidak melakukan apa pun lebih buruk daripada tombol yang
 tidak ada — ia mengajari pengguna bahwa menekannya tidak berarti apa-apa.
 
-- [ ] Jenis notifikasi baru `cerita-baru` di `NOTIF_KINDS` (`type: 'cerita'`,
-      `group: 'cerita'`), dipicu saat cerita penulis yang diikuti terbit
-- [ ] `emitNotification` dipanggil dari jalur terbit cerita — **lewat pintunya**,
-      bukan menulis ke tabel langsung (§1.39)
-- [ ] Section beranda "Dari penulis yang kamu ikuti", tunduk pada sakelar
-      section yang sudah ada (FR-HOME-06)
-- [ ] Keadaan kosongnya harus **ajakan mengikuti penulis**, bukan "tidak ada
-      hasil" — pembaca baru pasti mengenainya (FR-CORE-03)
+- [x] Jenis notifikasi kedua belas `cerita-baru` (`type: 'cerita'`,
+      `group: 'cerita'`) — ikon, saringan, dan kelompok preferensinya dari
+      tabel `lib/notif.ts` yang sama
+- [x] Dipicu **lewat `emitNotification`** di satu-satunya tempat cerita jadi
+      `published` — keputusan tinjauan — jadi preferensi dan jam tenang tetap
+      berlaku; `groupKey` per penulis
+- [x] Section "Dari Penulis yang Kamu Ikuti" (`sec-following`, sakelar
+      kesepuluh) — global seperti Lanjut Membaca, tanpa halaman lihat-semua
+      (isinya bergantung siapa yang membaca; registry section tidak mengenal
+      pembacanya — `ponytail:` cabang ber-`userId` di `getSection` kalau perlu)
+- [x] Keadaan kosongnya **dikirim server** (`keepEmpty`) dan digambar sebagai
+      ajakan + tombol "Cari penulis"
+- [x] **Dua cacat lama ketahuan saat tombolnya diberi akibat** · `[LUAR]`:
+      tombol Ikuti di profil publik **tidak pernah bekerja** (`useToggleFollow`
+      mengira snapshot-nya daftar, `previous.items.map` melempar di `onMutate`),
+      dan berhenti mengikuti baris seed tidak pernah menghapus apa pun
+      (`delete` memakai id tebakan, bukan `existing.id`). Keduanya diperbaiki
 
 ### A3 · Tautan yang dibagikan tidak punya pratinjau · `P1` · butuh keputusan arsitektur
 
@@ -91,15 +116,21 @@ di ujung yang menerima.
 **Ini tidak bisa ditambal dari sisi klien.** Perayap tidak menjalankan JavaScript,
 jadi `document.title` yang diubah React tidak pernah terbaca. Pilihannya:
 
-- [ ] **Keputusan dulu**, sebelum satu baris kode: prerender halaman publik saat
-      build · SSR · atau fungsi edge kecil yang menyajikan meta untuk perayap
-      saja. Ketiganya menambah infrastruktur, dan itu bertabrakan dengan aturan
-      "jangan tambah dependensi" — jadi **jangan dipilih diam-diam**
-- [ ] Setelah diputuskan: `og:*` + `twitter:card` untuk `/cerita/:id` dan
-      `/pengguna/:id`, memakai sampul dan sinopsis yang sudah ada
-- [ ] `sitemap.xml` — sekarang **sengaja tidak ada**, dan `robots.txt` sudah
-      tidak lagi menunjuk ke sana (menunjuk sitemap yang 404 terbaca perayap
-      sebagai konfigurasi rusak). Ia lahir bersama deploy Fase 15
+- [x] **Diputuskan pengguna: prerender saat build** dari katalog contoh —
+      tanpa dependensi baru (`scripts/prerender.mjs` memakai `ssrLoadModule`
+      Vite sebagai pemuat TS/alias/JSON)
+- [x] `og:*` + `twitter:card` + `canonical` untuk 70 cerita dan 8 penulis →
+      `dist/cerita/<id>/index.html`, `dist/pengguna/<id>/index.html`; kerangka
+      SPA yang sama, jadi aplikasinya tetap menyala di atasnya
+- [x] `sitemap.xml` ditulis skrip yang sama; `robots.txt` menunjuknya lagi
+- [x] Berjalan **sesudah** `vite build` supaya 78 HTML itu tidak masuk precache
+      Workbox; `vite preview` diberi middleware `prerenderIndex` karena sirv tidak
+      mencari `index.html` untuk path tanpa garis miring — nginx produksi bisa,
+      dan `check:build` kini memeriksa `og:title` lewat HTTP mentah, seperti
+      perayap
+  ↳ **Batasnya ditulis:** datanya data contoh. Saat backend nyata ada, langkah
+    ini harus jadi dinamis (edge/SSR) dan skripnya dihapus (`backend-contract.md`
+    §11)
 
 ### A4 · Belum ada persetujuan analitik · `P1` · kepatuhan
 
@@ -109,6 +140,11 @@ tanpa satu pun langkah persetujuan. UU PDP menuntutnya.
 Separuh kewajibannya justru **sudah** dipenuhi: ekspor data empat kategori dan
 hapus akun sudah ada di `/pengaturan/keamanan` (FR-SET-05). Yang kurang bagian
 paling sederhananya.
+
+**Diputuskan pengguna (Langkah 84): ditunda sampai Fase 15** — dibangun
+bersama Sentry/analitik, supaya lembarnya lahir bersama hal yang ia gerbangi.
+Kotak-kotaknya tetap di sini, tidak dicentang. Tabel `analytics_consent` sudah
+ada di `backend-contract.md` §3.9.
 
 - [ ] Lembar persetujuan sekali, sebelum Sentry/analitik pertama menyala
 - [ ] Pilihannya tersimpan dan **bisa diubah** di pengaturan — persetujuan yang
@@ -126,11 +162,21 @@ Pembaca yang menemukan pelanggaran di **isi bab** — bukan di komentarnya —
 terpaksa melaporkan seluruh ceritanya. Itu memaksa moderator menebak bab mana,
 dan memaksa pelapor menuduh lebih luas daripada yang ia maksud.
 
-- [ ] `'chapter'` masuk ke `targetType`
-- [ ] Jalur masuknya dari ruang baca, memakai `ReportSheet` yang sudah ada
-- [ ] Antrean tinjauan menampilkan nomor + judul babnya, bukan hanya ceritanya
-- [ ] Ambang penyembunyian berlaku **per bab**, bukan menjatuhkan seluruh cerita
-      — sejalan dengan §1.18 ("melapor bukan membungkam")
+- [x] `'chapter'` masuk ke `targetType` (kontrak, Dexie, `backend-contract.md`)
+- [x] Tombol **Laporkan** di baris reaksi ujung bab, memakai `ModerationActions`
+      + `ReportSheet` yang sudah ada; lembarnya berjudul "Laporkan Bab N" —
+      dari `data.number`, bukan bab yang sedang terlihat (di ujung bab pengamat
+      sudah menunjuk bab berikutnya)
+- [x] Antrean tinjauan menampilkan `Bab N · judul` di konteks laporan, dan
+      tautannya menuju editor bab itu — bukan formulir ceritanya
+- [x] Ambang tiga laporan menaruh **bab itu saja** ke `review: 'in_review'`:
+      keluar dari daftar bab pembaca, `getChapter` mengirimnya tanpa isi dengan
+      `underReview`, ruang baca menggambar pemberitahuan "sedang ditinjau" tanpa
+      tombol, rantai baca berhenti di sana. Ceritanya tidak disentuh; keputusan
+      admin memulihkannya lewat pintu antrean yang sudah ada
+- [x] Iklan native & baris Suka/Laporkan **tidak digambar** di bawah bab yang
+      ditahan gerbang usia atau tinjauan — dua kontrol untuk sesuatu yang tidak
+      ada di layar · `[LUAR]`
 
 ### A6 · FR-WALLET-13 dilewati tanpa catatan · `P3` · utang dokumen
 
@@ -141,6 +187,10 @@ Ia hampir pasti memang tidak diinginkan — ia bekerja dalam rupiah dan
 bertabrakan langsung dengan ekonomi koin yang jadi inti aplikasi ini. Tetapi
 **tidak ada satu baris pun yang mencatat bahwa ia sengaja dilewati**, dan aturan
 proyek ini menuntut tiap penimpaan PRD dicatat di `architecture.md` §1.x.
+
+**Diputuskan pengguna (Langkah 84): "jangan dikerjakan A6."** Tidak dibuang,
+tidak dibangun, tidak dicatat sebagai penimpaan — ia tetap terbuka di sini
+sampai ada keputusan lain. PRD tidak disentuh.
 
 - [ ] Putuskan: dibuang atau dibangun
 - [ ] Kalau dibuang — catat di `architecture.md` §1.x beserta alasannya, dan
@@ -162,9 +212,9 @@ Yang kurang jalan masuknya. Hanya **dua** tempat menautinya: `UserRow` (dipakai
 dan `Story.authorId` sudah ada di kontraknya. Pembaca yang menyukai satu cerita
 tidak punya cara melihat apa lagi yang ditulis orang itu.
 
-- [ ] Nama pena di `StoryHero` jadi tautan ke `/pengguna/<authorId>`
-      — **butuh persetujuan**: ia mengubah tampilan halaman yang paling sering
-      dibuka, dan nama yang tiba-tiba bisa diketuk adalah keputusan desain
+- [x] Nama pena di `StoryHero` jadi tautan ke `/pengguna/<authorId>` —
+      disetujui pengguna (Langkah 85). Garis bawah putus-putus warna garis,
+      bukan tombol: ia terbaca sebagai tautan tanpa bersaing dengan Simpan/Ikuti
 - [ ] Nama penulis di kartu cerita (`StoryCard`) — sengaja **tidak** diusulkan:
       seluruh kartunya sudah satu tautan ke ceritanya, dan tautan di dalam
       tautan bukan HTML yang sah (jebakan yang sama dengan tombol putar di
@@ -184,16 +234,27 @@ sama-sama berbunyi **"Belum ada bab selesai"** untuk semua orang.
 Menurunkannya dari data nyata **benar** (§1.38). Yang salah cuma: data nyatanya
 tidak ada, dan kolom yang menyiratkan sebaliknya dibiarkan menganggur.
 
-- [ ] Putuskan salah satu — **jangan dua-duanya**:
-      **(a)** hapus kolom `act` yang mati, terima bahwa seluruh baris berbunyi
-      sama sampai ada backend · **(b)** semai `progress` untuk `f1`–`f8` supaya
-      baris turunannya bervariasi. Yang kedua lebih bagus dilihat, tetapi
-      **menambah data contoh bukan perubahan yang aman secara otomatis**
-      (CLAUDE.md §8) — ia sudah dua kali melahirkan cacat di proyek ini
+- [x] **Diputuskan pengguna: (b)** — kolom `act` dihapus **dan** `progress`
+      disemai untuk enam dari delapan pengguna (`FOLLOWER_PROGRESS`, 11 baris);
+      dua sengaja tanpa progres karena koneksi yang belum membaca apa pun adalah
+      keadaan yang sah. Barisnya tetap diturunkan `activityLineOf` (§1.38), jadi
+      "21 bab selesai" adalah angka yang bisa dibuktikan dari datanya
+  ↳ Tanggal selesainya kemarin dan sebelumnya — **bukan hari ini** — supaya misi
+    harian akun contoh tidak dihitung dari bab orang lain
+- [x] Baris `UserRow` di 320px diperbaiki · `[LUAR]`: nama dan lencana *Penulis*
+      berbagi satu baris dengan tombol Mengikuti, jadi "Adi Kurniawan" jadi
+      "Ad…" — cacat lama yang baru terlihat setelah barisnya berisi. Lencana
+      turun ke baris keterangan, keterangan boleh tiga baris
 
 ---
 
 ## B. Menunggu backend
+
+> **Skemanya sudah ditulis.** `backend-contract.md` (Langkah 82) memuat 36 tabel
+> Postgres beserta tipe tiap kolom, ke-127 endpoint RPC, bentuk yang **tidak**
+> punya tabel, dan urutan migrasi sembilan tahap. Mulai dari sana, bukan dari
+> membaca ulang `contracts/`.
+
 
 Dipindahkan ke sini dari `todo.md` (bekas bagian *"Backlog — Setelah v1"*)
 supaya "apa yang belum lengkap" punya **satu** daftar, bukan dua yang bisa

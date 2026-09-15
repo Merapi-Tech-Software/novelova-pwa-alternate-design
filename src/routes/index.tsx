@@ -56,6 +56,7 @@ const ConnectionsPage = lazy(() => import('@/features/profile/pages/ConnectionsP
 const PublicProfilePage = lazy(() => import('@/features/profile/pages/PublicProfilePage'))
 const LocalePage = lazy(() => import('@/features/profile/pages/LocalePage'))
 const SecurityPage = lazy(() => import('@/features/profile/pages/SecurityPage'))
+const AgeVerificationPage = lazy(() => import('@/features/profile/pages/AgeVerificationPage'))
 const HelpPage = lazy(() => import('@/features/profile/pages/HelpPage'))
 const LegalPage = lazy(() => import('@/features/profile/pages/LegalPage'))
 const NotificationPrefsPage = lazy(
@@ -355,6 +356,14 @@ export const ROUTES: RouteDef[] = [
     guard: 'auth',
     fallback: '/profil',
     element: <LocalePage />,
+  },
+  {
+    path: '/pengaturan/verifikasi-usia',
+    title: 'Verifikasi usia',
+    layout: 'topbar',
+    guard: 'auth',
+    fallback: '/pengaturan/bahasa',
+    element: <AgeVerificationPage />,
   },
   {
     path: '/pengaturan/keamanan',

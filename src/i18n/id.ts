@@ -42,6 +42,7 @@ export const id = {
 
   profile: {
     label: 'Profil',
+    ageVerification: 'Verifikasi usia',
     settings: 'Pengaturan',
     since: (tahun: number) => `Pembaca sejak ${tahun}`,
     edit: 'Sunting',
@@ -62,6 +63,21 @@ export const id = {
   },
 
   reader: {
+    // ── gerbang usia · A1 ─────────────────────────────────────────────────
+    ageGateTitle: 'Bab ini untuk 18+',
+    ageGateNone:
+      'Verifikasi usiamu dengan KTP untuk membaca cerita dewasa. Prosesnya sekali saja untuk seluruh cerita.',
+    ageGatePending: 'Dokumenmu sedang ditinjau. Bab ini terbuka begitu verifikasinya disetujui.',
+    ageGateRejected:
+      'Verifikasi sebelumnya ditolak. Kamu bisa mengajukan lagi dengan foto yang lebih jelas.',
+    ageGateUnderage: 'Verifikasimu diterima, tetapi usiamu belum 18 tahun.',
+    ageGateSafe: 'Tidak ada koin yang terpotong.',
+    ageGateVerify: 'Verifikasi usia',
+    ageGateBack: 'Kembali ke cerita',
+    // ── bab dalam tinjauan · A5 ───────────────────────────────────────────
+    underReviewTitle: 'Bab ini sedang ditinjau',
+    underReviewBody:
+      'Beberapa pembaca melaporkannya, jadi isinya disembunyikan sampai tim kami memeriksanya. Bab lain tetap bisa dibaca.',
     // Putaran 7 · ruang baca Type A.
     chapterLabel: (n: number) => `Bab ${n}`,
     tapHint: 'Ketuk teks sekali lagi untuk menyembunyikan',
@@ -196,6 +212,16 @@ export const id = {
   },
 
   story: {
+    /** Lencana & pemberitahuan cerita 18+ · A1. */
+    adultBadge: '18+',
+    adultNoticeTitle: 'Cerita ini untuk 18+',
+    adultNoticeBody:
+      'Isi babnya terbuka setelah usiamu terverifikasi. Menyimpan dan mengikuti tetap bisa; koinmu tidak terpotong.',
+    adultVerify: 'Verifikasi usia',
+    notFoundTitle: 'Cerita ini tidak ditemukan',
+    notFoundBody:
+      'Tautannya mungkin salah, ceritanya sudah dihapus, atau ia tidak tersedia untuk akunmu.',
+    notFoundAction: 'Ke beranda',
     views: 'Dibaca',
     ratings: 'Rating',
     followers: 'Disimpan',
@@ -377,6 +403,11 @@ export const id = {
   },
 
   home: {
+    /** Section "Dari Penulis yang Kamu Ikuti" · A2. Keadaan kosongnya ajakan. */
+    followingEmptyTitle: 'Belum ada penulis yang kamu ikuti',
+    followingEmptyBody:
+      'Ikuti penulis dari halaman profilnya. Cerita barunya muncul di sini, dan kamu diberi tahu saat terbit.',
+    followingEmptyAction: 'Cari penulis',
     greeting: (name: string) => `Hi, ${name}`,
     greetingSub: 'Enjoy your reading today',
     allGenres: 'Semua',
@@ -1661,6 +1692,7 @@ export const id = {
     targetComment: (name: string) => `Komentar dari ${name}`,
     targetReview: (name: string) => `Ulasan dari ${name}`,
     targetStory: (title: string) => `Cerita "${title}"`,
+    targetChapter: (number: number) => `Bab ${number}`,
   },
 
   /** Fase 14 · PWA & offline · arch §10.2–§10.4. */
@@ -1695,6 +1727,33 @@ export const id = {
 
   /** Fase 13 · prd_10 · FR-PROF-* · FR-SET-* · FR-HELP-*. */
   settings: {
+    // ── konten dewasa & verifikasi usia · A1 ──────────────────────────────
+    contentTitle: 'Konten',
+    showAdult: 'Tampilkan cerita 18+',
+    showAdultDesc: 'Di beranda, pencarian, dan jelajah. Tautan langsung tetap bisa dibuka.',
+    showAdultLocked: 'Verifikasi usiamu dulu untuk menyalakan ini.',
+    showAdultSaved: 'Pengaturan konten disimpan.',
+    ageTitle: 'Verifikasi usia',
+    ageIntro:
+      'Cerita berlabel 18+ hanya terbuka untuk akun yang usianya terverifikasi. Ajukan sekali dengan foto KTP; hasilnya berlaku untuk seluruh cerita.',
+    ageStatus: 'Status',
+    ageNoneBody: 'Belum ada dokumen yang diajukan.',
+    agePendingBody: 'Dokumenmu sedang ditinjau. Biasanya selesai dalam 1×24 jam.',
+    ageVerifiedBody: (age: number) => `Usiamu tercatat ${age} tahun. Cerita 18+ terbuka untukmu.`,
+    ageRejectedBody: 'Pengajuan sebelumnya ditolak. Kamu bisa mengajukan lagi.',
+    ageRejectReason: 'Alasan:',
+    ageSubmittedAt: (when: string) => `Diajukan ${when}`,
+    ageBirthDate: 'Tanggal lahir',
+    ageBirthDateRequired: 'Isi tanggal lahir sesuai KTP.',
+    ageDocument: 'Foto KTP',
+    ageDocumentHint: 'JPG, PNG, atau PDF · maksimal 8 MB',
+    ageDocumentRequired: 'Pilih berkas KTP.',
+    ageDocumentTooBig: 'Berkas lebih dari 8 MB. Kecilkan dulu.',
+    ageSubmit: 'Ajukan verifikasi',
+    ageResubmit: 'Ajukan lagi',
+    ageSubmitted: 'Dokumen diajukan. Kami beri tahu begitu ditinjau.',
+    ageSimNote:
+      'Di versi ini berkas tidak dikirim ke mana pun — hanya namanya yang tercatat, dan tinjauannya disimulasikan.',
     onlyYou: 'HANYA KAMU',
     recapTitle: 'Rekap 7 hari',
     recapEmpty: 'Belum ada bab selesai minggu ini.',

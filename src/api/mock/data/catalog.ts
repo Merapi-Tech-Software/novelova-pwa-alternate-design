@@ -31,6 +31,8 @@ export type StorySeed = {
   free?: boolean
   kisah?: boolean
   tags?: string[]
+  /** Cerita 18+ — lihat `FillerSeed.dewasa`. */
+  dewasa?: boolean
   title: string
   authorIdx: number
   genres: Story['genres']
@@ -191,6 +193,8 @@ export type FillerSeed = {
   /** Section kurasi dibangun di atas tag, jadi tag ditulis, bukan diturunkan. */
   tags: string[]
   synopsis: string
+  /** `audience: 'Dewasa 18+'` — isinya digerbangi usia (A1). */
+  dewasa?: boolean
 }
 
 /**
@@ -277,6 +281,7 @@ export const FILLER: FillerSeed[] = [
   {
     title: 'Malam Tanpa Rembulan',
     genres: ['Mystery', 'Thriller'],
+    dewasa: true,
     status: 'hiatus',
     tags: ['twist', 'psikologis'],
     synopsis:
@@ -404,6 +409,7 @@ export const FILLER: FillerSeed[] = [
   {
     title: 'Kabut di Puncak Ijen',
     genres: ['Horror'],
+    dewasa: true,
     status: 'completed',
     tags: ['rumah angker'],
     synopsis:

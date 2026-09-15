@@ -1,6 +1,8 @@
 import type {
   ActivityEntry,
   AdQuota,
+  AgeVerification,
+  AgeVerificationInput,
   AnalyticsParams,
   AuthorAnalytics,
   AuthorAnalyticsParams,
@@ -478,6 +480,13 @@ export interface NovelovaApi {
   removeChapterOffline(chapterId: string): Promise<OfflineChapter[]>
   /** Menggerakkan LRU — dipanggil tiap bab tersimpan dibuka. */
   touchOfflineChapter(chapterId: string): Promise<void>
+
+  // ── verifikasi usia · A1 ──────────────────────────────────────────────────
+  getAgeVerification(): Promise<AgeVerification>
+  /** Mengajukan dokumen. Status jadi `pending`; keputusannya milik peninjau. */
+  submitAgeVerification(input: AgeVerificationInput): Promise<AgeVerification>
+  /** Sakelar "tampilkan konten dewasa" — hanya berarti bagi akun terverifikasi. */
+  setShowAdultContent(on: boolean): Promise<ReaderPrefs>
 }
 
 /**

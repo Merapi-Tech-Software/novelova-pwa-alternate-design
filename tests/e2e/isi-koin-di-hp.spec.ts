@@ -115,6 +115,11 @@ for (const path of [
   // bersih" (CLAUDE.md §8).
   '/pengguna/f1',
   '/pengaturan/bahasa',
+  // A1 — kartu status + formulir tanggal lahir & pemilih berkas KTP.
+  '/pengaturan/verifikasi-usia',
+  // A1 — bab 18+ yang tertahan: gerbang usia dengan dua tombol berdampingan
+  // di ≥360px, bertumpuk di 320px.
+  '/cerita/s16/bab/s16-c1',
   '/pengaturan/keamanan',
   '/bantuan',
   '/legal/ketentuan',
@@ -552,6 +557,8 @@ for (const path of [
   // Fase 13 — sakelar, kotak centang ekspor, dan tombol Cabut per sesi.
   '/profil/ubah',
   '/pengaturan/keamanan',
+  // A1 — pemilih berkas dibungkus `<label>` selebar kotak; ia target ketuk juga.
+  '/pengaturan/verifikasi-usia',
 ]) {
   test(`target ketuk ≥44px di ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 900 })

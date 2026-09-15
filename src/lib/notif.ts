@@ -44,9 +44,16 @@ export const NOTIF_KINDS: Record<NotifKind, NotifKindDef> = {
   'pengikut-baru': { type: 'cerita', group: 'cerita', label: 'Pengikut baru' },
   penarikan: { type: 'dompet', group: 'karya', label: 'Penarikan' },
   keamanan: { type: 'sistem', group: 'sistem', label: 'Sistem & keamanan' },
+  // Jenis kedua belas (A2). Kelompoknya `cerita`, bukan `karya`: yang menerima
+  // adalah **pembaca** yang mengikuti, bukan penulisnya.
+  'cerita-baru': {
+    type: 'cerita',
+    group: 'cerita',
+    label: 'Cerita baru dari penulis yang diikuti',
+  },
 }
 
-/** Sebelas kunci, urut sesuai tabel PRD. */
+/** Dua belas kunci — sebelas dari tabel PRD, satu dari A2. */
 export const NOTIF_KIND_LIST = Object.keys(NOTIF_KINDS) as NotifKind[]
 
 export function typeOfKind(kind: NotifKind): NotifType {

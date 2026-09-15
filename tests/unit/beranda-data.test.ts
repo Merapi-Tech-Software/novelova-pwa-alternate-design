@@ -21,7 +21,7 @@ import { GENRE_TABS } from '@/i18n/content'
  */
 
 /** Section yang **tidak** ikut tersaring tab; isinya seluruh katalog. */
-const GLOBAL = ['populer', 'terbaru', 'terbuka', 'banner', 'lanjut-baca']
+const GLOBAL = ['populer', 'terbaru', 'terbuka', 'banner', 'mengikuti', 'lanjut-baca']
 
 const MIN_PER_SECTION = 6
 

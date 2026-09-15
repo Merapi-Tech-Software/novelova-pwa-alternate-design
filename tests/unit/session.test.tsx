@@ -108,14 +108,14 @@ describe('masa berlaku sesi mengikuti "Ingat saya"', () => {
  * yang cacat gagal di sini — bukan di layar putih saat dibuka.
  */
 describe('tabel rute', () => {
-  it('memuat 42 rute — 41 dari §8 plus antrean tinjauan, tanpa path ganda', async () => {
+  it('memuat 43 rute — 41 dari §8 plus antrean tinjauan dan verifikasi usia, tanpa path ganda', async () => {
     const { ROUTES } = await import('@/routes')
 
     // `/karya/tinjauan` tidak ada di tabel rute §8; FR-STUDIO-38 menuntut satu
     // tempat untuk empat sumber, dan menempelkannya ke layar jadwal akan
     // mencampur dua pertanyaan yang berbeda.
-    expect(ROUTES).toHaveLength(42)
-    expect(new Set(ROUTES.map((r) => r.path)).size).toBe(42)
+    expect(ROUTES).toHaveLength(43)
+    expect(new Set(ROUTES.map((r) => r.path)).size).toBe(43)
     expect(ROUTES.map((r) => r.path)).toContain('/karya/tinjauan')
   })
 

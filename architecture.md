@@ -1822,6 +1822,179 @@ dengan alasan PRD tidak boleh punya dua versi — dua daftar "yang belum selesai
 akan menyimpang, dan yang menyimpang diam-diam adalah yang paling mahal.
 
 
+### 1.51 Menuliskan kontrak backend memperlihatkan empat lubang yang tidak terlihat dari kode
+
+`backend-contract.md` (Langkah 82) menerjemahkan seam ke skema Postgres dan 127
+endpoint RPC. Menerjemahkan **memaksa membaca tiap kontrak sebagai penyimpanan**,
+dan itu memperlihatkan empat hal yang tidak pernah muncul saat membacanya sebagai
+antarmuka:
+
+1. **Tiga kontrak tidak punya tabel sama sekali.** `PushSubscriptionSchema`,
+   `DataExportSchema`, dan `CoinPackageSchema` lengkap dan bertipe — dan tidak
+   satu pun punya baris di `db.ts`. Yang pertama menyimpan langganan push (jadi
+   push v1 memang tidak pernah bisa mengirim ke perangkat mana pun), yang kedua
+   membuat `requestDataExport` menjawab tanpa menyimpan apa pun, dan yang ketiga
+   membuat harga paket koin jadi konstanta di `lib/coin.ts` — **tidak bisa diubah
+   tanpa rilis**, padahal §1.13 menuntut sebaliknya.
+2. **Tidak ada kata sandi di mana pun.** Server-mock menerima apa pun yang cocok
+   dengan seed; tabel `credentials` beserta `password_hash` adalah hal pertama
+   yang harus ada di backend, dan ia **tidak punya padanan** untuk disalin.
+3. **`reviewQueue` adalah tabel mati.** Ada di `db.ts`, **nol** rujukan di seluruh
+   handler — peninggalan sebelum §1.11 memutuskan antreannya diturunkan. Jangan
+   ikut dibuat di Postgres.
+4. **Empat `Record`/array `ReaderPrefs` dan tiga `Record` `ReadingProgress`
+   sebenarnya dua tabel.** `hiddenStoryIds`, `autoUnlockStoryIds`,
+   `autoUnlockCounts`, dan `bundleOfferSeenStoryIds` semuanya berkunci (pembaca,
+   cerita) → satu `reader_story_state`. `finishedChapterIds`, `scrollByChapter`,
+   dan `finishedAt` semuanya berkunci (pembaca, bab) → satu
+   `reading_progress_chapters`. Bentuk dokumen menyembunyikan bahwa ketujuhnya
+   cuma kolom dari dua tabel.
+
+Pelajaran yang lebih umum: **kontrak yang tidak pernah diterjemahkan ke
+penyimpanan tidak pernah diuji sebagai penyimpanan.** Sebuah `z.object` yang
+rapi bisa hidup bertahun-tahun tanpa satu pun tempat menulis isinya, dan
+typecheck tidak punya cara mengeluh.
+
+Tiga keputusan yang mengunci dokumen itu, dan semuanya dijawab pengguna sebelum
+satu baris ditulis: **Postgres relasional** · **RPC 1:1 dengan seam** (supaya
+`api/http/` tetap terjemahan mekanis, nol perubahan di 42 halaman) · **cakupan
+penuh** termasuk bentuk turunan.
+
+
+### 1.52 Rating usia, pengikut yang mendapat sesuatu, dan pratinjau tautan (A1–A3)
+
+Tiga celah teratas `todo-incoming-features.md` ditutup di Langkah 83. Tiga
+keputusannya ditanyakan lebih dulu; jawabannya membentuk kodenya.
+
+**A1 · verifikasi KTP, mode diatur server.** Pengguna memilih dokumen — bukan
+swa-deklarasi — dan meminta **keduanya** dibangun: `gated` (tampil berlencana,
+isi bab ditahan) dan `hidden` (`NOT_FOUND`), dengan backend yang memilih.
+Empat aturan yang menentukan bentuknya:
+
+1. **`isAdult` diturunkan saat dibaca** (`lib/age.ts`, satu berkas dua pembaca):
+   `verified` **dan** usia ≥ 18 pada tanggal lokal hari ini. Bendera tersimpan
+   akan berkata "belum" selamanya untuk akun yang diverifikasi sebulan sebelum
+   ulang tahun ke-18.
+2. **Satu penyaring untuk semua deretan** (`feedFilterFor`). Beranda, section,
+   pencarian, dan pilihan awal memakai fungsi yang sama — daftar yang lupa
+   adalah cara cerita 18+ bocor ke beranda anak.
+3. **Gerbang usia mendahului gerbang koin, dan bukan gerbang koin dengan kata
+   lain.** Ia tidak memperlihatkan pratinjau, tidak menjual apa pun, tidak
+   mencatat progres, dan `unlockChapter` menolak sebelum satu koin terpotong.
+   Rantai baca menerus berhenti di sana tanpa mencoba buka-otomatis.
+4. **Sakelar ≠ izin.** `showAdultContent` menjawab "mau lihat di deretan atau
+   tidak"; verifikasi menjawab "boleh atau tidak". Sakelar yang menyala tanpa
+   verifikasi tidak menampilkan apa pun, dan itu aturannya.
+
+Unggahan KTP **disimulasikan** dan layarnya mengatakannya terang. Batas yang
+lebih besar: **tanpa panel admin, di produksi tidak ada yang bisa menyetujui**
+— cerita 18+ tidak terbaca siapa pun sampai panel itu ada (§17 no. 7).
+
+**A2 · mengikuti penulis kini menghasilkan sesuatu.** Jenis notifikasi kedua
+belas (`cerita-baru`) dipicu di **satu-satunya tempat** cerita jadi `published`
+— keputusan tinjauan — lewat `emitNotification`, jadi preferensi dan jam tenang
+berlaku. Section "Dari Penulis yang Kamu Ikuti" **dikirim walau kosong**
+(`keepEmpty`): keadaan kosongnya ajakan, dan section yang menghilang tidak
+mengajak siapa pun.
+
+Memberi tombol Ikuti sebuah akibat memperlihatkan bahwa **tombolnya tidak pernah
+bekerja**: `useToggleFollow` mengira snapshot-nya daftar (`previous.items.map`)
+dan di profil publik itu melempar di `onMutate` — mutasinya dibatalkan sebelum
+sampai ke server, dengan toast "Gagal menyimpan". Dan berhenti mengikuti baris
+seed tidak pernah menghapus apa pun: `delete` memakai id tebakan
+(`u1-a2`) alih-alih `existing.id` (`fw-out-a2`). Dua cacat yang lolos tiga fase
+karena tidak ada yang melihat **akibat** tombolnya — hanya kedipannya.
+
+**A3 · prerender saat build.** `scripts/prerender.mjs` menulis 78 halaman
+(`dist/cerita/<id>/`, `dist/pengguna/<id>/`) berisi kerangka SPA + `og:*`, plus
+`sitemap.xml`, memakai `ssrLoadModule` Vite sebagai pemuat — nol dependensi
+baru. Dua hal yang tidak terlihat sampai dicoba:
+
+- **Urutannya harus sesudah `vite build`**, supaya 78 HTML itu tidak masuk
+  precache Workbox (tidak ada gunanya di sana; navigasi offline sudah jatuh ke
+  kerangka, §1.45).
+- **`vite preview` tidak menyajikan `dist/cerita/s1/index.html` untuk
+  `/cerita/s1`** — sirv tidak mencari `index.html` pada path tanpa garis miring,
+  sementara nginx (`try_files $uri $uri/`) bisa. `check:build` gagal jujur, dan
+  middleware `prerenderIndex` di `vite.config.ts` menyamakannya. Yang diperiksa
+  `check:build` adalah **HTTP mentah**, seperti perayap — memeriksanya lewat
+  Playwright akan membuktikan hal yang salah.
+
+Batasnya tertulis: datanya data contoh. Dengan backend, halaman ini harus
+dinamis dan skripnya dihapus (`backend-contract.md` §11).
+
+**Satu perbaikan di luar ketiganya:** `NOT_FOUND` di detail cerita dulu memakai
+pesan generik *"permintaannya tidak sampai ke server"* + Coba lagi — dua
+kebohongan sekaligus, karena servernya menjawab dan mencoba lagi menghasilkan
+jawaban yang sama. Kini "Cerita ini tidak ditemukan" + Ke beranda.
+
+
+### 1.53 Laporan menyasar bab, dan ambangnya per bab (A5)
+
+Sebelum ini `targetType` cuma `story | review | comment | user`: pelanggaran di
+**isi bab** terpaksa dilaporkan sebagai seluruh ceritanya — moderator menebak
+bab mana, pelapor menuduh lebih luas dari yang ia maksud. Sekarang `chapter`
+ada, dan tiga hal mengikutinya:
+
+1. **Ambangnya per bab.** Tiga laporan menaruh **bab itu saja** ke
+   `review: 'in_review'` — jalur yang sama dengan bab yang dikirim penulis
+   sendiri, jadi keputusan admin memulihkannya lewat pintu yang sudah ada, dan
+   `state` tidak disentuh supaya ia kembali `published` tanpa dijadwalkan ulang.
+   Ceritanya tidak pernah disentuh (§1.18: melapor bukan membungkam).
+2. **Yang ditahan tetap terlihat sebagai "ada, sedang diproses".** `getChapter`
+   mengirimnya tanpa isi dengan `underReview: true`, dan ruang baca menggambar
+   pemberitahuan tanpa satu pun tombol — pembaca tidak bisa berbuat apa pun
+   selain menunggu, dan tombol yang tidak berbuat apa pun lebih buruk daripada
+   tidak ada. Rantai baca menerus berhenti di sana seperti di gerbang usia.
+3. **Antrean penulis menyebut babnya**: konteks `Bab N · judul — catatan`, dan
+   tautannya ke editor bab itu, bukan ke formulir cerita.
+
+Dua hal kecil yang hanya ketahuan dengan menekan tombolnya:
+
+- Lembar laporan sempat berjudul **"Laporkan Bab 6" di baris reaksi bab 5**:
+  labelnya memakai `babTerlihat`, dan di ujung bab pengamat sudah menunjuk bab
+  berikutnya (§1.25). Label bab harus dari bab pemilik barisnya (`data.number`).
+- Iklan native dan baris Suka/Laporkan **masih digambar di bawah bab yang
+  ditahan** gerbang usia (A1) maupun tinjauan — dua kontrol untuk sesuatu yang
+  tidak ada di layar. Keduanya kini disyaratkan pada isi yang benar-benar
+  tampil.
+
+Dan satu jebakan e2e: `reload` setelah menggulir ke ujung bab 5 memuat **bab
+6**, karena URL ikut bab yang terlihat (§1.25) — bab berbayar tanpa baris
+reaksi, dan tombol Laporkan "hilang". Pakai `goto` eksplisit.
+
+**A4 ditunda ke Fase 15** (keputusan pengguna: lembar persetujuan lahir bersama
+Sentry yang ia gerbangi), **A6 tidak dikerjakan** (keputusan pengguna; tidak
+dibuang, tidak dicatat sebagai penimpaan, PRD tidak disentuh).
+
+
+### 1.54 Profil publik dapat jalan masuknya, dan koneksi dapat angkanya (A7–A8)
+
+**A7.** Nama pena di `StoryHero` kini tautan ke `/pengguna/<authorId>` —
+disetujui pengguna, karena ia mengubah halaman yang paling sering dibuka. Nama
+di `StoryCard` **sengaja tidak**: kartunya sudah satu tautan utuh, dan tautan
+di dalam tautan bukan HTML yang sah.
+
+**A8.** Kolom `act` di `FOLLOWER_ROWS` dihapus dan `progress` disemai untuk
+enam pengguna contoh. Yang disemai **fakta**-nya (bab mana yang selesai), bukan
+kalimatnya — baris "21 bab selesai" tetap diturunkan `activityLineOf`, jadi ia
+tidak bisa berselisih dengan datanya (§1.38). Dua pengguna sengaja tanpa
+progres: "Belum ada bab selesai" adalah keadaan yang sah dan harus tetap ada di
+daftar, bukan dihapus supaya daftarnya terlihat ramai.
+
+Menambah data contoh bukan perubahan yang aman secara otomatis (CLAUDE.md §8),
+jadi dua hal diperiksa lebih dulu: tidak ada handler yang mengagregasi
+`progress` lintas pengguna (statistik cerita diturunkan dari tabel lain), dan
+tanggal selesainya **kemarin atau sebelumnya** — misi harian akun contoh
+dihitung dari tanggal, dan bab orang lain tidak boleh menyumbang ke sana.
+
+Yang baru terlihat begitu barisnya berisi: **`UserRow` di 320px memotong nama
+jadi "Ad…"** untuk penulis — nama, lencana *Penulis*, dan tombol Mengikuti
+berbagi satu baris, dan yang menyusut duluan namanya. Lencana turun ke baris
+keterangan dan keterangannya boleh tiga baris. Cacat itu sudah ada sejak Fase
+13; ia tidak terlihat selama seluruh baris berbunyi sama dan pendek.
+
+
 ## 2. Stack
 
 | Kebutuhan | Pilihan | Alasan | Yang ditolak & kenapa |

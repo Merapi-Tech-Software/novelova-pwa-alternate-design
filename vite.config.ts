@@ -1,6 +1,9 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import type { Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
@@ -12,10 +15,39 @@ import { defineConfig } from 'vitest/config'
  */
 const allowedHosts = ['.merapiapp.my.id']
 
+/**
+ * `vite preview` menyajikan `dist/cerita/s1/` tetapi **bukan** `dist/cerita/s1`
+ * — sirv di dalamnya tidak mencari `index.html` untuk path tanpa garis miring.
+ * nginx produksi bisa (`try_files $uri $uri/ /index.html`), begitu juga host
+ * statis mana pun; preview yang tidak bisa berarti `check:build` menguji hal
+ * yang berbeda dari yang dideploy. Middleware kecil ini menyamakannya: path
+ * tanpa ekstensi yang punya folder prerender (A3) dialihkan ke `index.html`-nya.
+ */
+const PRERENDER_DIR = fileURLToPath(new URL('./dist', import.meta.url))
+const prerenderIndex: Plugin = {
+  name: 'novelova:prerender-index',
+  configurePreviewServer(server) {
+    server.middlewares.use((req, _res, next) => {
+      const url = req.url ?? ''
+      const path = url.split('?')[0] ?? ''
+      if (
+        path.length > 1 &&
+        !path.endsWith('/') &&
+        !path.includes('.') &&
+        existsSync(join(PRERENDER_DIR, path, 'index.html'))
+      ) {
+        req.url = `${path}/index.html${url.slice(path.length)}`
+      }
+      next()
+    })
+  },
+}
+
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    prerenderIndex,
     VitePWA({
       // injectManifest: service worker ditulis tangan di src/sw.ts, Workbox hanya
       // menyuntikkan daftar precache. Strategi lengkapnya di architecture.md §10.2.

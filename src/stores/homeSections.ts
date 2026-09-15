@@ -17,7 +17,7 @@ import { create } from 'zustand'
 
 const KEY = 'home_section_visibility_v1'
 
-/** Sembilan blok beranda, dengan `data-target` prototipe sebagai kuncinya. */
+/** Sepuluh blok beranda — sembilan `data-target` prototipe + `sec-following` (A2). */
 export const SECTION_KEYS = [
   'sec-banner',
   'sec-genres',
@@ -27,6 +27,7 @@ export const SECTION_KEYS = [
   'sec-editor',
   'sec-ad2',
   'sec-toprom',
+  'sec-following',
   'sec-continue',
 ] as const
 

@@ -140,7 +140,10 @@ export const profileHandlers: Pick<
     const existing = await db.follows.where('[followerId+followeeId]').equals([me, userId]).first()
 
     if (existing) {
-      await db.follows.delete(`${me}-${userId}`)
+      // Hapus lewat **id baris yang ditemukan**, bukan id yang ditebak dari
+      // polanya: baris seed memakai id lain (`fw-out-a2`), dan hapus yang menebak
+      // diam-diam tidak menghapus apa pun — tombolnya berkedip lalu kembali.
+      await db.follows.delete(existing.id)
       return { following: false }
     }
     await db.follows.put({

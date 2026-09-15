@@ -10,6 +10,8 @@ export interface OptimisticOptions<TVars, TData, TSnapshot> {
   optimisticUpdate: (previous: TSnapshot | undefined, vars: TVars) => TSnapshot | undefined
   /** Pesan yang ditampilkan bila server menolak dan perubahan dikembalikan. */
   rollbackMessage?: string
+  /** Kunci lain yang ikut basi begitu mutasi ini selesai — mis. beranda saat mengikuti penulis. */
+  alsoInvalidate?: QueryKey[]
 }
 
 /**
@@ -28,6 +30,7 @@ export function useOptimistic<TVars, TData, TSnapshot>({
   mutationFn,
   optimisticUpdate,
   rollbackMessage = 'Perubahan dibatalkan karena gagal disimpan.',
+  alsoInvalidate = [],
 }: OptimisticOptions<TVars, TData, TSnapshot>) {
   const queryClient = useQueryClient()
   const toast = useToast()
@@ -52,6 +55,7 @@ export function useOptimistic<TVars, TData, TSnapshot>({
 
     onSettled() {
       void queryClient.invalidateQueries({ queryKey })
+      for (const key of alsoInvalidate) void queryClient.invalidateQueries({ queryKey: key })
     },
   })
 }
