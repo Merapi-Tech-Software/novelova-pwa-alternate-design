@@ -46,8 +46,56 @@
     />
 
     <title>Novelova</title>
+
+    <!--
+      Layar pembuka · todo.md Fase 14b-b.
+
+      Inline, bukan di `base.css`: ia harus tergambar pada frame pertama, dan
+      di `npm run dev` `base.css` disuntikkan JS — menunggu JS berarti menunggu
+      hal yang justru sedang ditunggu. Karena inline, warnanya hex literal;
+      `tests/unit/pembuka.test.ts` menjaga ketiganya sama persis dengan token
+      di `tokens.css`, karena `check-tokens.mjs` tidak memindai berkas ini.
+
+      Tema: `applyReaderSettings()` baru berjalan sesudah HTML tergambar, jadi
+      pilihan tema pengguna belum diketahui di sini. Preferensi OS adalah tebakan
+      terbaik yang ada; pengguna bertema gelap di OS terang melihat satu kedipan,
+      dan itu diterima sadar — kompromi yang sama dengan yang dicatat `main.tsx`.
+    -->
+    <style>
+      #pembuka{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#f4f2ef;transition:opacity .2s ease}
+      #pembuka.redup{opacity:0;pointer-events:none}
+      #pembuka svg{width:clamp(72px,22vw,112px);height:auto;display:block}
+      #pembuka .h{fill:#b68235;transform-origin:32px 49px;transform-box:view-box;opacity:0;animation:kembang .55s cubic-bezier(.2,.7,.2,1) both,denyut 2.4s ease-in-out infinite;animation-delay:calc(var(--i)*55ms),calc(.9s + var(--i)*55ms)}
+      #pembuka .p{fill:#1c1a18}
+      @keyframes kembang{from{opacity:0;transform:rotate(calc(var(--r)*1deg)) scale(.72)}to{opacity:1;transform:none}}
+      @keyframes denyut{0%,100%{opacity:1}50%{opacity:.62}}
+      @media (prefers-color-scheme:dark){#pembuka{background:#171513}#pembuka .p{fill:#c4beb7}}
+      @media (prefers-reduced-motion:reduce){#pembuka .h{animation:none;opacity:1}}
+    </style>
   </head>
   <body>
+    <!--
+      Di luar `#root`, dan ini bukan selera: `layarGagal()` di `main.tsx` menolak
+      menggambar bila `#root` sudah berisi. Layar pembuka di dalamnya akan
+      membungkam layar gagal `APP-INIT-TIMEOUT` — satu-satunya jaring untuk
+      WebKit yang menggantung (architecture.md §1.47).
+
+      Siluet mono 7 halaman dari `public/assets/logo-novelova/mark-mono-emas.svg`,
+      ditulis ulang tangan tanpa gradasi: berkas ini di-prerender jadi 78 halaman,
+      jadi tiap byte di sini terkalikan 78 di `dist/`.
+    -->
+    <div id="pembuka" role="status" aria-label="Memuat Novelova">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path class="h" style="--i:0;--r:78" d="M32 49L-0.03 40.8Q0.62 37.6 1.26 36.81Z"/>
+        <path class="h" style="--i:1;--r:54" d="M32 49L6.07 28.48Q7.48 25.72 8.88 25.36Z"/>
+        <path class="h" style="--i:2;--r:28" d="M32 49L16.66 19.71Q18.58 17.65 20.5 18Z"/>
+        <path class="h" style="--i:3;--r:0" d="M32 49L29.9 16Q32 14.8 34.1 16Z"/>
+        <path class="h" style="--i:4;--r:-28" d="M32 49L43.5 18Q45.42 17.65 47.34 19.71Z"/>
+        <path class="h" style="--i:5;--r:-54" d="M32 49L55.12 25.36Q56.52 25.72 57.93 28.48Z"/>
+        <path class="h" style="--i:6;--r:-78" d="M32 49L62.74 36.81Q63.38 37.6 64.03 40.8Z"/>
+        <path class="p" d="M7 50Q19.5 44.5 32 50Q44.5 44.5 57 50V57Q44.5 51.5 32 57Q19.5 51.5 7 57Z"/>
+      </svg>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

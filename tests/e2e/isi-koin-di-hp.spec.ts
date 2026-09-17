@@ -499,7 +499,11 @@ const HITUNG_TARGET = `(() => {
    *
    * Selama masih ada kerangka di layar, nilai baliknya **tidak pernah** \`[]\`.
    */
-  if (document.getAnimations().some((a) => a.animationName === 'pulse')) {
+  // \`pulse\` = kerangka \`Skeleton\`; \`nvKembang\`/\`nvDenyut\` = \`MuatRute\`
+  // (Fase 14b-c), yang tampil selagi modul halamannya belum tiba — dan halaman
+  // tanpa modul memang belum punya satu pun tombol.
+  const MEMUAT = new Set(['pulse', 'nvKembang', 'nvDenyut'])
+  if (document.getAnimations().some((a) => MEMUAT.has(a.animationName))) {
     return ['(masih memuat)']
   }
 

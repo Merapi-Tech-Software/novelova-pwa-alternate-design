@@ -263,8 +263,11 @@ export const chapterStudioHandlers: Pick<
       throw new ApiError(INTERNAL_CODES.VALIDATION, 'Tanggal atau jam terbit tidak sah.')
     }
     if (at.getTime() < Date.now() - 60_000) {
+      // `SCHED-422`, bukan `VALIDATION` · §7.2. Kodenya sudah ada sejak awal dan
+      // `Scheduler.tsx` memang menantikannya sebagai kesalahan inline; yang
+      // kurang cuma servernya yang tidak pernah mengirimkannya.
       throw new ApiError(
-        INTERNAL_CODES.VALIDATION,
+        VISIBLE_CODES.SCHED_PAST_TIME,
         'Waktu terbit sudah lewat. Pilih tanggal hari ini atau sesudahnya.',
       )
     }

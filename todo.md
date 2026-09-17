@@ -186,8 +186,9 @@ Ekspor data dan hapus akun sebelumnya direncanakan punya rute sendiri (`/pengatu
 | 12 | Pusat hadiah & voucher terpadu | 4–6 h | |
 | 13 | Profil, pengaturan, bantuan, legal | 6–8 h | |
 | 14 | Pengerasan PWA & push | 5–7 h | |
+| **14b** | **Layar pembuka & animasi muat** `[PRODUK]` | 3–4 h | |
 | 15 | Persiapan rilis | 3–4 h | **M5 — siap dipakai** |
-| | | **~99–129 h** | ≈ 20–26 minggu solo |
+| | | **~102–133 h** | ≈ 21–27 minggu solo |
 | **R** | **Redesign putaran 7** — trek terpisah di `novelova-v2/` `[PRODUK]` | 21–31 h | menyerap Fase 5b |
 
 **Fase R tidak dijumlahkan ke total di atas.** Ia trek terpisah di folder lain, berjalan di atas salinan yang sudah selesai sampai Fase 10 — bukan pekerjaan tambahan pada jalur yang sama. Fase 5b juga tidak dihitung dua kali: mockup `7x`…`7aa` menggambarnya persis, jadi ia dikerjakan di dalam **R4**.
@@ -195,6 +196,13 @@ Ekspor data dan hapus akun sebelumnya direncanakan punya rute sendiri (`/pengatu
 **Perubahan estimasi dari pembaruan desain:** Fase 1 dan 6 masing-masing **+1 hari** untuk sistem keadaan gagal (komponen `FailureNotice` dan tiga varian kegagalan bayar); Fase 13 **−1 hari** karena delapan layarnya kini punya mockup. Selebihnya tidak berubah — layar-layar baru itu sudah dihitung dari teks PRD sejak awal.
 
 **Seksi `8a` tidak menggeser total, tetapi menggeser isi Fase 8.** Formulir cerita (8c) turun **−1 hari** — tujuh FR-nya kini punya mockup lengkap dengan copy kedua modenya, jadi tidak ada lagi yang dirancang dari teks. Riwayat cetak (8g) naik **+1 hari** untuk empat keadaan gagal cetak yang sebelumnya tidak ada di rencana mana pun, termasuk satu alur persetujuan biaya berlayar penuh. Bersih nol — isi Fase 8 yang berubah, bukan panjangnya.
+
+**Fase 14b menambah 3–4 hari ke total** (~99–129 → **~102–133**). Ia permintaan
+produk yang datang setelah Fase 14 selesai, dan ditulis sebagai fase tersendiri
+alih-alih diselipkan ke Fase 15: persiapan rilis adalah daftar periksa, bukan
+tempat membangun layar baru. Nomornya `14b` karena layar pembukanya melanjutkan
+pekerjaan Fase 14 — `theme-color`, `apple-touch-startup-image`, dan ikon aplikasi
+semuanya sudah dipasang di sana, dan sekarang ketiganya ikut berubah.
 
 **Koreksi terpisah, bukan dari desain:** kepala Fase 8 tertulis 17–22 hari sementara ketujuh sub-bagiannya berjumlah **20–26**. Selisih tiga sampai empat hari itu salah hitung, bukan asumsi kerja paralel — tidak ada catatan yang menyatakannya. Kepala fase dan total sekarang mengikuti jumlah bagiannya: **~99–129 hari**. Ini satu-satunya fase yang punya sub-estimasi, jadi tidak ada tempat lain yang perlu diperiksa ulang.
 
@@ -1757,9 +1765,173 @@ Bangun `SettingRow` dan `UserRow` (Fase 1) lebih dulu — keduanya memikul hampi
 
 ---
 
+## Fase 14b — Layar Pembuka & Animasi Muat · 3–4 hari · `[PRODUK]` · **selesai (Langkah 90)**
+
+> Permintaan pengguna, 17 September 2026: *"buat animasi loading saat aplikasi
+> dibuka/saat user pindah ke fitur tetapi butuh resp yang agak lama. Nah untuk
+> logo sudah saya buat di folder public/asset/logo-novelova. ada macam sample
+> logo tinggal disesuaikan dengan theme aplikasi novelova nya"*
+
+**Dua masalah yang disebut bersama, dan jawabannya berlawanan.** Membuat
+keduanya memakai komponen yang sama adalah cara tercepat membuat salah satunya
+salah:
+
+| | Saat aplikasi dibuka | Saat pindah fitur |
+|---|---|---|
+| Yang dilihat sekarang | `#root` kosong sampai `initApi()` selesai — **tidak ada apa pun**, bahkan bukan logo | `Skeleton lines={6}` muncul **seketika**, di setiap rute malas |
+| Masalahnya | Tidak ada tanda aplikasinya hidup | Berkedip: 60 md skeleton lalu hilang lebih mengganggu daripada tidak ada |
+| Jawabannya | **Tampil segera**, tanpa jeda | **Tunggu dulu** ~180 md; yang cepat tidak pernah memunculkannya |
+| Kalau tertukar | Pengguna menatap layar kosong setelah menekan ikon | Setiap ketukan berkedip |
+
+Karena itu ambangnya hidup di `lib/limits.ts` sebagai **dua** konstanta berbeda,
+bukan satu yang dipakai dua tempat.
+
+**Dan skeleton tidak diganti spinner.** Skeleton yang berbentuk seperti
+halamannya lebih baik daripada logo berputar — ia memberi tahu apa yang akan
+datang. Animasi logo hanya untuk dua tempat yang **bentuk halamannya belum
+diketahui**: pembukaan aplikasi, dan perpindahan rute sebelum modulnya termuat.
+`AsyncState` tidak disentuh sama sekali.
+
+### 14b-a. Logo disesuaikan ke palet putaran 7 · 0,5–1 h
+
+Yang dikirim pengguna berpalet **rose gold** (`#b76e79`, `#c47f88`, `#e3b3ab`)
+di atas arang — itu bahasa visual **v1**, bukan putaran 7 yang dipakai
+`novelova-v2/` (§1.20). Menaruhnya apa adanya sebagai layar pembuka membuat hal
+**pertama** yang dilihat pengguna memakai palet yang sudah ditinggalkan satu
+putaran.
+
+- [x] Foil kipas diubah rose gold → **dua emas**: `#b68235` (`--nv-gold-line`)
+      sebagai warna utama kipas, `#7d5411` (`--nv-gold`) sebagai sisi gelapnya,
+      `#fff3e4` (`--nv-gold-soft`) sebagai kilau
+  ↳ `--nv-gold-line`, **bukan** `--nv-gold`, karena tokennya sendiri membaginya
+    begitu: emas teks vs emas bukan-teks. Tanda logo bukan teks.
+- [x] Punggung buku diselaraskan ke tinta putaran 7 (`#1c1a18`), bukan
+      `#2b2d31` — selisihnya kecil tetapi terlihat saat bersebelahan dengan
+      bilah atas
+- [x] Varian gelap memakai `--nv-accent` malam (`#b68235`) sesuai `tokens.css`
+      baris 179
+- [x] **`BACA-SAYA.md` di folder logo ikut diperbarui pada giliran yang sama**
+  ↳ Berkas itu sekarang berbunyi *"jangan tambah warna di luar rose gold +
+    kelabu"* — aturan yang **melarang persis** apa yang diminta di sini.
+    Membiarkannya berarti dua dokumen yang saling membantah, dan itu selalu
+    lebih mahal daripada satu dokumen yang usang (alasan yang sama dengan
+    aturan PRD, CLAUDE.md §5).
+- [x] Bagian "Warna" diganti, dan aturan ukuran kecil (<24 px pakai mono)
+      dipertahankan — itu aturan keterbacaan, bukan aturan palet
+
+**Butuh persetujuan sebelum dikerjakan:** apakah emas memang menggantikan rose
+gold sepenuhnya, atau rose gold tetap jadi identitas merek yang berdiri di luar
+palet aplikasi. Keduanya sah; yang tidak sah adalah memilihnya diam-diam.
+
+### 14b-b. Layar pembuka · 1–1,5 h
+
+- [x] Markup + `<style>` **inline di `index.html`**, di luar `#root`
+  ↳ Inline karena ia harus tergambar pada frame pertama: menunggu `base.css`
+    (yang di `npm run dev` disuntikkan JS) berarti menunggu hal yang justru
+    sedang ditunggu.
+  ↳ **Di luar `#root`, dan ini bukan selera.** `layarGagal()` di `main.tsx`
+    menolak menggambar bila `root.innerHTML.length > 0`. Layar pembuka di dalam
+    `#root` membuat layar gagal `APP-INIT-TIMEOUT` **tidak pernah muncul** —
+    dan itu justru satu-satunya jaring untuk WebKit yang menggantung (§1.47).
+- [x] Tanda logo disederhanakan untuk layar pembuka — siluet mono 7 halaman,
+      tanpa gradasi, **disasar < 2 KB**
+  ↳ Berkas yang ada 8,8–9,7 KB. `index.html` di-prerender jadi **78 halaman**
+    (A3), jadi tiap KB yang disisipkan terkalikan 78 di `dist/`. Ukur
+    sebelum/sesudah `npm run build`, jangan diperkirakan.
+- [x] Animasi: kipas mengembang sekali lalu berdenyut halus, atau kilau
+      bergerak melintasi foil — **satu gagasan, bukan dua**
+- [x] `@media (prefers-reduced-motion: reduce)` → logo diam, tanpa gerakan
+      (`base.css` sudah punya blok ini; layar pembuka punya blok sendiri karena
+      CSS-nya inline)
+- [x] `@media (prefers-color-scheme: dark)` di CSS inline-nya
+  ↳ `applyReaderSettings()` baru berjalan **sesudah** HTML tergambar, jadi tema
+    pilihan pengguna belum diketahui saat layar pembuka muncul. Preferensi OS
+    adalah tebakan terbaik yang tersedia; pengguna bertema gelap di OS terang
+    akan tetap melihat satu kedipan, dan itu diterima sadar — persis kompromi
+    yang sudah dicatat di `main.tsx`.
+- [x] Dihapus oleh `main.tsx` **setelah render pertama**, dengan transisi redup
+      ~200 md — bukan dihapus mendadak
+  ↳ Dihapus di `.then()` yang sudah ada, bersebelahan dengan `clearTimeout`.
+- [x] **Tanpa durasi minimum.** Boot 80 md harus terlihat 80 md; layar pembuka
+      yang menahan aplikasi demi terlihat adalah aplikasi yang sengaja
+      dilambatkan
+- [x] `role="status"` + `aria-label` "Memuat Novelova", dan `aria-hidden` begitu
+      mulai meredup
+
+### 14b-c. Indikator perpindahan · 1–1,5 h
+
+- [x] `MUAT_RUTE_TUNDA_MS = 180` di `lib/limits.ts` — **hanya satu ambang**,
+      bukan sepasang seperti direncanakan
+  ↳ Batas "tampil minimal" menuntut fallback **menahan** halaman yang sudah
+    siap, dan itu aplikasi yang sengaja dilambatkan — persis yang dilarang
+    14b-b. Kedipan terbalik yang langka lebih baik daripada jeda yang pasti.
+- [x] Komponen `MuatRute` menggantikan `Skeleton lines={6}` sebagai `fallback`
+      Suspense di `App.tsx` — tanda logo kecil + gerakan yang sama dengan layar
+      pembuka, supaya keduanya terbaca sebagai satu aplikasi
+  ↳ **Premis fase ini setengah keliru, dan ketahuan saat dikerjakan.** React
+    Router 7 membungkus navigasi dalam transisi, jadi saat pindah fitur halaman
+    lama **tetap tergambar** sampai modul barunya tiba — fallback tidak pernah
+    dipanggil di sana, dan tidak ada kedipan skeleton yang perlu ditunda.
+    `MuatRute` hanya untuk muat pertama, muat ulang, dan tautan langsung.
+    Dibuktikan e2e: dua perpindahan cepat, nol kemunculan. §1.57.
+- [x] **Tidak menutupi halaman lama.** Ia menempati area konten, bukan lapisan
+      di atas segalanya
+  ↳ Lapisan penuh layar akan menghalangi ketukan, dan sapuan e2e yang
+    **menekan** tombol (CLAUDE.md §2) akan gagal berselang-seling — gejala yang
+    terbaca seperti cacat produk, bukan cacat indikator.
+- [x] Mutasi lambat (buka bab, bayar) **tidak** memakai indikator ini — tombolnya
+      sendiri yang menyatakan sedang bekerja, dan itu sudah berjalan
+- [x] Offline tidak memutar selamanya: `networkMode: 'offlineFirst'` (§1.44)
+      membuat kueri **gagal**, bukan menggantung, jadi indikatornya berhenti dan
+      `FailureNotice` mengambil alih — periksa, jangan asumsikan
+
+### 14b-d. Ikon aplikasi & splash iOS ikut berganti · 0,5 h
+
+Sekarang ada **dua sumber ikon yang berbeda** di repo, dan keduanya hidup:
+`public/icons/` (dipakai `index.html` dan manifest sejak Fase 14) dan
+`public/assets/logo-novelova/` (yang baru). Membiarkan keduanya berarti ikon di
+layar utama ponsel memakai gambar lama sementara layar pembuka memakai yang
+baru.
+
+- [x] `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`,
+      `icon-512-maskable.png` dibuat ulang dari tanda yang sudah diemaskan
+- [x] Keempat `splash-*.png` iOS dibuat ulang — latarnya `#f4f2ef` supaya
+      sambungannya ke layar pembuka tidak terlihat
+- [x] `public/assets/logo-novelova/` ditetapkan sebagai **sumber**, `public/icons/`
+      sebagai **turunan** — dicatat di `BACA-SAYA.md` supaya sesi berikutnya tidak
+      menyunting yang salah
+- [x] `theme-color` diperiksa masih `#f4f2ef`; kalau layar pembuka memakai warna
+      lain, keduanya harus sama
+
+### 14b-e. Penjaga · 0,5 h
+
+- [x] Test: warna di `<style>` inline `index.html` **sama persis** dengan
+      `--nv-bg` dan `--nv-gold-line` di `tokens.css`
+  ↳ `check-tokens.mjs` hanya memindai `src/**`, jadi hex di `index.html` lolos
+    begitu saja — satu-satunya tempat di proyek ini yang boleh punya hex di luar
+    `tokens.css`, dan karena itu satu-satunya yang bisa menyimpang tanpa
+    ketahuan. Penjaganya harus test, bukan niat.
+- [x] Test: tanda logo **tidak** disisipkan sebagai SVG inline ke `.tsx` —
+      `MuatRute.test.tsx` menuntut `fill="currentColor"`, dan `check-tokens.mjs`
+      menjatuhkan hex apa pun yang menyelinap
+  ↳ Kalau disisipkan, belasan hex-nya melanggar aturan struktur #1 dan
+    `npm run check` gagal. Pakai `<img>` ke berkas, atau warnai lewat
+    `currentColor` + token.
+- [x] e2e: `/` dibuka, layar pembuka terlihat, lalu **hilang** — dan `#root`
+      terisi. Menguji kemunculannya saja akan lulus walau ia tidak pernah pergi
+- [x] e2e: perpindahan rute **cepat** tidak memunculkan indikator sama sekali
+- [x] Sapuan lebar: layar pembuka di **320 · 360 · 390 · 412 · 430 · 1280** —
+      logo yang tidak menyusut akan meluber justru di 320
+- [x] `npm run check:build` bersih: layar pembuka ikut ke 78 halaman prerender,
+      dan ukuran `dist/` sesudahnya dicatat
+
+---
+
 ## Fase 15 — Persiapan Rilis · 3–4 hari · **M5**
 
 - [ ] Aset nyata menggantikan seluruh placeholder (cover, avatar, gambar iklan) — tidak ada lagi rujukan CDN
+  ↳ Ikon aplikasi dan splash iOS **bukan** bagian butir ini lagi: keduanya
+    dikerjakan di **Fase 14b-d** bersama logo yang diemaskan.
 - [ ] Konten legal final ditinjau (bukan lorem)
 - [ ] **Pemeriksa tautan internal di CI** — setiap tujuan navigasi harus cocok dengan satu rute (arch §8) · `P0` — FR-CORE-05 · `[BARU]`
 - [ ] `.env.example` + dokumentasi `VITE_API_MODE`

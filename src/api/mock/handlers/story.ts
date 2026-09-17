@@ -116,7 +116,7 @@ export const storyHandlers: Pick<
       throw new ApiError(
         VISIBLE_CODES.CONTENT_WITHDRAWN,
         'Bab ini ditarik penulisnya untuk disunting ulang.',
-        { detail: chapter.withdrawnAt },
+        { withdrawnAt: chapter.withdrawnAt },
       )
     }
 

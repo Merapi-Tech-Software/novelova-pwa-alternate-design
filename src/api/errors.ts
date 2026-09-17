@@ -98,6 +98,22 @@ export interface ApiErrorOptions {
    * terkubur di dalam kalimat pesannya.
    */
   retryAt?: string
+  /**
+   * Kapan bab ditarik penulisnya, ISO — `CONTENT-410`. Layar bab-ditarik
+   * menyebut tanggalnya, dan tanggal itu harus datang sebagai tanggal.
+   */
+  withdrawnAt?: string
+  /**
+   * Berapa koin yang kurang — `INSUFFICIENT_COINS`. Ruang baca memakainya untuk
+   * menyorot paket terkecil yang mencukupi, jadi ia angka, bukan kalimat.
+   */
+  shortBy?: number
+  /**
+   * `request_id` dari amplop jawaban (`backend-contract.md` §2.2) — sama dengan
+   * baris log server. Ikut tampil kecil di bawah pesan supaya yang dibacakan
+   * pengguna ke dukungan menunjuk ke satu baris log, bukan ke seluruh hari.
+   */
+  requestId?: string
 }
 
 export class ApiError extends Error {
@@ -105,6 +121,9 @@ export class ApiError extends Error {
   readonly retryable: boolean
   readonly detail: string | undefined
   readonly retryAt: string | undefined
+  readonly withdrawnAt: string | undefined
+  readonly shortBy: number | undefined
+  readonly requestId: string | undefined
 
   constructor(code: ErrorCode, message: string, options: ApiErrorOptions = {}) {
     super(message, options.cause === undefined ? undefined : { cause: options.cause })
@@ -113,11 +132,28 @@ export class ApiError extends Error {
     this.retryable = options.retryable ?? RETRYABLE.has(code)
     this.detail = options.detail
     this.retryAt = options.retryAt
+    this.withdrawnAt = options.withdrawnAt
+    this.shortBy = options.shortBy
+    this.requestId = options.requestId
   }
 
   /** Benar bila kodenya memang untuk dibaca pengguna ke tim dukungan. */
   get isVisibleCode(): boolean {
     return this.code.includes('-')
+  }
+
+  /**
+   * Baris kecil di bawah pesan gagal: `"PAY-402 · GoPay · 3f9a…"`.
+   *
+   * Sebelum Langkah 88 baris ini dirakit `AsyncState` dari `detail ?? code`,
+   * dan `detail` sendiri dipakai **tiga arti sekaligus** — teks tampilan,
+   * tanggal bab ditarik, dan jumlah koin yang kurang. Ketiganya lolos
+   * typecheck karena semuanya `string`; yang membedakannya cuma siapa yang
+   * kebetulan membacanya (CLAUDE.md §8, "satu nama untuk dua arti").
+   * Sekarang `detail` tinggal satu arti, dan dua sisanya punya nama sendiri.
+   */
+  get technicalCode(): string {
+    return [this.code, this.detail, this.requestId].filter(Boolean).join(' · ')
   }
 }
 

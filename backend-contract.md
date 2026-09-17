@@ -6,6 +6,23 @@
 > mock. Nah saya ingin buat data nya sekarang asli … buat markdown isinya api
 > contract dan field-field didatabase beserta type data nya."*
 >
+> **Revisi 16 Sep 2026 (Langkah 86):** amplop respons diganti mengikuti format
+> backend yang ditetapkan pengguna — `{ success, code, message, data, meta,
+> request_id }`, `code` = status HTTP sebagai **angka**, `data`/`meta` tidak
+> pernah `null`. Yang berubah: §0 (keputusan ke-4), §2.2, §6 (kolom Response =
+> isi `data`), §7 (peta `(metode, code)` → kode klien), §9 no. 24–26. Versi lama
+> — badan = nilai kembalian mentah, `{ "error": {…} }` saat gagal — **tidak
+> berlaku lagi**. Rencana penyesuaian klien & server-mock:
+> `todo-incoming-features.md` bagian **D**.
+>
+> **Revisi 17 Sep 2026 (Langkah 88):** amplopnya **dikerjakan**, dan
+> mengerjakannya memperbaiki empat hal di dokumen ini. §2.1 aturan argumen
+> ditulis ulang — nama bidang di §6 yang berlaku, bukan `{ arg }`, karena
+> tabel nama memang tidak terhindarkan. §2.2 bertambah satu fakta gagal
+> (`short_by`) dan mengoreksi jumlah metode `void` dari 22 jadi **20**. §7.2
+> kehilangan `SCHED-409`, yang ternyata **diturunkan** di layar jadwal dan
+> tidak pernah dilempar — tempatnya §7.3. Rinciannya `architecture.md` §1.56.
+>
 > **Sumber dokumen ini adalah kode, bukan ingatan.** Tiap tabel dan tiap
 > endpoint di bawah diturunkan dari berkas nyata:
 > `src/api/client.ts` (127 metode) · `src/api/contracts/*.ts` (10 berkas Zod) ·
@@ -15,7 +32,7 @@
 
 ---
 
-## 0. Tiga keputusan yang mengunci dokumen ini
+## 0. Empat keputusan yang mengunci dokumen ini
 
 Ditanyakan dan dijawab pengguna sebelum satu baris ditulis:
 
@@ -24,6 +41,7 @@ Ditanyakan dan dijawab pengguna sebelum satu baris ditulis:
 | **Bentuk DB** | **Relasional — PostgreSQL** | Array di dalam baris dipecah jadi tabel sendiri; aturan jadi `CONSTRAINT`, bukan pengecekan di kode |
 | **Gaya API** | **RPC 1:1 dengan seam** | Tiap metode `NovelovaApi` jadi satu `POST /rpc/<nama>`; folder `api/http/` jadi terjemahan mekanis, **nol perubahan di 42 halaman** |
 | **Cakupan** | **Tabel + endpoint + bentuk turunan** | Bagian 5 menjelaskan apa yang **tidak** punya tabel dan dihitung dari apa |
+| **Amplop respons** (Langkah 86) | **`{ success, code, message, data, meta, request_id }`** — `code` angka status HTTP, `data` & `meta` tidak pernah `null`, koleksi = `data` array + `meta { total_count, limit, offset }`, **tanpa kode aplikasi** | §2.2 dan §7. Kode aplikasi (`PAY-402`, `INSUFFICIENT_COINS`, …) dipulihkan klien dari pasangan `(metode, code)`; amplop dibuka **sekali** di satu fungsi, halaman tetap melihat tipe seam |
 
 ### Kenapa RPC, dan apa konsekuensinya
 
@@ -205,13 +223,27 @@ POST /rpc/<namaMetode>
 Content-Type: application/json
 Authorization: Bearer <access token>
 X-Client-Version: 1.4.2
+Accept-Language: id
 
 { ...argumen metode }
 ```
 
-**Argumennya persis parameter metode seam.** Metode berparameter tunggal objek
-mengirim objek itu apa adanya; metode berparameter posisi dibungkus jadi objek
-bernama:
+`Accept-Language` menentukan bahasa `message` di jawaban (§2.2); nilainya dari
+`locale_settings.language`, bawaan `id`.
+
+**Argumennya persis parameter metode seam**, dan **nama bidangnya diambil dari
+kolom Request di §6** — 69 metode menamainya di sana, dan ketika dicocokkan
+dengan tanda tangan di `client.ts`, ke-69-nya sama jumlahnya: nol selisih.
+
+Tiga bentuk, dan hanya tiga:
+
+1. Metode yang §6 tulis dengan bidang bernama (`{ storyId }`,
+   `{ storyId, chapterId }`, `{ params: ListParams }`) → persis bidang itu.
+2. Metode yang §6 tulis sebagai satu tipe masukan (`LoginInput`, `UnlockInput`,
+   `ProgressInput`, …) → objeknya dikirim **apa adanya**.
+3. Argumen tunggal non-objek yang §6 tulis `{ arg: … }` (`markRead`,
+   `finishOnboarding`, `getStarterPicks`, `revokeDeviceSession`,
+   `getSuggestions`, `setShowAdultContent`) → dibungkus `arg`.
 
 ```jsonc
 // api.getChapter(storyId, chapterId)
@@ -227,49 +259,147 @@ POST /rpc/getWallet
 {}
 ```
 
-> Aturannya harus **mekanis**, bukan per metode: begitu ada satu metode yang
-> namanya diterjemahkan khusus, `api/http/` berhenti jadi terjemahan dan mulai
-> jadi lapisan yang bisa salah sendiri.
+> **Versi pertama dokumen ini menetapkan aturan yang lebih ketat** — setiap
+> argumen tunggal non-objek dibungkus `{ arg }` — dengan alasan bahwa
+> terjemahannya harus mekanis, tanpa keputusan per metode. Aturan itu ternyata
+> **tidak pernah bisa berlaku penuh**: JavaScript tidak menyimpan nama parameter
+> saat runtime, jadi `getChapter(a, b)` tidak bisa menebak sendiri bahwa
+> keduanya `storyId` dan `chapterId`. Sebuah tabel nama wajib ada apa pun yang
+> terjadi. Dan karena ia wajib ada, `{ "storyId": "s1" }` lebih baik daripada
+> `{ "arg": "s1" }`: itu yang sudah tertulis di §6, dan itu yang terbaca di log.
+>
+> Yang tetap dijaga: tabelnya **disalin** dari §6, tidak disusun ulang, dan
+> jumlah bidangnya diperiksa terhadap tanda tangan seam
+> (`tests/unit/envelope.test.ts`). Terjemahannya tetap tidak boleh punya
+> pendapat sendiri.
 
-### 2.2 Bentuk jawaban
+### 2.2 Bentuk jawaban — satu amplop untuk semua
 
-**Berhasil — `200`**, badan = nilai kembalian metode, apa adanya:
+**Ditetapkan pengguna (Langkah 86).** Setiap jawaban, berhasil atau gagal,
+berbentuk sama:
 
-```json
-{ "id": "…", "balance": 20000, "bonus": 23, "updatedAt": "2026-09-06T…Z" }
-```
-
-Metode `Promise<void>` menjawab `200` dengan badan `null`.
-
-**Gagal — status HTTP sesuai kelasnya**, badan selalu bentuk yang sama:
-
-```json
+```jsonc
 {
-  "error": {
-    "code": "INSUFFICIENT_COINS",
-    "message": "Koin kamu kurang 1.200 untuk membuka bab ini.",
-    "retryable": false,
-    "details": { "need": 1200, "balance": 300 }
-  }
+  "success": true,
+  "code": 200,                 // angka = status HTTP jawaban ini, selalu sama dengannya
+  "message": "story created",  // kalimat; Bahasa Indonesia atau Inggris (Accept-Language)
+  "data": {},                  // selalu ada, tidak pernah null
+  "meta": {},                  // selalu ada, tidak pernah null; terisi hanya untuk koleksi
+  "request_id": "3f9a…"        // sama dengan baris log server
 }
 ```
 
-| Kelas | HTTP | `code` |
+| Field | Tipe | Aturan |
 |---|---|---|
-| Validasi gagal | `400` | `VALIDATION` |
-| Belum masuk / token kedaluwarsa | `401` | `AUTH-401` |
-| Tidak berhak | `403` | `FORBIDDEN` |
-| Tidak ada | `404` | `NOT_FOUND` |
-| Bentrok keadaan | `409` | `CONFLICT`, `SCHED-409`, `PRINT-409`, `DRAFT-409` |
-| Kuota / rate limit | `429` | `QUOTA_EXCEEDED`, `AUTH-429` |
-| Koin kurang | `402` | `INSUFFICIENT_COINS` |
-| Versi klien terlalu tua | `426` | `APP-426` |
-| Kegagalan server | `500` | `UNKNOWN` |
+| `success` | `boolean` | `true` ⇔ status HTTP `2xx`. Klien memutuskan dari **ini**; keduanya wajib sepakat (§9 no. 24) |
+| `code` | `integer` | **Status HTTP jawaban ini**, disalin ke badan. Bukan kode aplikasi, bukan string. Berhasil selalu `200` — RPC tidak memakai `201`/`204` |
+| `message` | `string` | Berhasil: boleh kosong, tidak dirender. Gagal: **ditampilkan ke pengguna apa adanya**, jadi wajib menjawab tiga hal §1.4 (apa yang terjadi → uang/tulisan aman? → satu tindakan). Bahasa mengikuti `Accept-Language`, bawaan `id` |
+| `data` | `object \| array` | Nilai kembalian metode (§6). `Promise<void>` → `{}`. Gagal → `{}`, kecuali dua pengecualian di bawah |
+| `meta` | `object` | `{}` kecuali `data` berupa array — lihat *Koleksi* |
+| `request_id` | `string` | UUID v7 per permintaan, ditulis di baris log server. Klien menampilkannya kecil di bawah pesan gagal bersama kodenya (`PAY-402 · 3f9a…`) — jejak yang dibacakan pengguna ke dukungan |
 
-> `message` **ditampilkan ke pengguna** dan sudah berbahasa Indonesia di
-> server-mock. Backend wajib meneruskan kebiasaan itu: pesan gagal di aplikasi
-> ini menjawab tiga hal berurutan — apa yang terjadi → apakah uang/tulisanmu aman
-> → satu tindakan (`architecture.md` §1.4).
+**Berhasil**, metode biasa — `data` = nilai kembalian, apa adanya:
+
+```jsonc
+// POST /rpc/getWallet  {}
+{
+  "success": true, "code": 200, "message": "",
+  "data": { "id": "…", "balance": 20000, "bonus": 23, "updatedAt": "2026-09-06T…Z" },
+  "meta": {}, "request_id": "…"
+}
+
+// POST /rpc/logout  {}          ← Promise<void>
+{ "success": true, "code": 200, "message": "", "data": {}, "meta": {}, "request_id": "…" }
+```
+
+**Koleksi** — `data` adalah **array**-nya langsung, halaman di `meta`:
+
+```jsonc
+// POST /rpc/getChapters  { "storyId": "s1", "params": { "page": 2, "pageSize": 20 } }
+{
+  "success": true, "code": 200, "message": "",
+  "data": [ { …ChapterSummary }, … ],
+  "meta": { "total_count": 42, "limit": 20, "offset": 20 },
+  "request_id": "…"
+}
+```
+
+Permintaannya **tetap** `page`/`pageSize` — aturan mekanis §2.1: badan =
+argumen seam. Server menghitung `offset = (page − 1) × pageSize`,
+`limit = pageSize`. Klien menurunkan `Paged<T>` seam dari amplop, **di satu
+tempat**, dan 37 berkas yang membaca `hasMore`/`pageSize` tidak berubah:
+
+| Seam (`Paged<T>`) | Dari amplop |
+|---|---|
+| `items` | `data` |
+| `pageSize` | `meta.limit` |
+| `page` | `⌊meta.offset ÷ meta.limit⌋ + 1` |
+| `total` | `meta.total_count` |
+| `hasMore` | `meta.offset + data.length < meta.total_count` |
+
+Array yang **tidak** berhalaman (`listVouchers`, `listDeviceSessions`,
+`getStarterPicks`, …) memakai aturan yang sama supaya mekanis:
+`meta = { "total_count": n, "limit": n, "offset": 0 }`. Klien tidak
+membedakannya — ia cuma membaca `data`.
+
+**Dua bentuk kembalian yang tidak muat begitu saja** — aturan `data` objek/array
+dan tidak pernah `null` bertabrakan dengan tujuh metode seam. Keduanya
+diselesaikan **mekanis**, sejalan dengan pembungkusan `{ arg }` di §2.1:
+
+| Bentuk seam | Metode | Di amplop |
+|---|---|---|
+| **Boleh `null`** — "belum ada", bukan kegagalan | `getProgress` · `getMyRating` · `getBundleOffer` | `data: {}`. Objek kosong **adalah** `null`-nya; klien mengembalikan `null` untuk skema yang nullable |
+| **Primitif** — bukan objek, bukan array | `hasReported` → `boolean` · `getUnreadCount` → `number` | `data: { "value": … }`. Klien membuka `value` |
+
+`string[]` (`getTrendingQueries`, `listBlocks`) tidak termasuk: array sudah sah
+sebagai `data`, dan ikut aturan koleksi.
+
+> Tanpa dua baris ini, `getProgress` untuk cerita yang belum pernah dibuka
+> mengirim `{}` yang gagal skema `ReadingProgress`, dan lencana notifikasi
+> mengirim `data: 3` yang melanggar amplopnya sendiri. Keduanya baru terlihat
+> saat dijalankan, bukan saat dibaca.
+
+**Gagal** — `success: false`, `code` = status HTTP, `data` dan `meta` **tetap
+objek**:
+
+```jsonc
+// POST /rpc/getStory  { "storyId": "tidak-ada" }        → HTTP 404
+{
+  "success": false, "code": 404,
+  "message": "Cerita ini tidak ada atau sudah dihapus.",
+  "data": {}, "meta": {}, "request_id": "3f9a…"
+}
+```
+
+**Tidak ada kode aplikasi di amplop** — itu keputusan pengguna, dan
+konsekuensinya ditanggung klien: `api/http/` memulihkan `ErrorCode` dari
+pasangan **`(metode, code)`** lewat satu tabel (§7). Pasangannya cukup, karena
+tiap metode hanya punya satu arti per status — `402` dari `unlockChapter`
+adalah koin kurang, `402` dari `confirmTopupOrder` adalah bank menolak.
+
+Dua kegagalan **membawa fakta di `data`**, karena layarnya bertindak dari
+fakta itu, bukan dari kalimat pesannya:
+
+| HTTP · metode | `data` | Dipakai untuk |
+|---|---|---|
+| `429` · `login` (`AUTH-429`) | `{ "retry_at": "2026-09-16T08:15:00Z" }` | Hitung mundur "coba lagi pukul …" di `/masuk` |
+| `410` · `getChapter` (`CONTENT-410`) | `{ "withdrawn_at": "2026-09-01T…Z" }` | Layar bab ditarik menyebut tanggalnya |
+| `402` · `unlockChapter` (`INSUFFICIENT_COINS`) | `{ "short_by": 1200 }` | Lembar saldo kurang menyorot paket koin terkecil yang mencukupi |
+
+Selain ketiganya, `data` saat gagal adalah `{}`. Menaruh rincian error lain di
+sana tanpa layar yang membacanya hanya menambah bentuk yang harus dijaga.
+
+> Ketiganya sempat menumpang **satu bidang** `ApiError.detail` di klien — teks
+> tampilan, tanggal, dan angka sekaligus. Ketiganya `string`, jadi typecheck
+> tidak pernah keberatan; yang membedakannya cuma siapa yang kebetulan
+> membacanya. Sekarang masing-masing punya nama (`architecture.md` §1.56).
+
+> **Kenapa `success` dan `code` dua-duanya, padahal satu cukup?** Karena
+> pengguna menetapkan keduanya, dan keduanya murah selama disepakati: klien
+> memutuskan dari `success`, log dan proxy memutuskan dari status HTTP. Yang
+> **tidak boleh** terjadi adalah `success: false` di atas `200` — §9 no. 24.
+> Klien memperlakukan amplop yang berselisih dengan statusnya sebagai
+> `CONTRACT`, bukan menelannya.
 
 ### 2.3 Autentikasi
 
@@ -1373,7 +1503,17 @@ dan seluruh `RewardHistoryEntry`.
 ## 6. Kontrak API — 130 endpoint
 
 Semua `POST /rpc/<nama>`. Kolom **Request** adalah badan JSON; kolom **Response**
-adalah badan jawaban `200`.
+adalah **isi `data`** pada jawaban `200` (amplop §2.2). `Paged<T>` berarti `data`
+= array item dan `meta` terisi; `{}` berarti metode `void`.
+
+Rekap bentuk kembalian ke-130 metode, karena pembungkusnya berbeda per bentuk:
+**20** `void` (`data: {}`) · **12** `Paged<T>` (`data` array + `meta`) · **18**
+array (dua di antaranya `string[]`) · **3** boleh `null` (`data: {}`) · **2**
+primitif (`data: { value }`) · **93** objek biasa. Angkanya dijaga
+`tests/unit/envelope.test.ts`, dan `src/api/envelope.ts` menurunkan keempat
+kelompok pertama dari tipe `NovelovaApi` sendiri — daftar yang ketinggalan
+zaman gagal di `tsc`, bukan di layar. Kelima metode bertanda 🔸 di
+bawah adalah yang **tidak muat begitu saja** — aturannya di §2.2.
 
 ### 6.1 Sesi & akun — 7
 
@@ -1383,9 +1523,9 @@ adalah badan jawaban `200`.
 | `register` | `RegisterInput` | `Session` |
 | `requestReset` | `{ identity }` | `ResetRequest` |
 | `refresh` | `{}` (cookie) | `Session` |
-| `logout` | `{}` | `null` |
+| `logout` | `{}` | `{}` |
 | `listDeviceSessions` | `{}` | `DeviceSession[]` |
-| `revokeDeviceSession` | `{ arg: string \| "all-others" }` | `null` |
+| `revokeDeviceSession` | `{ arg: string \| "all-others" }` | `{}` |
 
 ### 6.2 Onboarding & beranda — 6
 
@@ -1414,9 +1554,9 @@ adalah badan jawaban `200`.
 | `getChapter` | `{ storyId, chapterId }` | `Chapter` |
 | `getUnlockOptions` | `{ chapterId }` | `UnlockOption[]` |
 | `unlockChapter` | `UnlockInput` 🔑 | `UnlockResult` |
-| `getBundleOffer` | `{ storyId, chapterId }` | `BundleOffer \| null` |
-| `dismissBundleOffer` | `{ storyId }` | `null` |
-| `setAutoUnlock` | `{ storyId, on }` | `null` |
+| `getBundleOffer` 🔸 | `{ storyId, chapterId }` | `BundleOffer \| null` |
+| `dismissBundleOffer` | `{ storyId }` | `{}` |
+| `setAutoUnlock` | `{ storyId, on }` | `{}` |
 
 🔑 = wajib `idempotencyKey`.
 
@@ -1428,8 +1568,8 @@ adalah badan jawaban `200`.
 
 | Metode | Request | Response |
 |---|---|---|
-| `saveProgress` | `ProgressInput` | `null` |
-| `getProgress` | `{ storyId }` | `ReadingProgress \| null` |
+| `saveProgress` | `ProgressInput` | `{}` |
+| `getProgress` 🔸 | `{ storyId }` | `ReadingProgress \| null` |
 | `listProgress` | `{}` | `ReadingProgress[]` |
 | `getReaderStats` | `{}` | `ReaderStats` |
 | `listLibrary` | `{ params: ListParams }` | `Paged<Story>` |
@@ -1438,9 +1578,9 @@ adalah badan jawaban `200`.
 | `toggleLibrary` | `{ storyId }` | `LibraryEntry` |
 | `toggleFollow` | `{ storyId }` | `LibraryEntry` |
 | `toggleNotify` | `{ storyId }` | `LibraryEntry` |
-| `removeFromLibrary` | `{ storyId }` | `null` |
+| `removeFromLibrary` | `{ storyId }` | `{}` |
 | `undoRemove` | `{ storyId }` | `LibraryEntry` |
-| `hideStory` | `{ storyId }` | `null` |
+| `hideStory` | `{ storyId }` | `{}` |
 
 > `saveProgress` dikirim maksimal **sekali per 10 detik**. Server harus tahan
 > terhadap kiriman yang lebih rapat — ia idempoten secara alami (tulis nilai
@@ -1477,18 +1617,18 @@ adalah badan jawaban `200`.
 | Metode | Request | Response |
 |---|---|---|
 | `rateStory` | `{ storyId, stars }` | `Rating` |
-| `getMyRating` | `{ storyId }` | `Rating \| null` |
-| `deleteRating` | `{ storyId }` | `null` |
+| `getMyRating` 🔸 | `{ storyId }` | `Rating \| null` |
+| `deleteRating` | `{ storyId }` | `{}` |
 | `submitReview` | `ReviewInput` | `Review` |
-| `deleteReview` | `{ storyId }` | `null` |
+| `deleteReview` | `{ storyId }` | `{}` |
 | `listReviews` | `{ storyId, params: ReviewParams }` | `ReviewPage` |
 | `replyToReview` | `{ reviewId, text }` | `Review` |
 | `listComments` | `{ chapterId, params: CommentParams }` | `Paged<Comment>` |
 | `postComment` | `CommentInput` | `Comment` |
-| `react` | `{ target: ReactTarget, on }` | `null` |
-| `report` | `ReportInput` | `null` |
-| `hasReported` | `{ targetType, targetId }` | `boolean` |
-| `blockUser` | `{ userId, on }` | `null` |
+| `react` | `{ target: ReactTarget, on }` | `{}` |
+| `report` | `ReportInput` | `{}` |
+| `hasReported` 🔸 | `{ targetType, targetId }` | `boolean` |
+| `blockUser` | `{ userId, on }` | `{}` |
 | `listBlocks` | `{}` | `string[]` |
 | `listActivity` | `{ userId, respectPrivacy }` | `ActivityEntry[]` |
 
@@ -1497,10 +1637,10 @@ adalah badan jawaban `200`.
 | Metode | Request | Response |
 |---|---|---|
 | `listNotifications` | `{ params: NotifParams }` | `Paged<Notification>` |
-| `getUnreadCount` | `{}` | `number` |
-| `markRead` | `{ arg: string[] \| "all" }` | `null` |
+| `getUnreadCount` 🔸 | `{}` | `number` |
+| `markRead` | `{ arg: string[] \| "all" }` | `{}` |
 | `getNotificationPrefs` | `{}` | `NotificationPrefs` |
-| `setNotificationPrefs` | `{ prefs: NotificationPrefs }` | `null` |
+| `setNotificationPrefs` | `{ prefs: NotificationPrefs }` | `{}` |
 
 > `markRead: "all"` hanya menyentuh yang **masih terlihat** (≤ 90 hari).
 > Menandai yang tidak pernah dilihat pengguna adalah mengubah data atas nama
@@ -1516,21 +1656,21 @@ adalah badan jawaban `200`.
 | `getStudioSummary` | `{}` | `StudioSummary` |
 | `createStory` | `{ form: StoryForm }` | `Story` |
 | `updateStory` | `{ storyId, form: StoryForm }` | `Story` |
-| `deleteStory` | `{ storyId }` | `null` |
+| `deleteStory` | `{ storyId }` | `{}` |
 | `scheduleStory` | `ScheduleStoryInput` | `StudioStory` |
 | `getChaptersForAuthor` | `{ storyId, params }` | `Paged<AuthorChapter>` |
 | `getChapterBoard` | `{ storyId }` | `ChapterBoard` |
 | `publishChapter` | `{ chapterId }` | `AuthorChapter` |
 | `scheduleChapter` | `ScheduleChapterInput` | `AuthorChapter` |
 | `unscheduleChapter` | `{ chapterId }` | `AuthorChapter` |
-| `deleteChapter` | `{ chapterId }` | `null` |
+| `deleteChapter` | `{ chapterId }` | `{}` |
 | `getChapterDraft` | `{ chapterId }` | `ChapterDraft` |
 | `saveChapterDraft` | `ChapterDraftInput` | `ChapterDraft` |
 | `getChapterAccess` | `{ chapterId }` | `ChapterAccessInfo` |
 | `setChapterAccess` | `ChapterAccessInput` | `ChapterAccessInfo` |
 | `getStoryAnalytics` | `{ storyId, params: AnalyticsParams }` | `StoryAnalytics` |
 | `listSchedule` | `{}` | `ScheduleEntry[]` |
-| `cancelScheduleEntry` | `{ entryId }` | `null` |
+| `cancelScheduleEntry` | `{ entryId }` | `{}` |
 
 ### 6.11 Tinjauan & cetak — 8
 
@@ -1538,7 +1678,7 @@ adalah badan jawaban `200`.
 |---|---|---|
 | `listReviewQueue` | `{}` | `ReviewQueueItem[]` |
 | `submitForReview` | `{ target: ReviewTarget }` | `ReviewQueueItem` |
-| `withdrawFromReview` | `{ target: ReviewTarget }` | `null` |
+| `withdrawFromReview` | `{ target: ReviewTarget }` | `{}` |
 | `createPrintOrder` | `PrintOrderInput` | `PrintOrder` |
 | `listPrintOrders` | `{ params: PrintOrderParams }` | `Paged<PrintOrder>` |
 | `cancelPrintOrder` | `{ orderId }` | `PrintOrder` |
@@ -1586,7 +1726,7 @@ adalah badan jawaban `200`.
 | `getLocaleSettings` | `{}` | `LocaleSettings` |
 | `setLocaleSettings` | `{ settings }` | `LocaleSettings` |
 | `getSecurityOverview` | `{}` | `SecurityOverview` |
-| `clearReadingHistory` | `{}` | `null` |
+| `clearReadingHistory` | `{}` | `{}` |
 | `getDeletionCheck` | `{}` | `DeletionCheck` |
 | `requestDataExport` | `{ arg: ExportCategory[] }` | `DataExport` |
 | `requestAccountDeletion` | `{}` | `{ purgeAt }` |
@@ -1616,7 +1756,7 @@ adalah badan jawaban `200`.
 | `listOfflineChapters` | `{}` | `OfflineChapter[]` |
 | `saveChapterOffline` | `{ chapterId }` | `OfflineChapter[]` |
 | `removeChapterOffline` | `{ chapterId }` | `OfflineChapter[]` |
-| `touchOfflineChapter` | `{ chapterId }` | `null` |
+| `touchOfflineChapter` | `{ chapterId }` | `{}` |
 
 > `saveChapterOffline` **menolak bab yang belum dimiliki**. LRU dijalankan
 > **sesudah** menyimpan — yang baru saja diminta pengguna tidak boleh jadi korban
@@ -1624,37 +1764,63 @@ adalah badan jawaban `200`.
 
 ---
 
-## 7. Kode error
+## 7. Kode error — dan cara klien memulihkannya dari amplop
 
-### Ditampilkan ke pengguna
+Amplop (§2.2) hanya membawa **status HTTP**. Kode yang dipakai aplikasi — 15
+yang tampil ke pengguna dan 12 internal (`src/api/errors.ts`) — **tidak
+dikirim**; `api/http/` memulihkannya dari pasangan `(metode, code)`. Tabel di
+bawah adalah kontraknya: backend wajib menjawab status yang tertulis, klien
+wajib memetakannya persis begini. Peta ini hidup di **satu** berkas klien dan
+disapu test terhadap seluruh kode (`todo-incoming-features.md` D).
 
-| Kode | HTTP | Arti |
+### 7.1 Status bawaan — berlaku untuk metode apa pun
+
+| HTTP | `ErrorCode` klien | `retryable` |
 |---|---|---|
-| `PAY-402` | 402 | Bank menolak. **Tidak ada dana terpotong** |
-| `PAY-504` | 200† | Penyedia tidak menjawab 90 detik → `pending_reconciliation` |
-| `PAY-410` | 409 | Kode bayar / VA lewat batas waktu |
-| `AUTH-401` | 401 | Sesi berakhir |
-| `AUTH-429` | 429 | 5 percobaan gagal → tahan 15 menit |
-| `APP-426` | 426 | Versi aplikasi di bawah minimum |
-| `DRAFT-409` | 409 | Autosave gagal berulang. **Editor tidak dibekukan** |
-| `CONTENT-410` | 410 | Bab ditarik penulis. **Refund otomatis** |
-| `PRINT-504` | 504 | Pembuatan PDF lewat batas waktu |
-| `PRINT-410` | 410 | Berkas PDF lewat masa simpan 30 hari |
-| `PRINT-409` | 409 | Pesanan sudah produksi — tidak bisa dibatalkan |
-| `PRINT-402` | 409 | Biaya berubah; produksi berhenti sampai disetujui |
-| `SCHED-409` | 409 | Dua bab di slot yang sama |
-| `SCHED-422` | 422 | Waktu terbit sudah lewat |
-| `SCHED-200` | 200 | Zona berubah — **peringatan, bukan kegagalan** |
+| `400` | `VALIDATION` | tidak |
+| `401` | `AUTH-401` — memicu lembar masuk ulang. **Jangan dipakai untuk arti lain** | tidak |
+| `402` | `INSUFFICIENT_COINS` | tidak |
+| `403` | `FORBIDDEN` | tidak |
+| `404` | `NOT_FOUND` | tidak |
+| `409` | `CONFLICT` | tidak |
+| `426` | `APP-426` — layar versi kedaluwarsa. **Jangan dipakai untuk arti lain** | tidak |
+| `429` | `QUOTA_EXCEEDED` | tidak |
+| `5xx` lainnya | `UNKNOWN` | ya |
+| tidak ada jawaban · gagal parse · amplop berselisih dengan statusnya | `NETWORK` · `TIMEOUT` · `OFFLINE` · `CONTRACT` — **ditentukan klien**, bukan server | ya, kecuali `CONTRACT` |
 
-† `PAY-504` dijawab `200` dengan pesanan berstatus `pending_reconciliation`:
-transaksinya **belum gagal**, dan menjawabnya sebagai error membuat klien
-menampilkan "gagal" untuk uang yang mungkin sudah berpindah.
+### 7.2 Penimpaan per metode — kode yang tampil ke pengguna
 
-### Internal
+Angka pada nama kode tampil **adalah** status HTTP-nya (`PAY-402` → `402`). Itu
+sudah begitu sejak kanvas, dan sekarang jadi aturan (§9 no. 26): kode tampil
+`XXX-nnn` selalu dijawab dengan HTTP `nnn`. Yang berubah dari versi lama:
+`PAY-410` dulu tercatat `409` — sekarang `410`, mengikuti angkanya.
 
-`NETWORK` · `TIMEOUT` · `OFFLINE` · `NOT_FOUND` · `VALIDATION` · `CONTRACT` ·
-`FORBIDDEN` · `CONFLICT` · `INSUFFICIENT_COINS` · `QUOTA_EXCEEDED` ·
-`NOT_IMPLEMENTED` · `UNKNOWN`
+| Metode | HTTP | `ErrorCode` | Arti · `retryable` |
+|---|---|---|---|
+| *(mana pun)* | `401` | `AUTH-401` | Sesi berakhir · tidak |
+| *(mana pun)* | `426` | `APP-426` | Versi aplikasi di bawah minimum · tidak |
+| `login` | `429` | `AUTH-429` | 5 percobaan gagal → tahan 15 menit; **`data.retry_at` wajib** · tidak |
+| `createTopupOrder` · `confirmTopupOrder` | `402` | `PAY-402` | Bank menolak. **Tidak ada dana terpotong** · ya |
+| `createTopupOrder` · `confirmTopupOrder` | `504` | `PAY-504` | Penyedia tidak menjawab → pesanan `pending_reconciliation`; pesanan baru ditolak sampai selesai (§9 no. 14) · tidak |
+| `confirmTopupOrder` · `redeemVoucher` | `410` | `PAY-410` | Kode bayar / VA / voucher lewat batas waktu · tidak |
+| `getChapter` | `410` | `CONTENT-410` | Bab ditarik penulis. **Refund otomatis**; **`data.withdrawn_at` wajib** · tidak |
+| `saveChapterDraft` | `409` | `DRAFT-409` | Autosave gagal berulang. **Editor tidak dibekukan** · ya |
+| `scheduleChapter` · `scheduleStory` | `422` | `SCHED-422` | Waktu terbit sudah lewat · tidak |
+| `cancelPrintOrder` | `409` | `PRINT-409` | Pesanan sudah produksi — tidak bisa dibatalkan · tidak |
+
+Metode lain yang menjawab status yang sama memakai kode bawaan §7.1 —
+`409` dari `claimCheckIn` adalah `CONFLICT`, bukan `DRAFT-409`.
+
+### 7.3 Kode yang **bukan** jawaban gagal
+
+Lima kode tampil hidup sebagai **keadaan di data**, dijawab `200`:
+
+| Kode | Di mana |
+|---|---|
+| `SCHED-200` | Peringatan zona waktu di hasil `scheduleChapter`/`scheduleStory` — **bukan kegagalan** |
+| `SCHED-409` | **Bentrok jadwal — diturunkan, bukan dilempar.** `/karya/jadwal` menghitungnya dari hubungan antar entri dan merendernya sebagai sisipan; memperbaiki jadwalnya menghapus barisnya sendiri (§1.11). Kalau `scheduleChapter` menolaknya dengan `409`, bentrok tidak akan pernah bisa **dibuat** — termasuk yang sengaja disemai supaya peringatannya punya data |
+| `PRINT-504` · `PRINT-410` · `PRINT-402` | `print_orders.failure_code`; layarnya membaca status pesanan, bukan menangkap error |
+| `PAY-504` | Juga `topup_orders.failure_code` saat `getTopupOrder` — pesanan yang sedang dipastikan **belum gagal**, dan menjawabnya sebagai error membuat klien menampilkan "gagal" untuk uang yang mungkin sudah berpindah |
 
 **Boleh dicoba ulang otomatis:** `NETWORK`, `TIMEOUT`, `OFFLINE`, `UNKNOWN`,
 `PAY-402`, `DRAFT-409`, `PRINT-504`. Sisanya **tidak** — mencoba ulang
@@ -1736,6 +1902,14 @@ Melewati klien tidak boleh melewati aturannya.
 22. **Cerita tayang → pengikut penulisnya diberi tahu (A2)** lewat pintu
     notifikasi yang sama (`notif_kind = 'cerita-baru'`, `group_key` per penulis),
     dipicu di satu-satunya tempat cerita jadi `published`: keputusan tinjauan.
+24. **`success` ⇔ status HTTP `2xx`, dan `code` = status HTTP** (Langkah 86).
+    `success: false` di atas `200`, atau `code` yang berbeda dari statusnya,
+    adalah cacat server; klien memperlakukannya sebagai `CONTRACT`.
+25. **`data` dan `meta` tidak pernah `null` dan tidak pernah absen** — `{}` untuk
+    `void` dan untuk kegagalan; array untuk koleksi, dengan `meta` terisi (§2.2).
+26. **Kode tampil `XXX-nnn` dijawab HTTP `nnn`** pada metode yang tertulis di
+    §7.2; `401` dan `426` tidak dipakai untuk arti lain; `login` `429` membawa
+    `data.retry_at`, `getChapter` `410` membawa `data.withdrawn_at`.
 
 ---
 
@@ -1763,6 +1937,13 @@ tidak tahu implementasi mana yang dipakai — itulah gunanya seam.
 ---
 
 ## 11. Yang dokumen ini **tidak** jawab
+
+> **Sudah terjawab sejak Langkah 88:** amplop §2.2 dan peta §7 bukan lagi
+> rencana — keduanya berjalan di `src/api/envelope.ts` dan `src/api/errorMap.ts`,
+> dipakai **dua sisi** seam, dan dijaga 76 test (`envelope`, `amplop-domain`,
+> `http-rpc`). `api/http/` juga bukan stub lagi: ke-130 metodenya nyata,
+> terjemahan argumennya diuji, dan yang belum ada tinggal **backend di ujung
+> kabelnya**.
 
 Ditulis terang supaya tidak dikira sudah diputuskan:
 

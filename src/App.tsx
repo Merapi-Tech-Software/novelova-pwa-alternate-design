@@ -3,7 +3,7 @@ import { RouterProvider } from 'react-router'
 import { ErrorBoundary } from './app/ErrorBoundary'
 import { QueryProvider } from './app/providers/QueryProvider'
 import { SessionProvider } from './app/providers/SessionProvider'
-import { Skeleton } from './components/ui/Card'
+import { MuatRute } from './components/patterns/MuatRute'
 import { ToastProvider } from './components/ui/Toast'
 import { router } from './routes'
 
@@ -19,7 +19,13 @@ export default function App() {
       <QueryProvider>
         <ToastProvider>
           <SessionProvider>
-            <Suspense fallback={<Skeleton lines={6} className="m-6" />}>
+            {/*
+              Fallback ini hanya untuk modul halaman yang belum ada — muat
+              pertama, muat ulang, tautan langsung. Perpindahan di dalam
+              aplikasi tidak sampai ke sini: React Router 7 menahan halaman
+              lama selama transisi (Fase 14b-c).
+            */}
+            <Suspense fallback={<MuatRute />}>
               <RouterProvider router={router} />
             </Suspense>
           </SessionProvider>

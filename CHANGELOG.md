@@ -5,6 +5,367 @@ benar-benar berubah — termasuk yang **tidak** dikerjakan dan alasannya.
 
 ---
 
+## 2026-09-17 · Langkah 90 — Fase 14b dikerjakan bertahap: logo emas, layar pembuka, MuatRute, ikon
+
+> "oke sekarang lanjutkan step 14b sesuai todo yang dibuat. secara bertahap"
+
+Lima tahap berurutan, tiap tahap diverifikasi sebelum tahap berikutnya. 28
+dari 28 kotak — dua di antaranya dengan teks yang **diperbaiki** karena
+kenyataannya berbeda dari rencananya, bukan dicentang apa adanya.
+
+### 14b-a · Logo diemaskan
+
+Sembilan SVG dipetakan dari rose gold ke dua emas token; bentuk tidak disentuh.
+Nama `*-rose`/`*-arang` diganti (`mark-mono-emas`, `ikon-aplikasi-emas`,
+`ikon-aplikasi-malam`); manifest C2PA yang batal dibuang (9 KB → 1,5 KB);
+`BACA-SAYA.md` ditulis ulang, termasuk menetapkan folder ini **sumber** dan
+`public/icons/` **turunan**. Keputusan yang saya tandai "butuh persetujuan"
+dijawab permintaan awal Anda sendiri — "disesuaikan dengan theme aplikasi" —
+jadi emas menggantikan rose gold sepenuhnya.
+
+### 14b-b · Layar pembuka
+
+Inline di `index.html`, di luar `#root`, 1.787 B; kipas 7 halaman mengembang
+lalu berdenyut; tema malam lewat `prefers-color-scheme`; gerak-dikurangi → diam.
+Ditutup `main.tsx` di **tiga** jalan keluar boot, tanpa durasi minimum. Diuji di
+320·360·390·412·430·1280, terang, malam, dan gerak-dikurangi.
+
+### 14b-c · MuatRute
+
+Fallback akar berupa siluet yang sama (`currentColor` + token, tanpa hex),
+diam 180 md lalu tampil. **Premisnya setengah keliru**: React Router 7 menahan
+halaman lama saat pindah fitur, jadi fallback hanya menyala di muat
+pertama/muat ulang/tautan langsung. Dibuktikan e2e, dicatat `architecture.md`
+§1.57.
+
+### 14b-d · Ikon & splash iOS
+
+`scripts/buat-ikon.mjs` kini membaca tanda emasnya, bukan huruf "N"
+penampung; sembilan berkas `public/icons/` dibangkitkan ulang. Diperiksa visual:
+zona aman maskable utuh, favicon terbaca 16 px, splash iOS sewarna kertas.
+
+### 14b-e · Penjaga
+
+`pembuka.test.ts` (warna `index.html` = token, di luar `#root`, < 2 KB, gerak
+dikurangi), `MuatRute.test.tsx` (ambang, `currentColor`, timer dibersihkan),
+`pembuka-dan-muat.spec.ts` (8 e2e: layar pembuka **pergi**, MuatRute di 6
+lebar tanpa luberan, perpindahan cepat nol indikator). Probe sapuan target
+ketuk diperluas mengenali animasi `MuatRute` sebagai "masih memuat".
+
+**Gerbang:** `npm run check` bersih · **761 unit** · **132 e2e** · `check:build`
+bersih · `dist/` 2,7 MB, layar pembuka ada di 78 halaman prerender.
+
+### Tiga temuan
+
+1. **Peran `status` tidak bernama dari isinya** — `getByRole('status', { name })`
+   tidak pernah cocok; tiga e2e gagal sementara instrumentasi menunjukkan
+   komponennya hidup dua detik. CLAUDE.md §8.
+2. **Menambahkan folder logo saja sudah membuat `npm run check` merah**
+   (Langkah 89) — dan sekarang readme logonya sendiri melarang perubahan yang
+   diminta. Keduanya ditutup.
+3. **`main.tsx` sudah punya dua jalan gagal yang akan tertutup layar pembuka**
+   kalau layar itu tidak ditutup di sana juga.
+
+### Yang **tidak** dikerjakan
+
+- `MIN_TAMPIL_INDIKATOR_MS` — menahan halaman yang sudah siap; ditolak sadar.
+- Indikator untuk perpindahan yang **sungguh** lambat (`route.lazy` +
+  `useNavigation`, 43 entri tabel rute) — dicatat di `todo-incoming-features.md`
+  bagian C, bukan dikerjakan diam-diam.
+- **Flake lama `ReaderPage` "TIGA jalan keluar"** gagal di **tiga dari tiga**
+  jalan suite penuh hari ini dan lulus setiap kali sendirian (23/23). Ia ada
+  sebelum sesi ini (Langkah 88 mencatat pohon bersih pun gagal) dan **bukan**
+  bagian 14b; tidak disentuh, tetapi tidak boleh terus disebut "flake" —
+  usulan: jalankan berkas itu terpisah dari paralel, atau naikkan penantian
+  dialognya seperti preseden §8.
+- Tidak ada commit.
+
+---
+
+## 2026-09-17 · Langkah 89 — Fase 14b direncanakan: layar pembuka & animasi muat
+
+> "oke bagus sekarang update file todo.md untuk step membuat animasi loading
+> saat aplikasi dibuka/saat user pindah ke fitur tetapi butuh resp yang agak
+> lama. Nah untuk logo sudah saya buat di folder public/asset/logo-novelova. ada
+> macam sample logo tinggal disesuaikan dengan theme aplikasi novelova nya"
+
+**Rencana saja — nol baris kode.** `todo.md` dapat **Fase 14b** (28 kotak, lima
+bagian, 3–4 hari), disisipkan antara Fase 14 dan 15 karena layar pembukanya
+melanjutkan pekerjaan Fase 14: `theme-color`, `apple-touch-startup-image`, dan
+ikon aplikasi semuanya dipasang di sana, dan ketiganya ikut berubah. Total
+rencana naik dari ~99–129 jadi **~102–133 hari**.
+
+### Dua masalah, jawaban berlawanan
+
+Keduanya disebut dalam satu kalimat permintaan, tetapi jawabannya bertolak
+belakang — dan memakai satu komponen untuk keduanya membuat salah satunya salah:
+
+- **Aplikasi dibuka:** `#root` kosong sampai `initApi()` selesai. Tampil
+  **segera**, tanpa jeda dan tanpa durasi minimum.
+- **Pindah fitur:** `Skeleton lines={6}` muncul **seketika** di setiap rute
+  malas, jadi perpindahan cepat berkedip. **Tunggu ~180 md** dulu, lalu tahan
+  minimal ~320 md supaya tidak berkedip terbalik.
+
+Dua ambang berbeda di `lib/limits.ts`, bukan satu yang dipakai dua tempat.
+`AsyncState` tidak disentuh: skeleton yang berbentuk seperti halamannya lebih
+baik daripada logo berputar.
+
+### Tiga hal yang ditemukan saat membaca asetnya
+
+1. **Logonya berpalet rose gold** (`#b76e79`, `#c47f88`) di atas arang — itu
+   bahasa visual **v1**, bukan putaran 7 yang dipakai `novelova-v2/` (§1.20).
+   Inilah yang pengguna sebut "tinggal disesuaikan". Rencananya memetakan foil
+   kipas ke **dua emas** (`--nv-gold-line` utama, `--nv-gold` sisi gelap).
+2. **`BACA-SAYA.md` di folder logo melarang persis apa yang diminta** — ia
+   berbunyi *"jangan tambah warna di luar rose gold + kelabu"*. Berkas itu wajib
+   ikut diperbarui pada giliran yang sama; dua dokumen yang saling membantah
+   lebih mahal daripada satu yang usang.
+3. **Ada dua sumber ikon yang sama-sama hidup** — `public/icons/` (dipakai
+   `index.html` dan manifest sejak Fase 14) dan `public/assets/logo-novelova/`
+   yang baru. Tanpa 14b-d, ikon di layar utama ponsel tetap gambar lama
+   sementara layar pembukanya sudah baru.
+
+### Empat jebakan yang sudah ditulis di rencananya
+
+- **Layar pembuka wajib di luar `#root`.** `layarGagal()` menolak menggambar
+  bila `root.innerHTML.length > 0`, jadi layar pembuka di dalamnya akan
+  mematikan layar `APP-INIT-TIMEOUT` — satu-satunya jaring untuk WebKit yang
+  menggantung (§1.47).
+- **Tiap KB terkalikan 78.** `index.html` di-prerender jadi 78 halaman (A3);
+  berkas logo yang ada 8,8–9,7 KB, jadi layar pembuka menuntut siluet < 2 KB.
+- **Hex di `index.html` tidak terpindai `check-tokens.mjs`** (ia hanya membaca
+  `src/**`), jadi satu-satunya tempat yang boleh punya hex di luar `tokens.css`
+  juga satu-satunya yang bisa menyimpang tanpa ketahuan. Penjaganya test.
+- **Indikator perpindahan tidak boleh jadi lapisan penuh layar** — ia akan
+  menghalangi ketukan, dan sapuan e2e yang menekan tombol akan gagal
+  berselang-seling, terbaca seperti cacat produk.
+
+### `[LUAR]` Sembilan logo baru membuat `npm run check` merah
+
+Menambahkan folder logonya saja sudah menggagalkan pemeriksaan: Biome memindai
+**seluruh** repo (`includes: ["**"]`), dan aturan `a11y/noSvgWithoutTitle`
+menyala di kesembilan berkas. Bukan cacat lama — ia lahir bersama asetnya, dan
+menahan setiap pekerjaan berikutnya sampai ditutup.
+
+Diperbaiki mengikuti pola yang sudah dipakai `public/icons/favicon.svg`:
+`role="img"`, `aria-label="Novelova"`, dan satu `<title>`. Kesembilan berkas
+diperiksa ulang sebagai XML yang sah sesudahnya. `npm run check` bersih lagi —
+362 berkas.
+
+### Yang **tidak** dikerjakan
+
+- **Tidak ada kode aplikasi.** Permintaannya memperbarui `todo.md`; satu-satunya
+  yang disentuh di luar dokumen adalah sembilan `<title>` di atas, karena tanpa
+  itu `npm run check` merah.
+- **Satu keputusan sengaja ditinggalkan terbuka** dan ditandai di 14b-a: apakah
+  emas menggantikan rose gold sepenuhnya, atau rose gold tetap identitas merek
+  yang berdiri di luar palet aplikasi. Keduanya sah; yang tidak sah adalah
+  memilihnya diam-diam.
+- Butir "aset nyata" di Fase 15 dipersempit — ikon dan splash iOS pindah ke
+  14b-d supaya tidak dikerjakan dua kali.
+
+---
+
+## 2026-09-17 · Langkah 88 — Bagian D dikerjakan: amplop respons hidup di kedua sisi seam
+
+> "oke sekarang kerjakan step d pada file todo-incoming-features.md secara
+> beruurutan"
+
+37 dari 37 kotak, dikerjakan berurutan D1 → D2 → D3 → D4 → D5 → D6 sesuai
+aturan main D0.
+
+### D1 · Fondasi seam
+
+`src/api/envelope.ts` — `bungkus()`, `bungkusGagal()`, `buka()`, dan skema Zod
+yang **menegakkan** aturan "`data` objek atau array, tidak pernah `null`".
+Kelima bentuk kembalian ditangani di satu tempat. Keempat kelompok khusus
+(`void`, `Paged`, nullable, primitif) **diturunkan dari tipe `NovelovaApi`
+sendiri**, dan `Record<Union, true>` menuntut kelengkapannya — metode baru yang
+lupa didaftarkan gagal di `tsc`, bukan diam-diam di layar.
+
+`src/api/errorMap.ts` — peta dua arah `(metode, status) ↔ ErrorCode`. Arah
+pulang dibaca dari **nama kodenya** (`PAY-402` → `402`), jadi angkanya tidak
+ditulis dua kali.
+
+`ApiError` dapat `requestId`, `withdrawnAt`, `shortBy`, dan getter
+`technicalCode`.
+
+### D2 · Server-mock dibungkus
+
+Satu titik di `mock/index.ts`; ke-130 metode lewat `bungkus()` → `buka()`.
+`SCHED-422` kini benar-benar dilempar penjadwal (sebelumnya `VALIDATION`,
+padahal `Scheduler.tsx` sudah menantikannya).
+
+### D3 · Sapuan 16 domain
+
+`tests/unit/amplop-domain.test.ts` — satu test per bagian §6, memeriksa bentuk
+yang khas di tiap domain: `getProgress` yang **harus** `null`, `hasReported`
+yang **harus** boolean, `hasMore` di halaman terakhir, dan kode error yang
+memilih layar.
+
+### D4 · `api/http/` bukan stub lagi
+
+Ke-130 metode nyata, dibangkitkan dari satu daftar nama yang kelengkapannya
+dijaga `tsc`. Alur `401 → refresh sekali → ulang`, kegagalan jaringan yang
+dibedakan (`NETWORK`/`TIMEOUT`/`OFFLINE`/`CONTRACT`), dan `code` yang diperiksa
+terhadap status HTTP sebenarnya. Diuji dengan `fetch` palsu.
+
+### D5 · Verifikasi
+
+`tests/unit/envelope.test.ts` — bentuk, sapuan **27 kode** (tiap kode wajib
+punya jalan pulang), dan sapuan **130 metode** (tiap metode punya bentuk; tiap
+metode berparameter dua punya nama argumen).
+
+**754 test unit · 124 e2e · `npm run check` bersih · `check:build` bersih.**
+
+### Empat temuan yang **mendahului** amplopnya
+
+Semuanya sudah ada sebelum satu baris amplop ditulis; yang menemukan mereka
+adalah mengerjakannya (`architecture.md` §1.56).
+
+1. **`ApiError.detail` dipakai tiga arti sekaligus** — baris kode teknis,
+   tanggal bab ditarik, dan jumlah koin yang kurang. Ketiganya `string`, jadi
+   typecheck tidak pernah keberatan.
+2. **`SCHED-409` tidak pernah dilempar siapa pun** — bentrok jadwal diturunkan
+   di layar. Kalau penjadwal menolaknya, bentrok tidak akan pernah bisa dibuat.
+   Kontrak §7.2 → §7.3.
+3. **Aturan `{ arg }` §2.1 tidak punya mekanisme** — nama parameter tidak ada
+   saat runtime, jadi tabel nama wajib ada apa pun yang terjadi. Tabelnya kini
+   disalin dari §6 (69 metode, nol selisih terhadap `client.ts`).
+4. **Dua test `ReaderPage` memasang penantian 10 detik di dalam `it()` berbatas
+   5 detik** — penjaga yang tidak pernah bisa menyala.
+
+### Yang **tidak** dikerjakan, dan kenapa
+
+- **Validasi Zod per metode atas isi `data`.** `buka()` memvalidasi amplopnya,
+  bukan muatannya. Untuk mock muatannya sudah bertipe; untuk backend sungguhan
+  itu pekerjaan tersendiri, dan kode `CONTRACT` sudah disiapkan untuknya.
+- **Bolak-balik JSON di sisi mock.** Skema amplop sudah menutup kesalahan yang
+  paling sering (`data` null/absen); kesetiaan JSON penuh (`Date`, `undefined`)
+  urusan lain.
+- **Sakelar env untuk mematikan amplop** — ditolak sejak Langkah 87; dua jalur
+  hidup bersamaan adalah cara paling rapi menghasilkan cacat yang "kadang".
+- **Commit** — tidak ada yang di-commit; seluruh perubahan ada di working tree.
+  D0 menyarankan satu commit per domain, dan itu keputusan Anda.
+- Satu peringatan teardown di `SchedulePage.test.tsx` masih muncul di suite
+  penuh. **Sudah ada sebelum Langkah 88** dan tidak disentuh: pada pohon bersih
+  ia justru menggagalkan satu test, sementara di pohon ini 754 lulus.
+
+---
+
+## 2026-09-16 · Langkah 87 — Todo amplop diperluas ke seluruh fitur, dan tujuh metode yang tidak muat
+
+> "oke sekarang menurut saya mendingan buat todo untuk semua fitur mengubah api
+> mocknya, dan saya mau ketika dikerjakan tidak ada error disemua fitur yang
+> sudah dibuat."
+
+### Bagian **D** ditulis ulang — dari 9 kotak jadi **37 kotak** dalam 7 bagian
+
+- **D0 aturan main** — prinsip (amplop berhenti di seam, 12 folder `features/`
+  dan 43 rute tidak disentuh), **definisi selesai lima butir** yang berlaku per
+  kotak (`check` bersih · `npm test` **penuh** hijau · e2e domainnya · enam
+  lebar layar · `check:build`), urutan wajib beserta alasannya, dan satu commit
+  per domain supaya yang di-revert satu domain.
+- **D1 fondasi** 5 · **D2 mock dibungkus** 4 · **D3 sapuan per domain 16 kotak =
+  130 metode** · **D4 `api/http/`** 4 · **D5 verifikasi** 6 · **D6 dokumen** 2.
+- **D3 itulah jawaban "semua fitur"**: satu kotak per bagian §6 kontrak, masing-masing
+  menyebut bentuk kembalian yang khas di sana, kode error yang harus bertahan,
+  layar yang membuktikannya, dan spec e2e yang menjaganya.
+
+**Kenapa server-mock ikut dibungkus** dijelaskan terang di D0: itu satu-satunya
+cara 678 unit + 124 e2e yang sudah ada berubah jadi jaring regresi untuk
+amplopnya. Tanpa itu, "tidak ada error di semua fitur" cuma janji.
+
+### Temuan sebelum satu baris kode ditulis: **tujuh metode tidak muat di amplop**
+
+Menghitung bentuk kembalian ke-130 metode (22 `void` · 12 `Paged` · 18 array ·
+3 nullable · 2 primitif) memperlihatkan tabrakan dengan aturan "`data` objek
+atau array, tidak pernah `null`":
+
+- **`getProgress` · `getMyRating` · `getBundleOffer`** sah mengembalikan `null`
+  — artinya "belum ada", bukan kegagalan. → `data: {}` **adalah** `null`-nya.
+- **`hasReported`** (`boolean`) dan **`getUnreadCount`** (`number`) bukan objek
+  dan bukan array. → `data: { value: … }`, sejalan dengan `{ arg }` di sisi
+  permintaan (§2.1).
+
+Keduanya lolos typecheck dan hanya gagal saat dijalankan: cerita yang belum
+pernah dibuka, dan lencana notifikasi yang mengirim `data: 3`.
+`backend-contract.md` §2.2 dan §6 (lima metode bertanda 🔸) sudah memuat
+aturannya; `architecture.md` §1.55 mencatat bagaimana ia ketahuan.
+
+### Yang **tidak** dikerjakan
+
+- **Tidak ada kode yang berubah** — permintaannya membuat todo. `npm run check`
+  dan `npm test` tidak dijalankan ulang karena tidak ada yang bisa berubah
+  hasilnya; angka 678/124 di dokumen adalah angka Langkah 85.
+- **Sakelar env untuk mematikan amplop** sengaja ditolak dan dicatat alasannya:
+  dua jalur hidup bersamaan menghasilkan cacat yang "kadang" muncul.
+- Bagian **A4** (persetujuan analitik) dan **A6** tetap seperti keputusan
+  sebelumnya — ditunda dan tidak dikerjakan.
+
+---
+
+## 2026-09-16 · Langkah 86 — Amplop respons backend: kontrak ditulis ulang, todo bagian D
+
+> "oke saya ingin buat todo untuk adjust api mock nya. Nanti di BE api nya akan
+> memiliki format resp nya seperti ini { "success": true, "code": "OK", //
+> string from a closed set — never a number "message": "story created", "data":
+> {}, // always present, never null "meta": { "total_count": 42, "limit": 20,
+> "offset": 0 }, // collections only "request_id": "3f9a…" // matches the server
+> log line } nah pada resp di field data, itu datanya mirip dengan api mock nya,
+> dan untuk "code" dia valuenya http code yah bukan seperti saya kirimakn.
+> Update todo backend-contract.md untuk format BE terbarunya. Jika ada yang
+> bingung tanyakan"
+
+**Tiga hal ditanyakan dulu**, dan jawabannya mengunci bentuknya:
+
+1. `code` = **angka** status HTTP (`200`, `404`) — komentar *"never a number"*
+   di contoh tidak berlaku.
+2. Saat gagal: `{ success: false, code: 404, message, data: {}, meta: {},
+   request_id }` — **tanpa kode aplikasi**; `message` boleh Indonesia/Inggris.
+3. Koleksi: `data` = **array langsung**, halaman di `meta`.
+
+### `backend-contract.md`
+
+- **§0** keputusan keempat; **§2.1** `Accept-Language`; **§2.2** ditulis ulang:
+  tabel aturan tiap field, contoh sukses/`void`/koleksi/gagal, peta `meta` →
+  `Paged<T>` (`page = ⌊offset ÷ limit⌋ + 1`, `hasMore = offset + data.length <
+  total_count`), dan **dua pengecualian** `data` saat gagal (`retry_at`,
+  `withdrawn_at`) — karena `SignInPage` dan `ReaderPage` bertindak dari fakta
+  itu, bukan dari kalimatnya.
+- **§6** kolom Response = isi `data`; 20 metode `void` dari `null` → `{}`.
+- **§7** ditulis ulang jadi peta `(metode, code) → ErrorCode`: bawaan per
+  status + 11 penimpaan per metode, diturunkan dari ±89 titik lempar di mock.
+  Kode tampil `XXX-nnn` → HTTP `nnn`; `PAY-410` dikoreksi dari 409 ke **410**.
+  Empat kode yang **bukan** error (`SCHED-200`, `PRINT-*`) dicatat sebagai
+  status di data.
+- **§9** aturan 24–26 (`success` ⇔ 2xx & `code` = status; `data`/`meta` tidak
+  pernah `null`; kode tampil = HTTP).
+
+### `todo-incoming-features.md` — bagian **D** baru
+
+Sembilan kotak: `envelope.ts` (satu pembuka amplop), `errorMap.ts` (satu tabel
+dua arah), `ApiError.requestId`, dua fakta `data`, **server-mock dibungkus**
+supaya 678 test yang ada membuktikan tiap `ApiError` selamat pulang-pergi,
+`api/http/` dari tabel §6, test amplop + sapuan seluruh kode, dokumen. Plus
+tiga hal yang sengaja tidak dilakukan.
+
+`architecture.md` §1.55 mencatat tiga keputusan turunan (pulihkan dari
+`(metode, code)`, amplop berhenti di satu fungsi, mock ikut dibungkus).
+
+### Yang **tidak** dikerjakan
+
+- **Tidak ada kode yang berubah** — permintaannya "buat todo", jadi mock,
+  `api/http/`, dan test tidak disentuh. `npm run check` / `npm test` tidak
+  dijalankan ulang karena tidak ada yang bisa berubah hasilnya.
+- Permintaan **tetap** `page`/`pageSize` (aturan mekanis §2.1), bukan
+  `limit/offset` — asumsi, dicatat di §2.2; mudah dibalik kalau backend
+  menghendaki sebaliknya.
+- Sukses selalu `200` (tanpa `201`/`204`) dan array tak berhalaman tetap
+  membawa `meta` terisi — dua asumsi supaya aturannya mekanis, dicatat di §2.2.
+
+---
+
 ## 2026-09-15 · Langkah 85 — A7 tautan penulis di detail cerita, A8 progres koneksi
 
 > "oke saya ingin kamu lanjutkan saja dulu untuk todo todo-incoming-features.md

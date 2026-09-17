@@ -58,7 +58,10 @@ function receiptNumber(at: string, sequence: number): string {
 }
 
 function payFailure(code: string, message: string, order: TopupOrder): ApiError {
-  return new ApiError(code as never, message, { detail: `${code} · ${order.method}` })
+  // Kodenya tidak ikut dirakit di sini: `ApiError.technicalCode` sudah
+  // menaruhnya di depan. Yang ditambahkan cuma yang tidak bisa diketahui
+  // dari kodenya sendiri — metode bayar yang dipakai.
+  return new ApiError(code as never, message, { detail: order.method })
 }
 
 /**

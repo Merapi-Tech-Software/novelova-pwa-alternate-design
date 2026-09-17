@@ -113,3 +113,17 @@ export const SCHEDULE_CLASH_MIN = 60
  * hanya penulisnya; angka ini cuma memberi bentuk pada "sudah sejauh mana".
  */
 export const CHAPTER_TARGET_WORDS = 1_500
+
+/**
+ * Berapa lama modul rute boleh memuat **tanpa** indikator · Fase 14b-c.
+ *
+ * Indikator yang muncul seketika lalu hilang 60 md kemudian lebih mengganggu
+ * daripada tidak ada — matanya menangkap kedipannya, bukan isinya. Di bawah
+ * ambang ini `MuatRute` tidak menggambar apa pun.
+ *
+ * **Sengaja hanya satu ambang, bukan sepasang.** Batas "tampil minimal" untuk
+ * mencegah kedipan terbalik akan menuntut fallback **menahan** halaman yang sudah
+ * siap — dan itu aplikasi yang sengaja dilambatkan, persis yang dilarang layar
+ * pembuka (14b-b). Lebih baik kedipan langka daripada jeda yang pasti.
+ */
+export const MUAT_RUTE_TUNDA_MS = 180

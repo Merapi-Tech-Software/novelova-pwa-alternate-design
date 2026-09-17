@@ -161,7 +161,7 @@ describe('aksi bab · FR-STUDIO-08 · FR-STUDIO-10 · FR-STUDIO-11', () => {
         time: '07:00',
         cadence: 'once',
       }),
-    ).rejects.toMatchObject({ code: 'VALIDATION' })
+    ).rejects.toMatchObject({ code: 'SCHED-422' })
   })
 
   it('bab terbit yang sudah dibeli menolak dihapus', async () => {

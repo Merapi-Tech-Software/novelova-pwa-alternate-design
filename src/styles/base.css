@@ -231,6 +231,35 @@
  * Panel putih. **Garis, bukan bayangan** — brief §1. Bayangan disimpan untuk
  * sampul (`shadow-nv-soft`) dan elemen yang benar-benar melayang (`shadow-nv`).
  */
+/*
+ * Kipas logo mengembang lalu berdenyut · todo.md Fase 14b-c.
+ *
+ * Salinan sadar dari dua keyframes di `<style>` inline `index.html`: layar
+ * pembuka harus mandiri (tergambar sebelum berkas ini termuat), sedangkan
+ * `MuatRute` hidup di dalam React dan memakai token. Gerakannya dijaga sama
+ * supaya keduanya terbaca sebagai satu aplikasi, bukan dua animasi berbeda.
+ */
+@keyframes nvKembang {
+  from {
+    opacity: 0;
+    transform: rotate(calc(var(--r) * 1deg)) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nvDenyut {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
 @utility nv-card {
   background: var(--nv-card);
   border: 1px solid var(--nv-line-soft);

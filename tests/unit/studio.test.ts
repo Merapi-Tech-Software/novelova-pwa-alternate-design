@@ -77,7 +77,7 @@ describe('tujuh status studio · FR-STUDIO-02 · FR-STUDIO-38', () => {
   it('waktu terbit yang sudah lewat ditolak', async () => {
     await expect(
       api.scheduleStory({ storyId: 'ms2', date: '2020-01-01', time: '19:00', cadence: 'once' }),
-    ).rejects.toMatchObject({ code: 'VALIDATION' })
+    ).rejects.toMatchObject({ code: 'SCHED-422' })
   })
 })
 

@@ -1995,6 +1995,169 @@ keterangan dan keterangannya boleh tiga baris. Cacat itu sudah ada sejak Fase
 13; ia tidak terlihat selama seluruh baris berbunyi sama dan pendek.
 
 
+### 1.55 Amplop respons backend — kode HTTP sebagai angka, dan apa yang klien pulihkan sendiri (Langkah 86)
+
+Pengguna menetapkan bentuk jawaban backend: `{ success, code, message, data,
+meta, request_id }`, dengan `code` = status HTTP sebagai **angka**, `data` &
+`meta` tidak pernah `null`, koleksi sebagai `data` array + `meta { total_count,
+limit, offset }`, dan **tanpa kode aplikasi** saat gagal. `backend-contract.md`
+§2.2 dan §7 ditulis ulang. **Belum ada kode yang berubah** — rencananya
+`todo-incoming-features.md` bagian **D**.
+
+Tiga keputusan turunan diambil di sini, bukan di kontrak:
+
+1. **Kode aplikasi dipulihkan dari `(metode, code)`.** Ke-15 kode tampil dan
+   12 kode internal tidak dikirim server. Pasangan metode + status ternyata
+   cukup — tiap metode hanya punya satu arti per status (`402` di
+   `unlockChapter` = koin kurang, `402` di `confirmTopupOrder` = bank menolak),
+   dan angka pada nama kode tampil memang status HTTP-nya sejak kanvas.
+   Tabelnya satu berkas dan **disapu test** terhadap seluruh kode: kode baru
+   tanpa jalan pulang gagal di test, bukan di produksi. Satu koreksi ikut:
+   `PAY-410` dulu tercatat `409`, sekarang `410`.
+2. **Amplop berhenti di satu fungsi.** `Paged<T>` seam tetap; `page`/`hasMore`
+   diturunkan dari `meta` di satu tempat. 37 berkas yang membaca `hasMore` tidak
+   tahu `offset` ada — dan permintaannya tetap `page`/`pageSize`, karena aturan
+   mekanis §2.1 (badan = argumen seam) lebih berharga daripada simetri dengan
+   `meta`.
+3. **Server-mock ikut dibungkus**, bukan cuma `api/http/`. Kalau hanya sisi HTTP
+   yang membuka amplop, tabel `(metode, code)` baru terbukti saat backend
+   sungguhan hidup. Dibungkus di mock, 678 test yang ada menjadi bukti bahwa
+   setiap `ApiError` yang dilempar selamat pulang-pergi.
+
+Dua pengecualian sadar: `data` saat gagal `{}`, **kecuali** `retry_at`
+(`AUTH-429`) dan `withdrawn_at` (`CONTENT-410`) — dua layar bertindak dari
+fakta itu, bukan dari kalimat pesannya. Menaruh rincian error lain di `data`
+tanpa layar yang membacanya hanya menambah bentuk yang harus dijaga.
+
+**Tujuh metode tidak muat di amplopnya** (ditemukan Langkah 87 saat menyusun
+rencana kerjanya, sebelum satu baris kode ditulis). Aturan "`data` objek atau
+array, tidak pernah `null`" bertabrakan dengan bentuk kembalian yang sudah ada:
+tiga metode sah mengembalikan `null` — `getProgress`, `getMyRating`,
+`getBundleOffer`, yang artinya **"belum ada", bukan kegagalan** — dan dua
+mengembalikan primitif, `hasReported` (`boolean`) dan `getUnreadCount`
+(`number`). Keduanya diselesaikan mekanis dan sejalan dengan pembungkusan
+`{ arg }` di sisi permintaan: nullable → `data: {}` yang **adalah** `null`-nya,
+primitif → `data: { value }`. Dua `string[]` tidak termasuk; array sudah sah.
+
+Yang menarik bukan aturannya, melainkan kapan ia ketahuan: membaca amplopnya
+saja tidak memperlihatkan tabrakan ini, karena tujuh metode itu tersebar di
+empat domain dan masing-masing terlihat wajar sendirian. Yang menemukannya
+adalah **menghitung bentuk kembalian ke-130 metode** — 22 `void`, 12 `Paged`,
+18 array, 3 nullable, 2 primitif — sebelum menulis rencananya. Dua di antaranya
+akan lolos typecheck dan gagal hanya saat dijalankan: `getProgress` untuk cerita
+yang belum pernah dibuka, dan lencana notifikasi yang mengirim `data: 3`.
+
+### 1.56 Amplop dikerjakan — dan yang ditemukan justru di luar amplopnya (D1–D6)
+
+Bagian **D** `todo-incoming-features.md` tuntas: `envelope.ts` membungkus dan
+membuka, `errorMap.ts` memulihkan kode dari `(metode, status)`, server-mock
+melewatinya di **satu titik**, dan `api/http/` berhenti jadi stub. 754 test unit
+dan 124 e2e hijau, `check:build` bersih.
+
+Rencananya menyebut satu manfaat: membungkus mock membuat suite yang sudah ada
+ikut menguji amplopnya. Itu terbukti — tetapi yang ditangkapnya bukan cacat
+amplop. **Keempat temuan di bawah sudah ada sebelum amplop ditulis**, dan tidak
+satu pun terlihat dari membaca kontraknya.
+
+**Satu bidang, tiga arti.** `ApiError.detail` dipakai `AsyncState` sebagai baris
+kode teknis, `ReaderPage` sebagai **tanggal** bab ditarik, dan `ReaderPage` lagi
+sebagai **angka** koin yang kurang. Ketiganya `string`, jadi typecheck tidak
+pernah keberatan; yang membedakannya cuma siapa yang kebetulan membacanya.
+Amplop memaksanya terurai karena `data` gagal harus menyebut **nama** faktanya
+di kawat — dan begitu namanya wajib, tiga arti tidak bisa lagi berbagi satu
+bidang. Sekarang `detail`, `withdrawnAt`, dan `shortBy` masing-masing satu arti,
+dan `technicalCode` merangkai baris kecilnya. Varian §1.40, dan lebih halus:
+di sana namanya bentrok, di sini namanya cocok tetapi artinya tidak.
+
+**`SCHED-409` tidak pernah dilempar.** Kontrak Langkah 86 menaruhnya di §7.2
+sebagai kegagalan `scheduleChapter`, karena ia ada di tabel kode dan layarnya
+memang merendernya. Ternyata ia **diturunkan**: `/karya/jadwal` menghitung
+bentrok dari hubungan antar entri (§1.11), dan seed sengaja memuat satu bentrok
+supaya peringatannya punya data. Kalau penjadwal menolak dengan `409`, bentrok
+tidak akan pernah bisa **dibuat**. Kodenya pindah ke §7.3, sekelas `SCHED-200`.
+Pelajarannya: **kode yang ada di tabel belum tentu kode yang pernah dilempar**,
+dan yang membedakan cuma menelusuri titik lemparnya satu per satu.
+
+**Aturan `{ arg }` di §2.1 tidak pernah bisa berlaku.** Ia ditulis supaya
+terjemahan seam → HTTP mekanis tanpa keputusan per metode. Tetapi JavaScript
+tidak menyimpan nama parameter saat runtime, jadi `getChapter(a, b)` menuntut
+tabel nama apa pun yang terjadi. Karena tabelnya wajib ada, `{ storyId: "s1" }`
+menang atas `{ arg: "s1" }` — dan itu justru yang **sudah** tertulis di §6
+untuk 69 metode. Tabel di `api/http/` disalin dari sana, lalu dicocokkan dengan
+tanda tangan `client.ts`: nol selisih. Aturan yang "mekanis" di atas kertas bisa
+tidak punya mekanisme.
+
+**Dua test yang penjaganya tidak pernah menyala.** `ReaderPage` memasang
+`findByRole(..., { timeout: 10_000 })` dengan alasan tertulis panjang, tetapi
+`it()`-nya memakai batas bawaan **5 detik** — jadi test mati lima detik sebelum
+penjagaannya sempat berlaku. Keduanya lulus selama ini karena jarang sampai ke
+sana. Batas `it` dinaikkan ke 15 detik. Sepupu jauh dari "menunggu hal yang
+sudah benar sejak awal" (CLAUDE.md §8): penjaga yang tidak bisa menyala sama
+tidak bergunanya dengan penjaga yang tidak ada.
+
+**Yang diukur, bukan ditebak.** Biaya amplop **5 mikrodetik per panggilan**
+(`getSection` 20 cerita, bolak-balik penuh termasuk `safeParse`). Itu sebabnya
+`safeParse` dibiarkan hidup di sisi mock walau mock membungkus jawabannya
+sendiri: ia menutup satu-satunya jalur yang bisa membuktikan `data` tidak pernah
+`null`, dan harganya nol. Satu test `ReaderPage` sempat dicurigai melambat
+karenanya — pengukuran itu yang menutup kecurigaannya, bukan pendapat.
+
+Dua jebakan `Proxy` yang menggigit di jalan ikut ke CLAUDE.md §8: `Proxy` yang
+menjawab `then` tampak seperti Promise, dan `Object.assign` atas `Proxy`
+bertarget kosong menyalin nol properti.
+
+### 1.57 Layar pembuka & animasi muat — dan premis yang setengah keliru (Fase 14b)
+
+Fase 14b tuntas: logo diemaskan, layar pembuka inline di `index.html`,
+`MuatRute` sebagai fallback akar, ikon PWA dan splash iOS dibangkitkan dari
+tanda yang sama. 761 test unit, 132 e2e, `check:build` bersih.
+
+**Premis 14b-c setengah keliru, dan yang menemukannya adalah e2e yang gagal
+untuk alasan yang salah.** Rencananya berbunyi "skeleton muncul seketika di tiap
+rute malas". Kenyataannya React Router 7 membungkus navigasi dalam
+`startTransition`, jadi saat pindah fitur halaman **lama tetap tergambar**
+sampai modul barunya tiba — fallback `Suspense` tidak pernah dipanggil, dan tidak
+ada kedipan yang perlu ditunda. Fallback hanya menyala di tiga tempat: muat
+pertama, muat ulang keras, tautan langsung. `MuatRute` disempitkan ke sana, dan
+satu e2e membuktikan kebalikannya: dua perpindahan cepat, **nol** kemunculan.
+Indikator untuk perpindahan yang sungguh lambat menuntut `route.lazy` +
+`useNavigation` — 43 entri tabel rute, di luar cakupan 1,5 jam, dicatat di
+`todo-incoming-features.md` bagian C.
+
+**Peran `status` tidak mengambil nama dari isinya.** Accname menyebut *name
+from: author*, jadi `getByRole('status', { name: 'Memuat…' })` di Playwright
+tidak pernah cocok — tiga e2e gagal "element not found" sementara instrumentasi
+memperlihatkan `MuatRute` hidup dua detik penuh. Pencari yang benar
+`getByRole('status').filter({ hasText })`. Masuk CLAUDE.md §8.
+
+**Satu ambang, bukan sepasang.** Rencana meminta `MIN_TAMPIL` 320 md untuk
+mencegah kedipan terbalik. Menerapkannya berarti fallback **menahan** halaman
+yang sudah siap — aplikasi yang sengaja dilambatkan, hal yang dilarang 14b-b
+untuk layar pembuka. Diambil sadar: kedipan terbalik yang langka lebih baik
+daripada jeda yang pasti.
+
+**Logo yang dikirim melarang perubahannya sendiri.** `BACA-SAYA.md` versi rose
+gold berbunyi *"jangan tambah warna di luar rose gold + kelabu"*. Bentuknya
+tidak disentuh sedikit pun; palet dipetakan ke dua emas token (`#b68235` utama,
+`#7d5411` sisi gelap, `#fff3e4` sorot) dengan **satu** tint turunan `#daba8c`
+untuk halaman selang-seling — dan readme ditulis ulang pada giliran yang sama.
+Manifest C2PA (±7,5 KB per berkas) dibuang: ia tanda tangan atas isi, dan batal
+begitu satu warna berubah; tanda tangan yang batal lebih menyesatkan daripada
+tidak ada. Berkas menyusut 9 KB → 1,1–1,9 KB.
+
+**Layar pembuka di luar `#root`, ditutup di tiga jalan keluar.** `layarGagal()`
+menolak menggambar bila `#root` berisi; layar pembuka di dalamnya membungkam
+`APP-INIT-TIMEOUT`, satu-satunya jaring untuk WebKit yang menggantung (§1.47).
+Karena ia `position:fixed` di atas segalanya, jalan gagal dan habis-waktu ikut
+menutupnya — kalau tidak, layar gagalnya tergambar tetapi tidak pernah terlihat.
+1.787 B inline, terkalikan 78 halaman prerender; `pembuka.test.ts` menjaga
+warnanya sama persis dengan token, karena `check-tokens.mjs` tidak memindai
+`index.html`.
+
+Yang terukur di server dev: HTML `commit` → layar pembuka; `#root` pertama
+terisi ±800 md (kerangka hidrasi sesi); layar pembuka lepas ±1,2 d; modul beranda
+yang sengaja ditunda memperlihatkan `MuatRute` sampai modulnya tiba.
+
 ## 2. Stack
 
 | Kebutuhan | Pilihan | Alasan | Yang ditolak & kenapa |

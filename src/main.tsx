@@ -45,7 +45,32 @@ if (!root) throw new Error('#root tidak ditemukan di index.html')
  * ketika lapisan-lapisan itu tidak bisa dipakai. Kalimatnya tetap tiga hal
  * berurutan — apa yang terjadi, apakah yang tersimpan aman, satu tindakan.
  */
+/**
+ * Menutup layar pembuka yang digambar `index.html` · todo.md Fase 14b-b.
+ *
+ * Meredup 200 md lalu dilepas dari DOM — bukan `display:none`, supaya pembaca
+ * layar tidak lagi menemukan `role="status"` yang sudah tidak berarti. **Tanpa
+ * durasi minimum**: boot 80 md harus terlihat 80 md; layar pembuka yang menahan
+ * aplikasi demi terlihat adalah aplikasi yang sengaja dilambatkan.
+ *
+ * Dipanggil di tiga jalan keluar boot — berhasil, gagal, dan habis waktu —
+ * karena ia lapisan `position:fixed` di atas segalanya: kalau tertinggal di
+ * jalan gagal, layar gagalnya tergambar tetapi tidak pernah terlihat.
+ */
+function tutupPembuka(): void {
+  const pembuka = document.getElementById('pembuka')
+  if (!pembuka) return
+  pembuka.setAttribute('aria-hidden', 'true')
+  pembuka.classList.add('redup')
+  const lepas = () => pembuka.remove()
+  pembuka.addEventListener('transitionend', lepas, { once: true })
+  // Jaring bila `transitionend` tidak pernah menyala (tab latar, gerak dikurangi
+  // pada peramban yang mematikan transisi sekalian).
+  setTimeout(lepas, 400)
+}
+
 function layarGagal(kode: string): void {
+  tutupPembuka()
   if (!root || root.innerHTML.length > 0) return
   // Token, bukan hex — `base.css` adalah `<link>` tersendiri dan tetap terpasang
   // walau JS gagal. Kalau ia pun gagal, layarnya jadi hitam-putih bawaan
@@ -84,6 +109,11 @@ void initApi()
         <App />
       </StrictMode>,
     )
+    // Dua `requestAnimationFrame`: `render()` di React 19 menjadwalkan, tidak
+    // langsung menggambar. Frame pertama memberi React waktu commit, frame kedua
+    // memastikan piksel aplikasinya sudah ada sebelum layar pembuka meredup —
+    // kalau tidak, yang terlihat sepersekian detik adalah kertas kosong.
+    requestAnimationFrame(() => requestAnimationFrame(tutupPembuka))
   })
   .catch((error: unknown) => {
     clearTimeout(jamPasir)

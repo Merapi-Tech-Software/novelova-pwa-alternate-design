@@ -244,7 +244,7 @@ export default function ReaderPage() {
           },
           onError: (failure) => {
             if (isApiError(failure) && failure.code === 'INSUFFICIENT_COINS') {
-              setShortBy(Number(failure.detail ?? 0))
+              setShortBy(failure.shortBy ?? 0)
               return
             }
             toast.show(isApiError(failure) ? failure.message : t('failure.genericTitle'))
@@ -291,7 +291,7 @@ export default function ReaderPage() {
             if (isApiError(failure) && failure.code === 'INSUFFICIENT_COINS') {
               // **Satu-satunya interupsi yang tersisa**, dan ia memang harus
               // menginterupsi: koin habis bukan hal yang boleh terjadi diam-diam.
-              setShortBy(Number(failure.detail ?? 0))
+              setShortBy(failure.shortBy ?? 0)
               return
             }
             toast.show(isApiError(failure) ? failure.message : t('failure.genericTitle'))
@@ -434,7 +434,7 @@ export default function ReaderPage() {
   // (CONTENT-410). Koin yang terpakai sudah dikembalikan server saat ini juga.
   if (chapter.isError && isApiError(chapter.error)) {
     const withdrawn = chapter.error.code === VISIBLE_CODES.CONTENT_WITHDRAWN
-    const at = chapter.error.detail
+    const at = chapter.error.withdrawnAt
 
     return (
       <FailureNotice

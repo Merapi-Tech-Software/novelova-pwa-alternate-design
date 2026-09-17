@@ -87,7 +87,7 @@ export function AsyncState<T>({
         body="Permintaannya tidak sampai ke server."
         safety="Tidak ada data yang berubah."
         {...(api?.retryable !== false && onRetry ? { onRetry } : {})}
-        {...(api?.isVisibleCode ? { code: api.detail ?? api.code } : {})}
+        {...(api?.isVisibleCode ? { code: api.technicalCode } : {})}
       />
     )
   }

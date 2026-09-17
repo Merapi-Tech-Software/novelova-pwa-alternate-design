@@ -1,5 +1,12 @@
 /**
- * Membuat ikon PWA dan splash iOS dari satu sumber SVG.
+ * Membuat ikon PWA dan splash iOS dari **tanda logo** di
+ * `public/assets/logo-novelova/` · todo.md Fase 14b-d.
+ *
+ * Folder logo itu **sumber**; `public/icons/` **turunan**. Jangan menyunting
+ * `public/icons/` dengan tangan — ubah sumbernya, lalu jalankan skrip ini.
+ * Sebelum Fase 14b skrip ini menggambar huruf "N" penampung; sekarang ia
+ * membaca kipas emasnya langsung, jadi ikon di layar utama ponsel dan layar
+ * pembuka di dalam aplikasi tidak bisa berselisih.
  *
  * **Playwright, bukan dependensi baru.** Ia sudah terpasang untuk e2e, dan
  * merender SVG lalu memotretnya adalah cara paling murah mendapat PNG berukuran
@@ -8,19 +15,24 @@
  *
  * Dijalankan manual: `node scripts/buat-ikon.mjs`. Hasilnya di-commit, jadi
  * `npm ci` di mesin bersih tidak perlu menjalankannya.
- *
- * Warnanya dari `src/styles/tokens.css` putaran 7 — kertas, tinta, emas garis.
- * Ikon yang warnanya tertinggal satu putaran adalah hal pertama yang dilihat
- * pengguna di layar utamanya.
  */
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
+/** `--nv-bg` di `tokens.css`. Satu-satunya hex di sini; sisanya milik SVG sumber. */
 const KERTAS = '#f4f2ef'
-const TINTA = '#1c1a18'
-const EMAS = '#b68235'
+const SUMBER = new URL('../public/assets/logo-novelova/', import.meta.url)
 const OUT = new URL('../public/icons/', import.meta.url)
+
+/** Isi sebuah SVG sumber tanpa pembungkus `<svg>` dan `<title>`-nya, siap ditempel di `<g>`. */
+async function isiTanda(nama) {
+  const svg = await readFile(new URL(nama, SUMBER), 'utf8')
+  return svg.replace(/<\/?svg[^>]*>/g, '').replace(/<title>.*?<\/title>/g, '')
+}
+
+const TANDA = await isiTanda('mark-terang.svg')
+const TANDA_MONO = await isiTanda('favicon.svg')
 
 /**
  * Satu lambang, dua bentuk.
@@ -28,32 +40,31 @@ const OUT = new URL('../public/icons/', import.meta.url)
  * `padding` dalam persen: ikon biasa nyaris penuh, `maskable` menyisakan zona
  * aman 20 % karena Android memotongnya jadi lingkaran, kotak membulat, atau
  * bentuk lain yang tidak bisa kita tahu sebelumnya.
+ *
+ * Tanda sumber hidup di ruang 64×64 dengan kipas dari y≈14 sampai punggung di
+ * y=57 — pusat visualnya ±35, bukan 32 — jadi digeser naik sedikit supaya
+ * terlihat di tengah, bukan cuma terhitung di tengah.
  */
-function svg(size, { padding = 8, bulat = 0.22 } = {}) {
+function svg(size, { padding = 8, bulat = 0.22, mono = false } = {}) {
   const p = (size * padding) / 100
-  const inner = size - p * 2
-  const font = inner * 0.62
-  const garisY = p + inner * 0.82
-  const garisW = inner * 0.42
+  const dalam = size - p * 2
+  const skala = dalam / 64
+  const naik = -3.4 * skala
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Novelova">
   <title>Novelova</title>
   <rect width="${size}" height="${size}" rx="${size * bulat}" fill="${KERTAS}"/>
-  <text x="50%" y="${p + inner * 0.66}" text-anchor="middle"
-        font-family="Georgia, 'Times New Roman', serif" font-weight="600"
-        font-size="${font}" fill="${TINTA}">N</text>
-  <rect x="${(size - garisW) / 2}" y="${garisY}" width="${garisW}" height="${Math.max(2, inner * 0.045)}"
-        rx="${Math.max(1, inner * 0.022)}" fill="${EMAS}"/>
+  <g transform="translate(${p} ${p + naik}) scale(${skala})">${mono ? TANDA_MONO : TANDA}</g>
 </svg>`
 }
 
-/** Layar pembuka iOS: lambang kecil di tengah kanvas sewarna kertas. */
+/** Layar pembuka iOS: lambang kecil di tengah kanvas sewarna kertas — sambungannya ke layar pembuka `index.html` tak terlihat. */
 function splashSvg(w, h) {
   const lambang = Math.round(Math.min(w, h) * 0.28)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
   <rect width="${w}" height="${h}" fill="${KERTAS}"/>
   <g transform="translate(${(w - lambang) / 2} ${(h - lambang) / 2})">
-    ${svg(lambang, { padding: 0, bulat: 0.22 })
+    ${svg(lambang, { padding: 0, bulat: 0 })
       .replace(/<\/?svg[^>]*>/g, '')
       .replace(/<title>.*?<\/title>/g, '')}
   </g>
@@ -106,10 +117,13 @@ for (const [nama, w, h] of SPLASH) {
   dibuat.push(await potret(page, splashSvg(w, h), w, h, nama))
 }
 
-// Favicon tetap SVG: satu berkas, tajam di semua ukuran, tanpa PNG tambahan.
-await writeFile(fileURLToPath(new URL('favicon.svg', OUT)), svg(64), 'utf8')
+// Favicon tetap SVG: satu berkas, tajam di semua ukuran. Versi mono 7 halaman,
+// karena di 16–32 px gradasi dan kilau cuma jadi noda (aturan logo: <24 px mono).
+await writeFile(fileURLToPath(new URL('favicon.svg', OUT)), svg(64, { mono: true }), 'utf8')
 dibuat.push('favicon.svg')
 
 await browser.close()
-console.log(`✓ ${dibuat.length} berkas ikon dibuat di public/icons/`)
+console.log(
+  `✓ ${dibuat.length} berkas ikon dibuat di public/icons/ dari public/assets/logo-novelova/`,
+)
 for (const n of dibuat) console.log(`  · ${n}`)

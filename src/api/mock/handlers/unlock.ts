@@ -290,7 +290,7 @@ export const unlockHandlers: Pick<
         throw new ApiError(
           INTERNAL_CODES.INSUFFICIENT_COINS,
           `Saldomu kurang ${coins - balance} koin untuk pilihan ini.`,
-          { detail: String(coins - balance) },
+          { shortBy: coins - balance },
         )
       }
     }

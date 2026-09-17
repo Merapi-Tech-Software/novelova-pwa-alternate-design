@@ -263,7 +263,9 @@ describe('auto-unlock per cerita · FR-READ-09 · §1.19', () => {
     expect(await screen.findByText(/Bagian di bawah tersensor/)).toBeInTheDocument()
 
     await db.readerPrefs.put(emptyReaderPrefs(CURRENT_USER_ID))
-  })
+    // Sama seperti test "TIGA jalan keluar" di atas: query-nya menunggu 10
+    // detik, jadi batas `it`-nya tidak boleh 5.
+  }, 15_000)
 })
 
 it('membuka lewat iklan juga menyimpan izinnya — sakelarnya tidak dibuang diam-diam', async () => {
@@ -330,7 +332,10 @@ describe('saldo kurang · mockup `7z` · R4e', () => {
 
     // Dan menyatakan terang bahwa membatalkan tidak menghilangkan apa pun.
     expect(within(lembar).getByText(/gerbangnya masih terbuka/)).toBeInTheDocument()
-  })
+    // 15 detik, bukan 5 bawaan: dua `findByRole` di atas meminta 10 detik, dan
+    // batas `it` yang lebih pendek membuat keduanya tidak pernah sempat
+    // berlaku — test mati lebih dulu daripada penjaganya.
+  }, 15_000)
 
   it('saldo TIDAK diperiksa klien — servernya yang menolak, lembarnya dibuka dari kekurangannya', async () => {
     await db.wallets.put({
